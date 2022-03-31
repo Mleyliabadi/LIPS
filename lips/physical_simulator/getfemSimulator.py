@@ -44,6 +44,7 @@ class GetfemSimulator(PhysicalSimulator):
         self._simulator.SetPhyParams(actor)
 
 if __name__ == '__main__':
+    import math
     physicalDomain={
         "Mesher":"Getfem",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
@@ -58,6 +59,7 @@ if __name__ == '__main__':
         "dirichlet":[["HOLE_BOUND",{"type" : "scalar", "Disp_Amplitude":6, "Disp_Angle":-math.pi/2}] ],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":2.0,"fricCoeff":0.9}] ]
     }
+
     mySimulator = GetfemSimulator(physicalDomain=physicalDomain,physicalProblem=physicalProperties)
     mySimulator.build_model()
     mySimulator.run_problem()
