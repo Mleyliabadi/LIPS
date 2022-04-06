@@ -82,7 +82,6 @@ class RollingWheelDataSet(DataSet):
             solverState=simulator.run_problem()
             
             self._store_obs(current_size=current_size,obs=simulator)
-
         self.size = nb_samples
 
         if path_out is not None:
