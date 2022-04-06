@@ -8,6 +8,7 @@ def lipsToGetfemBridge(physicalDomain,physicalProperties):
     simulator=SimulatorGeneration(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     return simulator
 
+
 class GetfemSimulator(PhysicalSimulator):
     """
     This simulator uses the `Getfem` library to implement a physical simulator.
