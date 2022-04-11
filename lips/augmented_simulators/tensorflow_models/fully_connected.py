@@ -48,8 +48,15 @@ class TfFullyConnected(object):
         else:
             self.name = name
 
+        self.layers = {
+            "linear": keras.layers.Dense,
+        }
+
         if "layer" in kwargs:
-            self.layer: keras.layers.Layer = kwargs["layer"]
+            if not isinstance(kwargs["layer"], keras.layers.Layer):
+                self.layer = self.layers[kwargs["layer"]]
+            else:
+                self.layer: keras.layers.Layer = kwargs["layer"]
         else:
             self.layer = keras.layers.Dense
 
@@ -58,7 +65,6 @@ class TfFullyConnected(object):
 
         self._model = None
         self.__build_model()
-        #self._model = self.create_model(output_size)
 
     def __build_model(self) -> Model:
         """_summary_
