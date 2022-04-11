@@ -8,6 +8,8 @@
 
 from typing import Union
 from abc import ABC, abstractmethod
+import pathlib
+import shutil
 
 from ..dataset import DataSet
 from ..dataset import Scaler
@@ -20,18 +22,35 @@ class AugmentedSimulator(ABC):
     They are meant to use data coming from a `DataSet` to learn from it.
     """
     def __init__(self,
-                 name: str,
-                 model: Union["tensorflow.keras.Model", "torch.nn.Module"]):
+                 model: Union["tensorflow.keras.Model", "torch.nn.Module"],
+                 name: Union[str, None]=None,
+                 scaler: Union[Scaler, None]=None,
+                 log_path: Union[str, None]=None,
+                 **kwargs):
         self.model = model
+        self.name = name
+        self.trained = False
+        # scaler class
+        if scaler is not None:
+            self.scaler = scaler()
+        self.log_path = log_path
+        self.params = kwargs
 
         self._observations = dict()
         self._predictions = dict()
 
+        # history
+        self.train_losses = []
+        self.val_losses = []
+        self.train_metrics = {}
+        self.val_metrics = {}
+
+        self.predict_time = 0
+
     @abstractmethod
     def train(self,
               train_dataset: DataSet,
-              val_dataset: Union[None, DataSet]=None,
-              scaler: Union[None, Scaler]=None):
+              val_dataset: Union[None, DataSet]=None):
         """
         Train the Augmented simulator using the provided datasets (parameters `train_dataset` and
         `val_dataset`) for a given number of iterations (`nb_iter`)
@@ -49,7 +68,9 @@ class AugmentedSimulator(ABC):
         """
         evaluate the model on the full dataset
         """
-        pass
+        if not isinstance(dataset, DataSet):
+            raise RuntimeError(f"The \"test_dataset\" should be an instance of DataSet. "
+                               f"We found {type(dataset)}")
 
     @abstractmethod
     def _build_model(self, **kwargs):
@@ -74,9 +95,17 @@ class AugmentedSimulator(ABC):
         """
         pass
 
-    def save(self, path: str):
+    def save(self, path: Union['str', pathlib.Path]):
         """save the model at a given path"""
-        pass
+        if not self.trained:
+            raise RuntimeError("Model is not trained yet, cannot save it")
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        if not path.exists():
+            path.mkdir(parents=True)
+        else:
+            shutil.rmtree(path)
+            path.mkdir(parents=True)
 
     def restore(self, path: str):
         """
@@ -85,7 +114,7 @@ class AugmentedSimulator(ABC):
         """
         pass
 
-    def save_metadata(self, path: str):
+    def _save_metadata(self, path: str):
         """
         Saves the "metadata" of the model.
 
@@ -95,6 +124,6 @@ class AugmentedSimulator(ABC):
         """
         pass
 
-    def load_metadata(self, path: str):
+    def _load_metadata(self, path: str):
         """load the metada from the given path."""
         pass
