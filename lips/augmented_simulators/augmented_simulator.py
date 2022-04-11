@@ -7,22 +7,31 @@
 # This file is part of LIPS, LIPS is a python platform for power networks benchmarking
 
 from typing import Union
-from ..dataset import DataSet
+from abc import ABC, abstractmethod
 
-class AugmentedSimulator(object):
+from ..dataset import DataSet
+from ..dataset import Scaler
+
+class AugmentedSimulator(ABC):
     """
     This class is the Base class that is used to create some "augmented simulator". These "augmented simulator" can be
     anything that emulates the behaviour of some "simulator".
 
     They are meant to use data coming from a `DataSet` to learn from it.
     """
-    def __init__(self, name: str):
-        self.name = name
+    def __init__(self,
+                 name: str,
+                 model: Union["tensorflow.keras.Model", "torch.nn.Module"]):
+        self.model = model
 
         self._observations = dict()
         self._predictions = dict()
 
-    def train(self, nb_iter: int, train_dataset: DataSet, val_dataset: Union[None, DataSet] = None):
+    @abstractmethod
+    def train(self,
+              train_dataset: DataSet,
+              val_dataset: Union[None, DataSet]=None,
+              scaler: Union[None, Scaler]=None):
         """
         Train the Augmented simulator using the provided datasets (parameters `train_dataset` and
         `val_dataset`) for a given number of iterations (`nb_iter`)
@@ -35,21 +44,18 @@ class AugmentedSimulator(object):
                 raise RuntimeError(f"The \"val_dataset\" should be an instance of DataSet. "
                                    f"We found {type(val_dataset)}")
 
-        if nb_iter <= 0:
-            raise RuntimeError("Impossible to train a model for a negative number of iteration. Make sure that "
-                               "`nb_iter` > 0.")
-
+    @abstractmethod
     def evaluate(self, dataset: DataSet):
         """
         evaluate the model on the full dataset
         """
         pass
 
-    def init(self, **kwargs):
-        """
-        initialize the "augmented simulator".
+    @abstractmethod
+    def _build_model(self, **kwargs):
+        """Build the model
 
-        For example, this is where the model should be built in case the augmented simulator used a neural network.
+        This is where a neural network is built.
         """
         pass
 
@@ -68,7 +74,7 @@ class AugmentedSimulator(object):
         """
         pass
 
-    def save(self, path_out: str):
+    def save(self, path: str):
         """save the model at a given path"""
         pass
 
@@ -79,7 +85,7 @@ class AugmentedSimulator(object):
         """
         pass
 
-    def save_metadata(self, path_out: str):
+    def save_metadata(self, path: str):
         """
         Saves the "metadata" of the model.
 
