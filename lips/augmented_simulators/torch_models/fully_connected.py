@@ -65,19 +65,11 @@ class TorchFullyConnected(nn.Module):
 
         self.__build_model()
 
-        # self.fc1 = nn.Linear(input_size, 300)
-        # self.fc2 = nn.Linear(300, 300)
-        # self.fc3 = nn.Linear(300, 300)
-        # self.fc4 = nn.Linear(300, 300)
-        # self.fc5 = nn.Linear(300, output_size)
-
     def __build_model(self):
         """Build the model flow
         """
         # Linear layers
         linear_sizes = list(self.params["layers"])
-        #linear_sizes.insert(0, self.input_size)
-        #linear_sizes.append(self.output_size)
 
         self.input_layer = nn.Linear(self.input_size, linear_sizes[0])
         self.input_dropout = nn.Dropout(p=self.params["input_dropout"])
@@ -111,9 +103,3 @@ class TorchFullyConnected(nn.Module):
             x = dropout(x)
         x = self.output_layer(x)
         return x
-        # output = F.relu(self.fc1(data))
-        # output = F.relu(self.fc2(output))
-        # output = F.relu(self.fc3(output))
-        # output = F.relu(self.fc4(output))
-        # output = self.fc5(output)
-        # return output

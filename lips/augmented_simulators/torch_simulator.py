@@ -1,10 +1,13 @@
 """
 Tensorflow based augmented simulators
 """
+import os
 import pathlib
 from typing import Union
 import shutil
 import time
+import json
+import tempfile
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -16,7 +19,7 @@ from torch import Tensor
 from torch.utils.data import TensorDataset, DataLoader
 
 from . import AugmentedSimulator
-from .torch_models.utils import LOSSES, OPTIMIZERS
+from .torch_models.utils import LOSSES, OPTIMIZERS, NpEncoder
 from ..dataset import DataSet
 from ..dataset import Scaler
 from ..logger import CustomLogger
@@ -39,6 +42,8 @@ class TorchSimulator(AugmentedSimulator):
             _description_
         name : str, optional
             _description_, by default None
+        scaler : Scaler, optional
+            scaler used to scale the data, by default None
         **kwargs : dict
             supplementary parameters for the model
             It should contain input_size and output_size
@@ -48,33 +53,20 @@ class TorchSimulator(AugmentedSimulator):
         """
     def __init__(self,
                  model: nn.Module,
-                 name: Union[str, None],
+                 name: Union[str, None]=None,
+                 scaler: Union[Scaler, None]=None,
                  log_path: Union[str, None] = None,
                  **kwargs):
-        super().__init__(name, model)
+        super().__init__(model, name, scaler, log_path, **kwargs)
         # logger
-        self.log_path = log_path
         self.logger = CustomLogger(__class__.__name__, self.log_path).logger
 
-        self.model = model
-        self.params = kwargs
         self._model = self._build_model(**kwargs)
 
         if name is not None:
             self.name = name
         else:
             self.name = self._model.name
-
-        # history
-        self.train_losses = []
-        self.val_losses = []
-        self.train_metrics = {}
-        self.val_metrics = {}
-
-        # scaler class
-        self.scaler = None
-
-        self.predict_time = 0
 
     def _build_model(self, **kwargs) -> nn.Module:
         """build torch model
@@ -96,7 +88,6 @@ class TorchSimulator(AugmentedSimulator):
     def train(self,
               train_dataset: DataSet,
               val_dataset: Union[None, DataSet] = None,
-              scaler: Scaler = None,
               save_path: Union[None, str] = None,
               **kwargs):
         """Function used to train a neural network
@@ -107,15 +98,14 @@ class TorchSimulator(AugmentedSimulator):
             training dataset
         val_dataset : Union[None, DataSet], optional
             validation dataset, by default None
-        scaler : Scaler, optional
-            scaler used to scale the data, by default None
         save_path : Union[None, str], optional
             the path where the trained model should be saved, by default None
         """
+        super().train(train_dataset, val_dataset)
         self.params.update(kwargs)
-        train_loader = self._process_all_dataset(train_dataset, scaler=scaler, training=True)
+        train_loader = self._process_all_dataset(train_dataset, training=True)
         if val_dataset is not None:
-            val_loader = self._process_all_dataset(val_dataset, scaler=scaler, training=False)
+            val_loader = self._process_all_dataset(val_dataset, training=False)
         optimizer = self._get_optimizer(optimizer=OPTIMIZERS[self.params["optimizer"]["name"]],
                                         **self.params["optimizer"]["params"])
         for metric_ in self.params["metrics"]:
@@ -142,6 +132,7 @@ class TorchSimulator(AugmentedSimulator):
                 if epoch % self.params["ckpt_freq"] == 0:
                     self.save(save_path, epoch)
 
+        self.trained = True
         # save the final model
         if save_path:
             self.save(save_path)
@@ -260,23 +251,20 @@ class TorchSimulator(AugmentedSimulator):
 
         return mean_loss, metric_dict
 
-    def evaluate(self, dataset: DataSet, scaler: Scaler=None, **kwargs) -> dict:
+    def evaluate(self, dataset: DataSet, **kwargs) -> dict:
         """_summary_
 
         Parameters
         ----------
         dataset : DataSet
             test datasets to evaluate
-        scaler : Scaler, optional
-            scaler used for normalization, by default None
         """
+        super().evaluate(dataset)
         if "batch_size" in kwargs:
             self.params["eval_batch_size"] = kwargs["batch_size"]
         self.params.update(kwargs)
 
-        if scaler is None:
-            scaler = self.scaler
-        test_loader = self._process_all_dataset(dataset, scaler=scaler, training=False)
+        test_loader = self._process_all_dataset(dataset, training=False)
         # activate the evaluation mode
         self._model.eval()
         predictions = []
@@ -304,9 +292,9 @@ class TorchSimulator(AugmentedSimulator):
                 _beg = time.time()
                 prediction = self._model(data)
                 total_time += time.time() - _beg
-                if scaler is not None:
-                    prediction = scaler.inverse_transform(prediction)
-                    target = scaler.inverse_transform(target)
+                if self.scaler is not None:
+                    prediction = self.scaler.inverse_transform(prediction)
+                    target = self.scaler.inverse_transform(target)
                 predictions.append(prediction.numpy())
                 observations.append(target.numpy())
 
@@ -328,8 +316,8 @@ class TorchSimulator(AugmentedSimulator):
         mean_loss = total_loss/len(test_loader.dataset)
         for metric in self.params["metrics"]:
             metric_dict[metric] /= len(test_loader.dataset)
-        print(f"Eval:   Avg_Loss: {mean_loss:.5f}",
-              [f"{metric}: {metric_dict[metric]:.5f}" for metric in self.params["metrics"]])
+        #print(f"Eval:   Avg_Loss: {mean_loss:.5f}",
+        #      [f"{metric}: {metric_dict[metric]:.5f}" for metric in self.params["metrics"]])
 
         predictions = dataset.reconstruct_output(np.concatenate(predictions))
         self._predictions[dataset.name] = predictions
@@ -364,7 +352,7 @@ class TorchSimulator(AugmentedSimulator):
         """
         return optimizer(self._model.parameters(), **kwargs)
 
-    def _process_all_dataset(self, dataset: DataSet, scaler: Scaler=None, training: bool=False) -> DataLoader:
+    def _process_all_dataset(self, dataset: DataSet, training: bool=False) -> DataLoader:
 
         """process the datasets for training and evaluation
 
@@ -387,8 +375,7 @@ class TorchSimulator(AugmentedSimulator):
         if training:
             batch_size = self.params["train_batch_size"]
             extract_x, extract_y = dataset.extract_data()
-            if scaler is not None:
-                self.scaler = scaler()
+            if self.scaler is not None:
                 extract_x, extract_y = self.scaler.fit_transform(extract_x, extract_y)
         else:
             batch_size = self.params["eval_batch_size"]
@@ -399,7 +386,7 @@ class TorchSimulator(AugmentedSimulator):
             if dataset._size_y is None:
                 raise RuntimeError("Model cannot be used, we don't know the size of the output vector. Either train it "
                                 "or load its meta data properly.")
-            if scaler is not None:
+            if self.scaler is not None:
                 extract_x, extract_y = self.scaler.transform(extract_x, extract_y)
 
         torch_dataset = TensorDataset(torch.from_numpy(extract_x).float(), torch.from_numpy(extract_y).float())
@@ -409,52 +396,110 @@ class TorchSimulator(AugmentedSimulator):
     ###############################################
     # function used to save and restore the model #
     ###############################################
-    def save(self, path: str, epoch: Union[int, None]=None):
-        """Save the model
+    def save(self, path: Union[str, pathlib.Path], epoch: Union[int, None]=None, save_metadata: bool=True):
+        """_summary_
 
         Parameters
         ----------
-        path : ``str``
+        path : Union[str, pathlib.Path]
             _description_
-        epoch : Union[``int``, ``None``], optional
+        epoch : Union[int, None], optional
             _description_, by default None
+        save_metadata : bool, optional
+            _description_, by default True
         """
-        save_path = pathlib.Path(path)
-        if not save_path.exists():
-            save_path.mkdir()
-        else:
-            shutil.rmtree(path)
+        save_path =  pathlib.Path(path) / self.name
+        super().save(save_path)
 
-        epoch = str(epoch) if epoch is not None else "last"
+        epoch_ = str(epoch) if epoch is not None else "_last"
 
-        if epoch is None:
-            self._save_metadata()
-
-        file_name = pathlib.Path(path) / self.name + epoch + ".pt"
+        file_name = save_path / ("model" + epoch_ + ".pt")
         torch.save(self._model.state_dict(), file_name)
 
-    def _save_metadata(self):
+        if epoch is None and save_metadata:
+            self._save_metadata(save_path)
+
+        self.logger.info("Model {%s} is saved at {%s}", self.name, save_path)
+
+    def _save_metadata(self, path: Union[str, pathlib.Path]):
         """save model's metadata
 
-        #TODO: save Scaler parameters (mean, std)
-        #TODO: save dataset infos (sizes, etc)
+        #TODO: save Scaler parameters (mean, std) -> OK
+        #TODO: save dataset infos (sizes, etc) -> maybe not necessary
         """
-        pass
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        self.scaler.save(path)
+        self._save_losses(path)
+        with open((path / "metadata.json"), "w", encoding="utf-8") as f:
+            json.dump(obj=self.params, fp=f, indent=4, sort_keys=True, cls=NpEncoder)
 
-    def restore(self, path: str):
+    def restore(self, path: Union[str, pathlib.Path], epoch: Union[int, None]=None):
         """
         restore the model
         """
-        self._model.load_state_dict(torch.load(path))
-        return self._model
+        epoch = str(epoch) if epoch is not None else "_last"
+        nm_file = "model" + epoch + ".pt"
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        path_weights = path / self.name / nm_file
+        if not path_weights.exists():
+            raise FileNotFoundError(f"Weights file {path_weights} not found")
+        # load the metadata
+        params = self._load_metadata(path)
+        # build the model
+        self._model = self._build_model(**params)
+        # load the weights
+        with tempfile.TemporaryDirectory() as path_tmp:
+            nm_tmp = os.path.join(path_tmp, nm_file)
+            # copy the weights into this file
+            shutil.copy(path_weights, nm_tmp)
+            # load this copy (make sure the proper file is not corrupted even if the loading fails)
+            self._model.load_state_dict(torch.load(nm_tmp))
+
+        self.logger.info("Model {%s} is loaded from {%s}", self.name, path_weights)
 
     def _load_metadata(self, path: str):
         """
         load the model metadata
         """
-        pass
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        full_path = path / self.name
+        # load scaler parameters
+        self.scaler.load(full_path)
+        self._load_losses(full_path)
+        with open((full_path / "metadata.json"), "r", encoding="utf-8") as f:
+            res_json = json.load(fp=f)
+        self.params.update(res_json)
+        return self.params
 
+    def _save_losses(self, path: Union[str, pathlib.Path]):
+        """
+        save the losses
+        """
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        res_losses = {}
+        res_losses["train_losses"] = self.train_losses
+        res_losses["train_metrics"] = self.train_metrics
+        res_losses["val_losses"] = self.val_losses
+        res_losses["val_metrics"] = self.val_metrics
+        with open((path / "losses.json"), "w", encoding="utf-8") as f:
+            json.dump(obj=res_losses, fp=f, indent=4, sort_keys=True, cls=NpEncoder)
 
+    def _load_losses(self, path: Union[str, pathlib.Path]):
+        """
+        load the losses
+        """
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        with open((path / "losses.json"), "r", encoding="utf-8") as f:
+            res_losses = json.load(fp=f)
+        self.train_losses = res_losses["train_losses"]
+        self.train_metrics = res_losses["train_metrics"]
+        self.val_losses = res_losses["val_losses"]
+        self.val_metrics = res_losses["val_metrics"]
     #########################
     # Some Helper functions #
     #########################
@@ -486,10 +531,11 @@ class TorchSimulator(AugmentedSimulator):
         if len(self.val_losses) > 0:
             ax[0].plot(self.val_losses, label='val_loss')
         for idx_, metric_name in enumerate(self.params["metrics"]):
-            ax[idx_].plot(self.train_metrics[metric_name], label=f"train_{metric_name}")
+            ax[idx_+1].set_title(metric_name)
+            ax[idx_+1].plot(self.train_metrics[metric_name], label=f"train_{metric_name}")
             if len(self.val_metrics[metric_name]) > 0:
-                ax[idx_].plot(self.val_metrics[metric_name], label=f"val_{metric_name}")
-        for i in range(2):
+                ax[idx_+1].plot(self.val_metrics[metric_name], label=f"val_{metric_name}")
+        for i in range(nb_subplots):
             ax[i].grid()
             ax[i].legend()
         # save the figure
