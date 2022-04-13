@@ -135,8 +135,23 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# ignore all the bkp files
+*.bkp
+
 #custom ignore folders
 .vscode
+
+# CI/CD
+.circleci/config.yml.bkp
+process.yml
+
+# linters
+.config
+
+# documentations
+docs/source/conf.py.bkp
+docs/_templates
+docs/build
 
 # getting started
 getting_started/Analyzing_Benchmark_class.ipynb
@@ -164,6 +179,7 @@ lips/tests/Evaluation/test_evaluation.py
 
 # LIPS
 logs.log
+lips_logs.log
 
 lips/Outputs/Scenario1/Data/super_test
 lips/Outputs/Scenario1/Data/test
