@@ -61,6 +61,6 @@ if __name__ == '__main__':
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":2.0,"fricCoeff":0.9}] ]
     }
 
-    mySimulator = GetfemSimulator(physicalDomain=physicalDomain,physicalProblem=physicalProperties)
+    mySimulator = GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     mySimulator.build_model()
     mySimulator.run_problem()
