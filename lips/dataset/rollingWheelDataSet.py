@@ -12,6 +12,58 @@ from tqdm import tqdm  # TODO remove for final push
 
 from lips.dataset.dataSet import DataSet
 from lips.logger import CustomLogger
+from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import GetfemInterpolationOnSupport
+
+def Domain2DGridGenerator(origin,lenghts,sizes):
+    origin_x,origin_y=origin
+    lenght_x,lenght_y=lenghts
+    nb_line,nb_column=sizes
+    coordX,coordY=np.meshgrid(np.arange(origin_x,origin_x+lenght_x,lenght_x/nb_line),np.arange(origin_y,origin_y+lenght_y,lenght_y/nb_column))
+    gridSupport = np.vstack(list(zip(coordX.ravel(), coordY.ravel()))).transpose()
+    return gridSupport
+
+class DataSetInterpolatorOnGrid():
+    """
+    This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
+    """
+
+    def __init__(self,simulator,dataset,gridSupport):
+        self.simulator=simulator
+        self.dataset=dataset
+        self.gridSupport=gridSupport
+        self.interpolated_dataset=dict()
+
+    def generate_interpolation_fields(self,dofnum_by_field,path_out=None):
+        self._init_interpolation_fields(dofnum_by_field)
+
+        for dataIndex in range(len(self.dataset)):
+            data_solver_obs=self.dataset.get_data(dataIndex)
+            for field_name in dofnum_by_field.keys():
+                field=data_solver_obs[field_name]
+                self.interpolated_dataset[field_name][dataIndex]=GetfemInterpolationOnSupport(self.simulator,field,self.gridSupport)
+
+        if path_out is not None:
+            # I should save the data
+            self._save_internal_data(path_out)
+
+    def _init_interpolation_fields(self,dofnum_by_field):
+        for field_name,dof_per_nodes in dofnum_by_field.items():
+            self.interpolated_dataset[field_name]=np.zeros((len(self.dataset),dof_per_nodes*self.gridSupport.shape[1]))
+
+    def _save_internal_data(self, path_out):
+        """save the self.data in a proper format"""
+        full_path_out = os.path.abspath(path_out)
+
+        if not os.path.exists(os.path.abspath(path_out)):
+            os.mkdir(os.path.abspath(path_out))
+
+        if os.path.exists(full_path_out):
+            shutil.rmtree(full_path_out)
+
+        os.mkdir(full_path_out)
+
+        for field_name in self.interpolated_dataset.keys():
+            np.savez_compressed(f"{os.path.join(full_path_out, field_name)}Interpolated.npz", data=self.interpolated_dataset[field_name])
 
 class RollingWheelDataSet(DataSet):
     """
@@ -43,7 +95,7 @@ class RollingWheelDataSet(DataSet):
         Parameters
         ----------
         simulator:
-           In this case, this should be a grid2op environment
+           In this case, this should be a getfem-based instance
 
         actor:
            In this case, it is the sampler used for the input parameters space discretization
@@ -213,8 +265,6 @@ if __name__ == '__main__':
               }
 
     training_actor=LHSSampler(space_params=trainingInput)
-    nb_sample_train=10
-    path_datasets="TotoDir"
 
     import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
     attr_names=(PFN.displacement,PFN.contactMultiplier)
@@ -222,9 +272,17 @@ if __name__ == '__main__':
     rollingWheelDataSet=RollingWheelDataSet("train",attr_names=attr_names)
     rollingWheelDataSet.generate(simulator=training_simulator,
                                     actor=training_actor,
-                                    path_out=path_datasets,
-                                    nb_samples=nb_sample_train,
+                                    path_out="WheelDir",
+                                    nb_samples=3,
                                     actor_seed=42
                                     )
-    print(rollingWheelDataSet.get_data(index=0))
-    print(rollingWheelDataSet.data)
+    # print(rollingWheelDataSet.get_data(index=0))
+    # print(rollingWheelDataSet.data)
+
+    #Interpolation on grid
+    gridSupport=Domain2DGridGenerator(origin=(-16.0,0.0),lenghts=(32.0,32.0),sizes=(64,64))
+    myTransformer=DataSetInterpolatorOnGrid(simulator=training_simulator,
+                                            dataset=rollingWheelDataSet,
+                                            gridSupport=gridSupport)
+    dofnum_by_field={PFN.displacement:2}
+    myTransformer.generate_interpolation_fields(dofnum_by_field=dofnum_by_field,path_out="wheel_interpolated")
