@@ -5,6 +5,12 @@ import lips.physical_simulator.GetfemSimulator.GetfemHSA as PhySolver
 import lips.physical_simulator.GetfemSimulator.MeshGenerationTools as ExternalMesher
 from lips.physical_simulator.GetfemSimulator.GetfemWheelProblem import GetfemMecaProblem,GetfemRollingWheelProblem
 from lips.physical_simulator.GetfemSimulator.GetfemWheelProblemQuasiStatic import QuasiStaticRollingProblem,QuasiStaticMecanicalProblem
+from lips.physical_simulator.GetfemSimulator.GetfemInterpolationTools import FEMInterpolationOnSupport
+
+
+def GetfemInterpolationOnSupport(simulator,field,gridSupport):
+    physical_problem=simulator._simulator
+    return FEMInterpolationOnSupport(phyProblem=physical_problem,originalField=field,targetSupport=gridSupport)
 
 def MeshGeneration(physicalDomain):
     if physicalDomain["Mesher"]=="Getfem":
