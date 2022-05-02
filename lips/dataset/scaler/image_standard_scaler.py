@@ -10,9 +10,9 @@ import numpy as np
 
 
 def put_along_axis_per_channel(channel,channel_index,channel_data,overall_data):
-    i = [slice(None)]*channel_data.ndim
-    i[channel_index] = channel
-    overall_data[tuple(i)] = channel_data
+    indices = [slice(None)]*channel_data.ndim
+    indices[channel_index] = channel
+    overall_data[tuple(indices)] = channel_data
     return overall_data
 
 
