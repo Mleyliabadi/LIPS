@@ -5,9 +5,8 @@ from typing import Union
 import pathlib
 import numpy as np
 
-# from . import Scaler
-# from . import StandardScaler
-
+from lips.dataset.scaler.scaler import Scaler
+#from . import Scaler
 
 def put_along_axis_per_channel(channel,channel_index,channel_data,overall_data):
     indices = [slice(None)]*channel_data.ndim
