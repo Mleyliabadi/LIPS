@@ -6,5 +6,5 @@
 __all__ = ["Benchmark", "PowerGridBenchmark"]
 
 from lips.benchmark.benchmark import Benchmark
-from lips.benchmark.powergridBenchmark import PowerGridBenchmark
+#from lips.benchmark.powergridBenchmark import PowerGridBenchmark
 

@@ -21,7 +21,7 @@ class Sampler(metaclass=abc.ABCMeta):
     def _define_sampling_method(self,nb_samples,sampler_seed=None):
         pass
 
-    def save_samples_in_file(self,filename,samples=None):
+    def save(self,path_out,samples=None):
         if samples is None:
             samples=self.sampling_output
 
@@ -29,7 +29,7 @@ class Sampler(metaclass=abc.ABCMeta):
         if fieldNum.count(fieldNum[0]) != len(fieldNum):
             raise RuntimeError("Samples do not have the same input parameters")
 
-        with open(filename, mode='w') as csv_file:
+        with open(path_out, mode='w') as csv_file:
             fieldnames = list(samples[0].keys())
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
