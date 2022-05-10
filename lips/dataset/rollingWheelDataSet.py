@@ -5,6 +5,7 @@ import os
 import warnings
 import numpy as np
 import shutil
+import csv
 
 import copy
 from typing import Union
@@ -52,7 +53,7 @@ class DataSetInterpolatorOnGrid():
 
     def _save_internal_data(self, path_out):
         """save the self.data in a proper format"""
-        full_path_out = os.path.abspath(path_out)
+        full_path_out = os.path.join(os.path.abspath(path_out), self.dataset.name)
 
         if not os.path.exists(os.path.abspath(path_out)):
             os.mkdir(os.path.abspath(path_out))
@@ -64,6 +65,20 @@ class DataSetInterpolatorOnGrid():
 
         for field_name in self.interpolated_dataset.keys():
             np.savez_compressed(f"{os.path.join(full_path_out, field_name)}Interpolated.npz", data=self.interpolated_dataset[field_name])
+
+        samples=self.dataset._inputs
+        fieldNum=[len(samples[0].keys()) for sample in samples]
+        if fieldNum.count(fieldNum[0]) != len(fieldNum):
+            raise RuntimeError("Samples do not have the same input parameters")
+
+        full_path_samples_out=os.path.join(full_path_out, "inputs.data")
+
+        with open(full_path_samples_out, mode='w') as csv_file:
+            fieldnames = list(samples[0].keys())
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for paramsSet in samples:
+                writer.writerow(paramsSet)
 
 class RollingWheelDataSet(DataSet):
     """
@@ -78,6 +93,7 @@ class RollingWheelDataSet(DataSet):
         DataSet.__init__(self, name=name)
         self._attr_names = copy.deepcopy(attr_names)
         self.size = 0
+        self._inputs = []
 
         # logger
         self.logger = CustomLogger(__class__.__name__, log_path).logger
@@ -124,10 +140,10 @@ class RollingWheelDataSet(DataSet):
         if nb_samples <= 0:
             raise RuntimeError("Impossible to generate a negative number of data.")
 
-        samples=actor.generate_samples(nb_samples=nb_samples,sampler_seed=actor_seed)
+        self._inputs=actor.generate_samples(nb_samples=nb_samples,sampler_seed=actor_seed)
         self._init_store_data(simulator=simulator,nb_samples=nb_samples)
 
-        for current_size,sample in enumerate(tqdm(samples, desc=self.name)):
+        for current_size,sample in enumerate(tqdm(self._inputs, desc=self.name)):
             simulator=type(simulator)(simulatorInstance=simulator)
             simulator.modify_state(actor=sample)
             simulator.build_model()
@@ -139,12 +155,15 @@ class RollingWheelDataSet(DataSet):
         if path_out is not None:
             # I should save the data
             self._save_internal_data(path_out)
+            full_path_out = os.path.join(os.path.abspath(path_out), self.name)
+            full_path_samples_out=os.path.join(full_path_out, "inputs.data")
+            actor.save(path_out=full_path_samples_out)
+
 
     def _init_store_data(self,simulator,nb_samples):
         self.data=dict()
         for attr_nm in self._attr_names:
             array_ = simulator.get_variable_value(field_name=attr_nm)
-            truc= np.zeros((nb_samples, array_.shape[0]))
             self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
 
     def _store_obs(self, current_size, obs):

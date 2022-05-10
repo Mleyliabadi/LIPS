@@ -311,17 +311,6 @@ class WheelBenchmark():
                                                         chronics_selected_regex=".*9[5-9][5-9].*")
         self.test_ood_topo_simulator.seed(self.test_ood_topo_env_seed)
 
-        self.training_actor = self.utils.get_actor_training_scenario(self.training_simulator)
-        self.training_actor.seed(self.train_actor_seed)
-
-        self.val_actor = self.utils.get_actor_test_scenario(self.val_simulator)
-        self.val_actor.seed(self.val_actor_seed)
-
-        self.test_actor = self.utils.get_actor_test_scenario(self.test_simulator)
-        self.test_actor.seed(self.test_actor_seed)
-
-        self.test_ood_topo_actor = self.utils.get_actor_test_ood_topo_scenario(self.test_ood_topo_simulator)
-        self.test_ood_topo_actor.seed(self.test_ood_topo_actor_seed)
 
 if __name__ == '__main__':
     print("toto")
