@@ -17,7 +17,7 @@ import copy
 from typing import Union
 import importlib
 
-# from . import Benchmark
+#from lips.benchmark import Benchmark
 # from .utils.powergrid_utils import get_kwargs_simulator_scenario
 
 from lips.evaluation.transport_evaluation import TransportEvaluation
