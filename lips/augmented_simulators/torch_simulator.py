@@ -65,6 +65,7 @@ class TorchSimulator(AugmentedSimulator):
         # scaler
         self.scaler = scaler() if scaler else None
         self._model = self.model(name, self.scaler, **kwargs)
+        print(type(self._model))
         self.params.update(self._model.params)
 
 
@@ -156,7 +157,7 @@ class TorchSimulator(AugmentedSimulator):
 
         for _, batch_ in enumerate(train_loader):
             architecture_type=self.params["architecture_type"]
-            if architecture_type == "Classical"
+            if architecture_type == "Classical":
                 data, target = batch_
                 loss_func = self._get_loss_func()
             elif architecture_type == "RNN":
@@ -174,7 +175,7 @@ class TorchSimulator(AugmentedSimulator):
             optimizer.step()
             total_loss += loss.item()*len(data)
             for metric in self.params["metrics"]:
-                if architecture_type == "Classical"
+                if architecture_type == "Classical":
                     metric_func = LOSSES[metric](reduction="mean")
                     metric_value = metric_func(prediction, target)
                     metric_value = metric_value.item()*len(data)
@@ -222,7 +223,7 @@ class TorchSimulator(AugmentedSimulator):
         with torch.no_grad():
             for _, batch_ in enumerate(val_loader):
                 architecture_type=self.params["architecture_type"]
-                if architecture_type == "Classical"
+                if architecture_type == "Classical":
                     data, target = batch_
                     loss_func = self._get_loss_func()
                 elif architecture_type == "RNN":
@@ -238,7 +239,7 @@ class TorchSimulator(AugmentedSimulator):
                 total_loss += loss.item()*len(data)
 
                 for metric in self.params["metrics"]:
-                    if architecture_type == "Classical"
+                    if architecture_type == "Classical":
                         metric_func = LOSSES[metric](reduction="mean")
                         metric_value = metric_func(prediction, target)
                         metric_value = metric_value.item()*len(data)
@@ -284,7 +285,7 @@ class TorchSimulator(AugmentedSimulator):
         with torch.no_grad():
             for _, batch_ in enumerate(test_loader):
                 architecture_type=self.params["architecture_type"]
-                if architecture_type == "Classical"
+                if architecture_type == "Classical":
                     data, target = batch_
                     loss_func = self._get_loss_func()
                 elif architecture_type == "RNN":
@@ -308,7 +309,7 @@ class TorchSimulator(AugmentedSimulator):
                 total_loss += loss.item()*len(data)
 
                 for metric in self.params["metrics"]:
-                    if architecture_type == "Classical"
+                    if architecture_type == "Classical":
                         metric_func = LOSSES[metric](reduction="mean")
                         metric_value = metric_func(prediction, target)
                         metric_value = metric_value.item()*len(data)

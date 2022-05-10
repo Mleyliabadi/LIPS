@@ -112,7 +112,7 @@ class TorchUnet(nn.Module):
         self.bench_config = ConfigManager(section_name=bench_config_name, path=bench_config_path)
         # The config file associoated to this model
         sim_config_name = sim_config_name if sim_config_name is not None else "DEFAULT"
-        sim_config_path_default = pathlib.Path(__file__).parent.parent / "configurations" / "torch_fc.ini"
+        sim_config_path_default = pathlib.Path(__file__).parent.parent / "configurations" / "torch_unet.ini"
         sim_config_path = sim_config_path if sim_config_path is not None else sim_config_path_default
         self.sim_config = ConfigManager(section_name=sim_config_name, path=sim_config_path)
         self.name = name if name is not None else self.sim_config.get_option("name")
@@ -121,6 +121,8 @@ class TorchUnet(nn.Module):
         # Logger
         self.log_path = log_path
         self.logger = CustomLogger(__class__.__name__, log_path).logger
+        self.params = self.sim_config.get_options_dict()
+        self.params.update(kwargs)
 
         self.bilinear = True
         self.n_channels = None if kwargs.get("input_size") is None else kwargs["input_size"]
