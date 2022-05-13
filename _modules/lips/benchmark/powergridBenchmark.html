@@ -97,7 +97,9 @@
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="c1">#import importlib</span>
 
 <span class="kn">import</span> <span class="nn">grid2op</span>
@@ -111,6 +113,7 @@
 <span class="kn">from</span> <span class="nn">..dataset.utils.powergrid_utils</span> <span class="kn">import</span> <span class="n">get_kwargs_simulator_scenario</span>
 <span class="kn">from</span> <span class="nn">..dataset.utils.powergrid_utils</span> <span class="kn">import</span> <span class="n">XDepthAgent</span><span class="p">,</span> <span class="n">get_action_list</span>
 <span class="kn">from</span> <span class="nn">..evaluation</span> <span class="kn">import</span> <span class="n">PowerGridEvaluation</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">NpEncoder</span>
 
 
 
@@ -301,6 +304,7 @@
                            <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
                            <span class="n">augmented_simulator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PhysicalSimulator</span><span class="p">,</span> <span class="n">AugmentedSimulator</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                            <span class="n">save_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">save_predictions</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;evaluate a trained augmented simulator on one or multiple test datasets</span>
 
@@ -312,6 +316,10 @@
 <span class="sd">            An instance of the class augmented simulator, by default None</span>
 <span class="sd">        save_path : Union[str, None], optional</span>
 <span class="sd">            the path that the evaluation results should be saved, by default None</span>
+<span class="sd">        save_predictions: bool</span>
+<span class="sd">            Whether to save the predictions made by an augmented simulator</span>
+<span class="sd">            The predictions will be saved at the same directory of the generated data</span>
+<span class="sd">            # TODO : to save predictions, the directory shoud look like ``benchmark_name\augmented_simulator.name\``</span>
 <span class="sd">        **kwargs: ``dict``</span>
 <span class="sd">            additional arguments that will be passed to the augmented simulator</span>
 <span class="sd">        Todo</span>
@@ -351,15 +359,24 @@
             <span class="c1"># call the evaluate simulator function of Benchmark class</span>
             <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aux_evaluate_on_single_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset_</span><span class="p">,</span>
                                                        <span class="n">augmented_simulator</span><span class="o">=</span><span class="n">augmented_simulator</span><span class="p">,</span>
-                                                       <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
+                                                       <span class="n">save_predictions</span><span class="o">=</span><span class="n">save_predictions</span><span class="p">,</span>
                                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">res</span><span class="p">[</span><span class="n">nm_</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">):</span>
+                <span class="n">save_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+            <span class="n">save_path</span> <span class="o">=</span> <span class="n">save_path</span> <span class="o">/</span> <span class="n">augmented_simulator</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">save_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">save_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">((</span><span class="n">save_path</span> <span class="o">/</span> <span class="s2">&quot;eval_res.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">res</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">NpEncoder</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">res</span></div>
 
     <span class="k">def</span> <span class="nf">_aux_evaluate_on_single_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                         <span class="n">dataset</span><span class="p">:</span> <span class="n">PowerGridDataSet</span><span class="p">,</span>
-                                        <span class="n">augmented_simulator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PhysicalSimulator</span><span class="p">,</span> <span class="n">AugmentedSimulator</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                                        <span class="n">save_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">augmented_simulator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PhysicalSimulator</span><span class="p">,</span> <span class="n">AugmentedSimulator</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">save_predictions</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Evaluate a single dataset</span>
 <span class="sd">        This function will evalute a simulator (physical or augmented) using various criteria predefined in evaluator object</span>
@@ -375,9 +392,9 @@
 <span class="sd">            batch_size used for inference, by default 32</span>
 <span class="sd">        active_flow : bool, optional</span>
 <span class="sd">            whether to compute KCL on active (True) or reactive (False) powers, by default True</span>
-<span class="sd">        save_path : Union[str, None], optional</span>
-<span class="sd">            if indicated the evaluation results will be saved to indicated path, by default None</span>
-
+<span class="sd">        save_predictions: bool</span>
+<span class="sd">            Whether to save the predictions made by an augmented simulator</span>
+<span class="sd">            The predictions will be saved at the same directory of the generated data</span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
@@ -399,9 +416,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
 
         <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">observations</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                                       <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">,</span>
-                                       <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span>
+                                       <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span>
                                        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_predictions</span><span class="p">:</span>
+            <span class="c1"># TODO : save the predicted variables here, they should be saved with the same format as the observations saved</span>
+            <span class="k">pass</span>
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="k">def</span> <span class="nf">_create_training_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
