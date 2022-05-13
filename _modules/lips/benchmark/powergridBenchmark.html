@@ -103,12 +103,13 @@
 <span class="kn">import</span> <span class="nn">grid2op</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">Benchmark</span>
-<span class="kn">from</span> <span class="nn">.utils.powergrid_utils</span> <span class="kn">import</span> <span class="n">get_kwargs_simulator_scenario</span><span class="p">,</span> <span class="n">XDepthAgent</span>
 <span class="kn">from</span> <span class="nn">..augmented_simulators</span> <span class="kn">import</span> <span class="n">AugmentedSimulator</span>
 <span class="kn">from</span> <span class="nn">..physical_simulator</span> <span class="kn">import</span> <span class="n">PhysicalSimulator</span>
 <span class="kn">from</span> <span class="nn">..physical_simulator</span> <span class="kn">import</span> <span class="n">Grid2opSimulator</span>
 <span class="kn">from</span> <span class="nn">..physical_simulator.dcApproximationAS</span> <span class="kn">import</span> <span class="n">DCApproximationAS</span>
 <span class="kn">from</span> <span class="nn">..dataset</span> <span class="kn">import</span> <span class="n">PowerGridDataSet</span>
+<span class="kn">from</span> <span class="nn">..dataset.utils.powergrid_utils</span> <span class="kn">import</span> <span class="n">get_kwargs_simulator_scenario</span>
+<span class="kn">from</span> <span class="nn">..dataset.utils.powergrid_utils</span> <span class="kn">import</span> <span class="n">XDepthAgent</span><span class="p">,</span> <span class="n">get_action_list</span>
 <span class="kn">from</span> <span class="nn">..evaluation</span> <span class="kn">import</span> <span class="n">PowerGridEvaluation</span>
 
 
@@ -411,8 +412,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_simulator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">training_simulator</span> <span class="o">=</span> <span class="n">Grid2opSimulator</span><span class="p">(</span><span class="n">get_kwargs_simulator_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">),</span>
                                                        <span class="n">initial_chronics_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_chronics_id</span><span class="p">,</span>
-                                                       <span class="c1"># i use 994 chronics out of the 904 for training</span>
-                                                       <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="s2">&quot;^((?!(.*9[0-9][0-9].*)).)*$&quot;</span>
+                                                       <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;chronics&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">)</span>
                                                        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fills_actor_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -423,46 +423,47 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">val_simulator</span> <span class="o">=</span> <span class="n">Grid2opSimulator</span><span class="p">(</span><span class="n">get_kwargs_simulator_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">),</span>
                                               <span class="n">initial_chronics_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_chronics_id</span><span class="p">,</span>
-                                              <span class="c1"># i use 50 full chronics for testing</span>
-                                              <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="s2">&quot;.*9[0-4][0-9].*&quot;</span><span class="p">)</span>
+                                              <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;chronics&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;val&quot;</span><span class="p">)</span>
+                                              <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">val_simulator</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val_env_seed</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">test_simulator</span> <span class="o">=</span> <span class="n">Grid2opSimulator</span><span class="p">(</span><span class="n">get_kwargs_simulator_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">),</span>
                                                <span class="n">initial_chronics_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_chronics_id</span><span class="p">,</span>
-                                               <span class="c1"># i use 25 full chronics for testing</span>
-                                               <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="s2">&quot;.*9[5-9][0-4].*&quot;</span><span class="p">)</span>
+                                               <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;chronics&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+                                               <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_simulator</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_env_seed</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_simulator</span> <span class="o">=</span> <span class="n">Grid2opSimulator</span><span class="p">(</span><span class="n">get_kwargs_simulator_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">),</span>
                                                         <span class="n">initial_chronics_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_chronics_id</span><span class="p">,</span>
-                                                        <span class="c1"># i use 25 full chronics for testing</span>
-                                                        <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="s2">&quot;.*9[5-9][5-9].*&quot;</span><span class="p">)</span>
+                                                        <span class="n">chronics_selected_regex</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;chronics&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_ood&quot;</span><span class="p">)</span>
+                                                        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_simulator</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_env_seed</span><span class="p">)</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        self.training_actor = self.utils.get_actor_training_scenario(self.training_simulator)</span>
-<span class="sd">        self.training_actor.seed(self.train_actor_seed)</span>
 
-<span class="sd">        self.val_actor = self.utils.get_actor_test_scenario(self.val_simulator)</span>
-<span class="sd">        self.val_actor.seed(self.val_actor_seed)</span>
-
-<span class="sd">        self.test_actor = self.utils.get_actor_test_scenario(self.test_simulator)</span>
-<span class="sd">        self.test_actor.seed(self.test_actor_seed)</span>
-
-<span class="sd">        self.test_ood_topo_actor = self.utils.get_actor_test_ood_topo_scenario(self.test_ood_topo_simulator)</span>
-<span class="sd">        self.test_ood_topo_actor.seed(self.test_ood_topo_actor_seed)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_topo_actions</span> <span class="o">=</span> <span class="n">get_action_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">training_actor</span> <span class="o">=</span> <span class="n">XDepthAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span>
-                                          <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;train&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">training_actor</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_actor_seed</span><span class="p">)</span>
+                                          <span class="n">all_topo_actions</span><span class="o">=</span><span class="n">all_topo_actions</span><span class="p">,</span>
+                                          <span class="n">reference_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reference_args&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                          <span class="n">scenario_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;train&quot;</span><span class="p">],</span>
+                                          <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">train_actor_seed</span><span class="p">,</span>
+                                          <span class="n">log_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">val_actor</span> <span class="o">=</span> <span class="n">XDepthAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span>
-                                     <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;test&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">val_actor</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val_actor_seed</span><span class="p">)</span>
+                                     <span class="n">all_topo_actions</span><span class="o">=</span><span class="n">all_topo_actions</span><span class="p">,</span>
+                                     <span class="n">reference_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reference_args&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                     <span class="n">scenario_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span>
+                                     <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_actor_seed</span><span class="p">,</span>
+                                     <span class="n">log_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_actor</span> <span class="o">=</span> <span class="n">XDepthAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span>
-                                      <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;test&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test_actor</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_actor_seed</span><span class="p">)</span>
+                                      <span class="n">all_topo_actions</span><span class="o">=</span><span class="n">all_topo_actions</span><span class="p">,</span>
+                                      <span class="n">reference_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reference_args&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                      <span class="n">scenario_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span>
+                                      <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_actor_seed</span><span class="p">,</span>
+                                      <span class="n">log_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_actor</span> <span class="o">=</span> <span class="n">XDepthAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span>
-                                               <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;test_ood&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_actor</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_actor_seed</span><span class="p">)</span></div>
+                                               <span class="n">all_topo_actions</span><span class="o">=</span><span class="n">all_topo_actions</span><span class="p">,</span>
+                                               <span class="n">reference_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reference_args&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                               <span class="n">scenario_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;dataset_create_params&quot;</span><span class="p">)[</span><span class="s2">&quot;test_ood&quot;</span><span class="p">],</span>
+                                               <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_actor_seed</span><span class="p">,</span>
+                                               <span class="n">log_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="get_env"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.get_env">[docs]</a><span class="k">def</span> <span class="nf">get_env</span><span class="p">(</span><span class="n">env_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Getter for the environment</span>
@@ -480,7 +481,7 @@
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">grid2op</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
-    <span class="n">env</span><span class="o">.</span><span class="n">deactivate_forecast</span><span class="p">()</span>
+    <span class="c1"># env.deactivate_forecast()</span>
     <span class="k">return</span> <span class="n">env</span></div>
 </pre></div>
 
