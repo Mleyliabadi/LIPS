@@ -88,7 +88,9 @@ def test_verify_voltage_equality():
     Verify if the voltage equality at bus is respected using real data
     """
     observations, _ = load_data()
-    config = ConfigManager(section_name="Benchmark3", path=None)
+    LIPS_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
+    CONFIG_PATH = LIPS_PATH / "configurations" / "powergrid" / "l2rpn_case14_sandbox.ini"
+    config = ConfigManager(section_name="Benchmark3", path=CONFIG_PATH)
     voltages, thetas = verify_voltage_at_bus(predictions=observations,
                                              observations=observations,
                                              config=config)
