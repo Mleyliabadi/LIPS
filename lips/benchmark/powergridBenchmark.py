@@ -281,14 +281,6 @@ class PowerGridBenchmark(Benchmark):
                                                        **kwargs)
             res[nm_] = copy.deepcopy(tmp)
 
-        if save_path:
-            if not isinstance(save_path, pathlib.Path):
-                save_path = pathlib.Path(save_path)
-            save_path = save_path / augmented_simulator.name
-            if not save_path.exists():
-                save_path.mkdir(parents=True, exist_ok=True)
-            with open((save_path / "eval_res.json"), "w", encoding="utf-8") as f:
-                json.dump(obj=res, fp=f, indent=4, sort_keys=True, cls=NpEncoder)
         return res
 
     def _aux_evaluate_on_single_dataset(self,
@@ -340,17 +332,24 @@ class PowerGridBenchmark(Benchmark):
                                        predictions=predictions
                                        )
 
-        if save_predictions:
-            if save_path:
-                if not isinstance(save_path, pathlib.Path):
-                    save_path = pathlib.Path(save_path)
-                save_path = save_path / augmented_simulator.name / "predictions" / dataset.name
-                if not save_path.exists():
-                    save_path.mkdir(parents=True, exist_ok=True)
+        if save_path:
+            if not isinstance(save_path, pathlib.Path):
+                save_path = pathlib.Path(save_path)
+            save_path = save_path / augmented_simulator.name / dataset.name
+            if save_path.exists():
+                self.logger.warning("Deleting path %s that might contain previous runs", save_path)
+                shutil.rmtree(save_path)
+            save_path.mkdir(parents=True, exist_ok=True)
+
+            with open((save_path / "eval_res.json"), "w", encoding="utf-8") as f:
+                json.dump(obj=res, fp=f, indent=4, sort_keys=True, cls=NpEncoder)
+            if save_predictions:
                 for attr_nm in predictions.keys():
                     np.savez_compressed(f"{os.path.join(save_path, attr_nm)}.npz", data=predictions[attr_nm])
-            else:
-                warnings.warn(message="You indicate to save the predictions, without providing a path. No predictions will be saved!")
+        elif save_predictions:
+            warnings.warn(message="You indicate to save the predictions, without providing a path. No predictions will be saved!")
+
+
         return res
 
     def _create_training_simulator(self):
