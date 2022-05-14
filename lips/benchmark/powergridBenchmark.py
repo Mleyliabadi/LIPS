@@ -17,8 +17,8 @@ import copy
 import json
 from typing import Union
 import pathlib
-#import importlib
 
+import numpy as np
 import grid2op
 
 from . import Benchmark
@@ -276,6 +276,7 @@ class PowerGridBenchmark(Benchmark):
             # call the evaluate simulator function of Benchmark class
             tmp = self._aux_evaluate_on_single_dataset(dataset=dataset_,
                                                        augmented_simulator=augmented_simulator,
+                                                       save_path=save_path,
                                                        save_predictions=save_predictions,
                                                        **kwargs)
             res[nm_] = copy.deepcopy(tmp)
@@ -293,6 +294,7 @@ class PowerGridBenchmark(Benchmark):
     def _aux_evaluate_on_single_dataset(self,
                                         dataset: PowerGridDataSet,
                                         augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None]=None,
+                                        save_path: Union[str, None]=None,
                                         save_predictions: bool=False,
                                         **kwargs) -> dict:
         """Evaluate a single dataset
@@ -309,6 +311,8 @@ class PowerGridBenchmark(Benchmark):
             batch_size used for inference, by default 32
         active_flow : bool, optional
             whether to compute KCL on active (True) or reactive (False) powers, by default True
+        save_path : Union[str, None], optional
+            the path where the predictions should be saved, by default None
         save_predictions: bool
             Whether to save the predictions made by an augmented simulator
             The predictions will be saved at the same directory of the generated data
@@ -337,8 +341,16 @@ class PowerGridBenchmark(Benchmark):
                                        )
 
         if save_predictions:
-            # TODO : save the predicted variables here, they should be saved with the same format as the observations saved
-            pass
+            if save_path:
+                if not isinstance(save_path, pathlib.Path):
+                    save_path = pathlib.Path(save_path)
+                save_path = save_path / augmented_simulator.name / "predictions" / dataset.name
+                if not save_path.exists():
+                    save_path.mkdir(parents=True, exist_ok=True)
+                for attr_nm in predictions.keys():
+                    np.savez_compressed(f"{os.path.join(save_path, attr_nm)}.npz", data=predictions[attr_nm])
+            else:
+                warnings.warn(message="You indicate to save the predictions, without providing a path. No predictions will be saved!")
         return res
 
     def _create_training_simulator(self):
