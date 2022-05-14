@@ -39,8 +39,8 @@ def test_loss_shapes():
     test the loss equation verification function
     """
     observations, predictions = load_data()
-    config = ConfigManager(section_name="Benchmark1", path=None)
-    verifications = physics_compliances.verify_loss(predictions, observations=observations, config=config)
+    tolerance = 0.04
+    verifications = physics_compliances.verify_loss(predictions, observations=observations, tolerance=tolerance)
     assert isinstance(verifications, dict)
     for key_, item_ in verifications.items():
         if isinstance(item_, Iterable):
@@ -63,10 +63,10 @@ def test_lce_shapes():
     test the law of conservation of energy function
     """
     observations, predictions = load_data()
-    config = ConfigManager(section_name="Benchmark1", path=None)
+    tolerance = 1e-3
     verifications = physics_compliances.verify_energy_conservation(predictions,
                                                                    observations=observations,
-                                                                   config=config)
+                                                                   tolerance=tolerance)
     assert isinstance(verifications, dict)
     for _, item_ in verifications.items():
         if isinstance(item_, Iterable):
