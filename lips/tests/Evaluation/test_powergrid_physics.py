@@ -89,7 +89,7 @@ def test_verify_voltage_equality():
     """
     observations, _ = load_data()
     LIPS_PATH = pathlib.Path(__file__).parent.parent.parent.parent.absolute()
-    CONFIG_PATH = LIPS_PATH / "configurations" / "powergrid" / "l2rpn_case14_sandbox.ini"
+    CONFIG_PATH = LIPS_PATH / "configurations" / "powergrid" / "benchmarks" / "l2rpn_case14_sandbox.ini"
     config = ConfigManager(section_name="Benchmark3", path=CONFIG_PATH)
     voltages, thetas = verify_voltage_at_bus(predictions=observations,
                                              observations=observations,
