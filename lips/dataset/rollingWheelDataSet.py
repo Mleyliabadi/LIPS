@@ -22,36 +22,60 @@ def Domain2DGridGenerator(origin,lenghts,sizes):
     lenght_x,lenght_y=lenghts
     nb_line,nb_column=sizes
     coordX,coordY=np.meshgrid(np.arange(origin_x,origin_x+lenght_x,lenght_x/nb_line),np.arange(origin_y,origin_y+lenght_y,lenght_y/nb_column))
-    gridSupport = np.vstack(list(zip(coordX.ravel(), coordY.ravel()))).transpose()
-    return gridSupport
+    grid_support = np.vstack(list(zip(coordX.ravel(), coordY.ravel()))).transpose()
+    return grid_support
 
 class DataSetInterpolatorOnGrid():
     """
     This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
     """
 
-    def __init__(self,simulator,dataset,gridSupport):
+    def __init__(self,simulator,dataset,grid_support):
         self.simulator=simulator
         self.dataset=dataset
-        self.gridSupport=gridSupport
-        self.interpolated_dataset=dict()
+        self.grid_support=grid_support
+        self.interpolated_dataset = dict()
+        self.distributed_inputs_on_grid = dict()
 
+    def generate(self,dofnum_by_field,path_out=None):
+        self.generate_interpolation_fields(dofnum_by_field,path_out=path_out)
+        self.distribute_data_on_grid()
+
+        if path_out is not None:
+            # I should save the data
+            self._save_internal_data(path_out)
+    
     def generate_interpolation_fields(self,dofnum_by_field,path_out=None):
         self._init_interpolation_fields(dofnum_by_field)
+
+        grid_support_domain=Domain2DGridGenerator(origin=self.grid_support["origin"],
+                                               lenghts=self.grid_support["lenghts"],
+                                               sizes=self.grid_support["sizes"])
 
         for dataIndex in range(len(self.dataset)):
             data_solver_obs=self.dataset.get_data(dataIndex)
             for field_name in dofnum_by_field.keys():
                 field=data_solver_obs[field_name]
-                self.interpolated_dataset[field_name][dataIndex]=GetfemInterpolationOnSupport(self.simulator,field,self.gridSupport)
+                self.interpolated_dataset[field_name][dataIndex]=GetfemInterpolationOnSupport(self.simulator,field,grid_support_domain)
 
-        if path_out is not None:
-            # I should save the data
-            self._save_internal_data(path_out)
+
+    def distribute_data_on_grid(self):
+        samples=self.dataset._inputs
+        fieldNum=[len(samples[0].keys()) for sample in samples]
+        if fieldNum.count(fieldNum[0]) != len(fieldNum):
+            raise RuntimeError("Samples do not have the same input parameters")
+        value_by_input_attrib = {attribName: np.array([sample[attribName] for sample in samples]) for attribName in samples[0]}
+
+        nx,ny=self.grid_support["sizes"]
+        for attrib_name,data in value_by_input_attrib.items():
+            data = np.repeat(data[:, np.newaxis], nx*ny, axis=1)
+            data = np.reshape(data,(data.shape[0],nx,ny))
+            self.distributed_inputs_on_grid[attrib_name]=data
 
     def _init_interpolation_fields(self,dofnum_by_field):
+        grid_shape=self.grid_support["sizes"]
         for field_name,dof_per_nodes in dofnum_by_field.items():
-            self.interpolated_dataset[field_name]=np.zeros((len(self.dataset),dof_per_nodes*self.gridSupport.shape[1]))
+            self.interpolated_dataset[field_name]=np.zeros((len(self.dataset),dof_per_nodes*grid_shape[0]*grid_shape[1]))
 
     def _save_internal_data(self, path_out):
         """save the self.data in a proper format"""
@@ -66,17 +90,10 @@ class DataSetInterpolatorOnGrid():
         os.mkdir(full_path_out)
 
         for field_name,data in self.interpolated_dataset.items():
+            print("outputs: ",data.shape)
             np.savez_compressed(f"{os.path.join(full_path_out, field_name)}Interpolated.npz", data=data)
 
-        samples=self.dataset._inputs
-
-        fieldNum=[len(samples[0].keys()) for sample in samples]
-        if fieldNum.count(fieldNum[0]) != len(fieldNum):
-            raise RuntimeError("Samples do not have the same input parameters")
-
-        value_by_input_attrib = {attribName: [sample[attribName] for sample in samples] for attribName in samples[0]}
-
-        for attrib_name,data in value_by_input_attrib.items():
+        for attrib_name,data in self.distributed_inputs_on_grid.items():
             np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=data)
 
 
@@ -309,7 +326,7 @@ class RollingWheelDataSet(DataSet):
             for el in attr_x:
                 if len(data[el].shape)==1:
                     data[el] = np.transpose(data[el].astype(np.float32)[np.newaxis])
-                    
+
             extract_x = np.concatenate([data[el].astype(np.float32) for el in attr_x], axis=1)
             extract_y = np.concatenate([data[el].astype(np.float32) for el in self._attr_y], axis=1)
             return extract_x, extract_y
@@ -360,9 +377,9 @@ if __name__ == '__main__':
     # print(rollingWheelDataSet.data)
 
     #Interpolation on grid
-    gridSupport=Domain2DGridGenerator(origin=(-16.0,0.0),lenghts=(32.0,32.0),sizes=(64,64))
+    grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(4,4)}
     myTransformer=DataSetInterpolatorOnGrid(simulator=training_simulator,
                                             dataset=rollingWheelDataSet,
-                                            gridSupport=gridSupport)
+                                            grid_support=grid_support)
     dofnum_by_field={PFN.displacement:2}
-    myTransformer.generate_interpolation_fields(dofnum_by_field=dofnum_by_field,path_out="wheel_interpolated")
+    myTransformer.generate(dofnum_by_field=dofnum_by_field,path_out="wheel_interpolated")
