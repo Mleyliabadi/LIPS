@@ -6,6 +6,7 @@ import abc
 import numpy as np
 import csv
 import pyDOE2 as doe
+import os
 
 class Sampler(metaclass=abc.ABCMeta):
     def __init__(self,space_params):
@@ -29,12 +30,10 @@ class Sampler(metaclass=abc.ABCMeta):
         if fieldNum.count(fieldNum[0]) != len(fieldNum):
             raise RuntimeError("Samples do not have the same input parameters")
 
-        with open(path_out, mode='w') as csv_file:
-            fieldnames = list(samples[0].keys())
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            writer.writeheader()
-            for paramsSet in samples:
-                writer.writerow(paramsSet)
+        value_by_input_attrib = {attribName: [sample[attribName] for sample in samples] for attribName in samples[0]}
+        for attrib_name,data in value_by_input_attrib.items():
+            np.savez_compressed(f"{os.path.join(path_out, attrib_name)}.npz", data=data)
+
 
     def __str__(self): 
         sInfo="Type of sampling: "+self.sampling_name+"\n"

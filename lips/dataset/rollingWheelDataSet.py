@@ -14,6 +14,8 @@ from tqdm import tqdm  # TODO remove for final push
 from lips.dataset.dataSet import DataSet
 from lips.logger import CustomLogger
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import GetfemInterpolationOnSupport
+from lips.config.configmanager import ConfigManager
+
 
 def Domain2DGridGenerator(origin,lenghts,sizes):
     origin_x,origin_y=origin
@@ -63,22 +65,20 @@ class DataSetInterpolatorOnGrid():
 
         os.mkdir(full_path_out)
 
-        for field_name in self.interpolated_dataset.keys():
-            np.savez_compressed(f"{os.path.join(full_path_out, field_name)}Interpolated.npz", data=self.interpolated_dataset[field_name])
+        for field_name,data in self.interpolated_dataset.items():
+            np.savez_compressed(f"{os.path.join(full_path_out, field_name)}Interpolated.npz", data=data)
 
         samples=self.dataset._inputs
+
         fieldNum=[len(samples[0].keys()) for sample in samples]
         if fieldNum.count(fieldNum[0]) != len(fieldNum):
             raise RuntimeError("Samples do not have the same input parameters")
 
-        full_path_samples_out=os.path.join(full_path_out, "inputs.data")
+        value_by_input_attrib = {attribName: [sample[attribName] for sample in samples] for attribName in samples[0]}
 
-        with open(full_path_samples_out, mode='w') as csv_file:
-            fieldnames = list(samples[0].keys())
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            writer.writeheader()
-            for paramsSet in samples:
-                writer.writerow(paramsSet)
+        for attrib_name,data in value_by_input_attrib.items():
+            np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=data)
+
 
 class RollingWheelDataSet(DataSet):
     """
@@ -88,6 +88,7 @@ class RollingWheelDataSet(DataSet):
     def __init__(self,
                  name="train",
                  attr_names=("disp",),
+                 config: Union[ConfigManager, None]=None,
                  log_path: Union[str, None]=None
                  ):
         DataSet.__init__(self, name=name)
@@ -97,6 +98,20 @@ class RollingWheelDataSet(DataSet):
 
         # logger
         self.logger = CustomLogger(__class__.__name__, log_path).logger
+
+        if config is not None:
+            self.config = config
+        else:
+            self.config = ConfigManager()
+
+        # number of dimension of x and y (number of columns)
+        self._size_x = None
+        self._size_y = None
+        self._sizes_x = None  # dimension of each variable
+        self._sizes_y = None  # dimension of each variable
+        self._attr_x = self.config.get_option("attr_x")
+        self._attr_y = self.config.get_option("attr_y")
+
 
     def generate(self,
                  simulator: "GetfemSimulator",
@@ -156,8 +171,7 @@ class RollingWheelDataSet(DataSet):
             # I should save the data
             self._save_internal_data(path_out)
             full_path_out = os.path.join(os.path.abspath(path_out), self.name)
-            full_path_samples_out=os.path.join(full_path_out, "inputs.data")
-            actor.save(path_out=full_path_samples_out)
+            actor.save(path_out=full_path_out)
 
 
     def _init_store_data(self,simulator,nb_samples):
@@ -222,6 +236,25 @@ class RollingWheelDataSet(DataSet):
             self.data[attr_nm] = np.load(path_this_array)["data"]
             self.size = self.data[attr_nm].shape[0]
 
+    def _infer_sizes(self):
+        data = copy.deepcopy(self.data)
+        self._sizes_x = np.array([data[el].shape[1] for el in self._attr_x], dtype=int)
+        self._sizes_y = np.array([data[el].shape[1] for el in self._attr_y], dtype=int)
+        self._size_x = np.sum(self._sizes_x)
+        self._size_y = np.sum(self._sizes_y)
+
+    def get_sizes(self):
+        """Get the sizes of the dataset
+
+        Returns
+        -------
+        tuple
+            A tuple of size (nb_sample, size_x, size_y)
+
+        """
+        return self._size_x, self._size_y
+
+
     def get_data(self, index):
         """
         This function returns the data in the data that match the index `index`
@@ -255,6 +288,35 @@ class RollingWheelDataSet(DataSet):
             res[el][:] = self.data[el][index, :]
 
         return res
+
+    def extract_data(self, concat: bool=True) -> tuple:
+        """extract the x and y data from the dataset
+
+        Parameters
+        ----------
+        concat : ``bool``
+            If True, the data will be concatenated in a single array.
+        Returns
+        -------
+        tuple
+            extracted inputs and outputs
+        """
+        # init the sizes and everything
+        data = copy.deepcopy(self.data)
+
+        if concat:
+            attr_x = self._attr_x
+            for el in attr_x:
+                if len(data[el].shape)==1:
+                    data[el] = np.transpose(data[el].astype(np.float32)[np.newaxis])
+                    
+            extract_x = np.concatenate([data[el].astype(np.float32) for el in attr_x], axis=1)
+            extract_y = np.concatenate([data[el].astype(np.float32) for el in self._attr_y], axis=1)
+            return extract_x, extract_y
+        else:
+            extract_x = [data[el].astype(np.float32) for el in self._attr_x]
+            extract_y = [data[el].astype(np.float32) for el in self._attr_y]
+            return extract_x, extract_y
 
 if __name__ == '__main__':
     import math
