@@ -83,32 +83,31 @@ class WheelBenchmark(Benchmark):
 
         self.initial_chronics_id = initial_chronics_id
         # concatenate all the variables for data generation
-        print(self.config.get_option("attr_x"))
-        print(self.config.get_option("attr_y"))
-        attr_names = self.config.get_option("attr_y")
+        attr_names = self.config.get_option("attr_x")\
+                     +self.config.get_option("attr_y")
 
 
         self.train_dataset = RollingWheelDataSet("train",
                                               attr_names=attr_names,
-                                              # config=self.config,
+                                              config=self.config,
                                               log_path=log_path
                                               )
 
         self.val_dataset = RollingWheelDataSet("val",
                                             attr_names=attr_names,
-                                            # config=self.config,
+                                            config=self.config,
                                             log_path=log_path
                                             )
 
         self._test_dataset = RollingWheelDataSet("test",
                                               attr_names=attr_names,
-                                              # config=self.config,
+                                              config=self.config,
                                               log_path=log_path
                                               )
 
         self._test_ood_topo_dataset = RollingWheelDataSet("test_ood_topo",
                                                        attr_names=attr_names,
-                                                       # config=self.config,
+                                                       config=self.config,
                                                        log_path=log_path
                                                        )
 
@@ -127,7 +126,6 @@ class WheelBenchmark(Benchmark):
         self.train_dataset.load(path=self.path_datasets)
         self.val_dataset.load(path=self.path_datasets)
         self._test_dataset.load(path=self.path_datasets)
-        self._test_ood_topo_dataset.load(path=self.path_datasets)
         self.is_loaded = True
 
     def generate(self, nb_sample_train: int, nb_sample_val: int,
@@ -162,11 +160,6 @@ class WheelBenchmark(Benchmark):
                                     path_out=self.path_datasets,
                                     nb_samples=nb_sample_test
                                     )
-        self._test_ood_topo_dataset.generate(simulator=self.test_ood_topo_simulator,
-                                             actor=self.test_ood_topo_actor,
-                                             path_out=self.path_datasets,
-                                             nb_samples=nb_sample_test_ood_topo
-                                             )
 
     def evaluate_simulator(self,
                            dataset: str = "all",
