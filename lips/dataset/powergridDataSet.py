@@ -109,6 +109,7 @@ class PowerGridDataSet(DataSet):
                  actor: Union[BaseAgent, None],
                  path_out: Union[str, None],
                  nb_samples: int,
+                 nb_samples_per_chronic: int = 288, # 1 day
                  simulator_seed: Union[None, int] = None,
                  actor_seed: Union[None, int] = None):
         """Generate a powergrid dataset
@@ -162,12 +163,23 @@ class PowerGridDataSet(DataSet):
             array_ = getattr(init_state, attr_nm)
             self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
 
-        for ds_size in tqdm(range(nb_samples), desc=self.name):
-            simulator.modify_state(actor)
-            current_state, extra_info = simulator.get_state()
-            self._store_obs(ds_size, current_state)
-            #self._store_theta(ds_size, current_theta)
-
+        #for ds_size in tqdm(range(nb_samples), desc=self.name):
+        ds_size = 0
+        pbar = tqdm(total = nb_samples)
+        while ds_size < nb_samples:
+            simulator.sample_chronics()
+            nb_steps = 0
+            while (nb_steps < nb_samples_per_chronic):
+                simulator.modify_state(actor)
+                current_state, extra_info = simulator.get_state()
+                self._store_obs(ds_size, current_state)
+                nb_steps += 1
+                ds_size += 1
+                pbar.update(1)
+                if ds_size >= nb_samples:
+                    break
+                #self._store_theta(ds_size, current_theta)
+        pbar.close()
         self.size = nb_samples
         self._init_sample()
         self._infer_sizes()
