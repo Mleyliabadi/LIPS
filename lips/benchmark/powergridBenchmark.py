@@ -180,7 +180,8 @@ class PowerGridBenchmark(Benchmark):
         self.is_loaded = True
 
     def generate(self, nb_sample_train: int, nb_sample_val: int,
-                 nb_sample_test: int, nb_sample_test_ood_topo: int):
+                 nb_sample_test: int, nb_sample_test_ood_topo: int,
+                 nb_samples_per_chronic: int=288):
         """
         generate the different datasets required for the benchmark
         """
@@ -199,22 +200,26 @@ class PowerGridBenchmark(Benchmark):
         self.train_dataset.generate(simulator=self.training_simulator,
                                     actor=self.training_actor,
                                     path_out=self.path_datasets,
-                                    nb_samples=nb_sample_train
+                                    nb_samples=nb_sample_train,
+                                    nb_samples_per_chronic=nb_samples_per_chronic
                                     )
         self.val_dataset.generate(simulator=self.val_simulator,
                                   actor=self.val_actor,
                                   path_out=self.path_datasets,
-                                  nb_samples=nb_sample_val
+                                  nb_samples=nb_sample_val,
+                                  nb_samples_per_chronic=nb_samples_per_chronic
                                   )
         self._test_dataset.generate(simulator=self.test_simulator,
                                     actor=self.test_actor,
                                     path_out=self.path_datasets,
-                                    nb_samples=nb_sample_test
+                                    nb_samples=nb_sample_test,
+                                    nb_samples_per_chronic=nb_samples_per_chronic
                                     )
         self._test_ood_topo_dataset.generate(simulator=self.test_ood_topo_simulator,
                                              actor=self.test_ood_topo_actor,
                                              path_out=self.path_datasets,
-                                             nb_samples=nb_sample_test_ood_topo
+                                             nb_samples=nb_sample_test_ood_topo,
+                                             nb_samples_per_chronic=nb_samples_per_chronic
                                              )
 
     def evaluate_simulator(self,
