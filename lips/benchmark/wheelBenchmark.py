@@ -17,7 +17,7 @@ import copy
 from typing import Union
 import importlib
 
-#from lips.benchmark import Benchmark
+from lips.benchmark import Benchmark
 # from .utils.powergrid_utils import get_kwargs_simulator_scenario
 
 from lips.evaluation.transport_evaluation import TransportEvaluation
@@ -26,7 +26,7 @@ from lips.augmented_simulators.augmented_simulator import AugmentedSimulator
 from lips.dataset.rollingWheelDataSet import RollingWheelDataSet
 
 
-class WheelBenchmark():
+class WheelBenchmark(Benchmark):
     def __init__(self,
                  benchmark_path: str,
                  config_path: Union[str, None]=None,
@@ -56,17 +56,10 @@ class WheelBenchmark():
         self.is_loaded=False
         # TODO : it should be reset if the config file is modified on the fly
         if evaluation is None:
-            self.evaluation = TransportEvaluation.from_benchmark(self)
+            myEval=TransportEvaluation()
+            self.evaluation = myEval.from_benchmark(benchmark=self)
 
-        # importing the right module from which the scenarios and actors could be used
-        if self.config.get_option("utils_lib") is not None:
-            try:
-                module_name = self.config.get_option("utils_lib")
-                module = ".".join(("lips", "benchmark", "utils", module_name))
-                self.utils = importlib.import_module(module)
-            except ImportError as error:
-                self.logger.error("The module %s could not be accessed! %s", module_name, error)
-
+        # print(self.config.get_options_dict())
         self.env_name = self.config.get_option("env_name")
         self.training_simulator = None
         self.val_simulator = None
@@ -90,32 +83,32 @@ class WheelBenchmark():
 
         self.initial_chronics_id = initial_chronics_id
         # concatenate all the variables for data generation
-        attr_names = self.config.get_option("attr_x") + \
-                     self.config.get_option("attr_tau") + \
-                     self.config.get_option("attr_y")
+        print(self.config.get_option("attr_x"))
+        print(self.config.get_option("attr_y"))
+        attr_names = self.config.get_option("attr_y")
 
 
         self.train_dataset = RollingWheelDataSet("train",
                                               attr_names=attr_names,
-                                              config=self.config,
+                                              # config=self.config,
                                               log_path=log_path
                                               )
 
         self.val_dataset = RollingWheelDataSet("val",
                                             attr_names=attr_names,
-                                            config=self.config,
+                                            # config=self.config,
                                             log_path=log_path
                                             )
 
         self._test_dataset = RollingWheelDataSet("test",
                                               attr_names=attr_names,
-                                              config=self.config,
+                                              # config=self.config,
                                               log_path=log_path
                                               )
 
         self._test_ood_topo_dataset = RollingWheelDataSet("test_ood_topo",
                                                        attr_names=attr_names,
-                                                       config=self.config,
+                                                       # config=self.config,
                                                        log_path=log_path
                                                        )
 
