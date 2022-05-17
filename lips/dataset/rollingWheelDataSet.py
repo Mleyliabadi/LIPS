@@ -48,15 +48,21 @@ class DataSetInterpolatorOnGrid():
     def generate_interpolation_fields(self,dofnum_by_field,path_out=None):
         self._init_interpolation_fields(dofnum_by_field)
 
+        grid_shape=self.grid_support["sizes"]
         grid_support_domain=Domain2DGridGenerator(origin=self.grid_support["origin"],
                                                lenghts=self.grid_support["lenghts"],
-                                               sizes=self.grid_support["sizes"])
+                                               sizes=grid_shape)
 
         for dataIndex in range(len(self.dataset)):
             data_solver_obs=self.dataset.get_data(dataIndex)
-            for field_name in dofnum_by_field.keys():
-                field=data_solver_obs[field_name]
-                self.interpolated_dataset[field_name][dataIndex]=GetfemInterpolationOnSupport(self.simulator,field,grid_support_domain)
+            for field_name,dofnum in dofnum_by_field.items():
+                single_field=np.zeros((dofnum,grid_shape[0],grid_shape[1]))
+                original_field=data_solver_obs[field_name]
+                interpolated_field=GetfemInterpolationOnSupport(self.simulator,original_field,grid_support_domain)
+                for dof_index in range(dofnum):
+                    intermediate_field=interpolated_field[dof_index::dofnum]
+                    single_field[dof_index]=intermediate_field.reshape((grid_shape[0],grid_shape[1]))
+                self.interpolated_dataset[field_name][dataIndex]=single_field
 
 
     def distribute_data_on_grid(self):
@@ -75,7 +81,7 @@ class DataSetInterpolatorOnGrid():
     def _init_interpolation_fields(self,dofnum_by_field):
         grid_shape=self.grid_support["sizes"]
         for field_name,dof_per_nodes in dofnum_by_field.items():
-            self.interpolated_dataset[field_name]=np.zeros((len(self.dataset),dof_per_nodes*grid_shape[0]*grid_shape[1]))
+            self.interpolated_dataset[field_name]=np.zeros((len(self.dataset),dof_per_nodes,grid_shape[0],grid_shape[1]))
 
     def _save_internal_data(self, path_out):
         """save the self.data in a proper format"""
