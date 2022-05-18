@@ -22,8 +22,8 @@ def Domain2DGridGenerator(origin,lenghts,sizes):
     lenght_x,lenght_y=lenghts
     nb_line,nb_column=sizes
     coordX,coordY=np.meshgrid(np.arange(origin_x,origin_x+lenght_x,lenght_x/nb_line),np.arange(origin_y,origin_y+lenght_y,lenght_y/nb_column))
-    grid_support = np.vstack(list(zip(coordX.ravel(), coordY.ravel()))).transpose()
-    return grid_support
+    grid_support_points = np.vstack(list(zip(coordX.ravel(), coordY.ravel()))).transpose()
+    return grid_support_points
 
 class DataSetInterpolatorOnGrid():
     """
@@ -49,7 +49,7 @@ class DataSetInterpolatorOnGrid():
         self._init_interpolation_fields(dofnum_by_field)
 
         grid_shape=self.grid_support["sizes"]
-        grid_support_domain=Domain2DGridGenerator(origin=self.grid_support["origin"],
+        grid_support_points=Domain2DGridGenerator(origin=self.grid_support["origin"],
                                                lenghts=self.grid_support["lenghts"],
                                                sizes=grid_shape)
 
@@ -58,7 +58,7 @@ class DataSetInterpolatorOnGrid():
             for field_name,dofnum in dofnum_by_field.items():
                 single_field=np.zeros((dofnum,grid_shape[0],grid_shape[1]))
                 original_field=data_solver_obs[field_name]
-                interpolated_field=GetfemInterpolationOnSupport(self.simulator,original_field,grid_support_domain)
+                interpolated_field=GetfemInterpolationOnSupport(self.simulator,original_field,grid_support_points)
                 for dof_index in range(dofnum):
                     intermediate_field=interpolated_field[dof_index::dofnum]
                     single_field[dof_index]=intermediate_field.reshape((grid_shape[0],grid_shape[1]))
@@ -96,7 +96,6 @@ class DataSetInterpolatorOnGrid():
         os.mkdir(full_path_out)
 
         for field_name,data in self.interpolated_dataset.items():
-            print("outputs: ",data.shape)
             np.savez_compressed(f"{os.path.join(full_path_out, field_name)}Interpolated.npz", data=data)
 
         for attrib_name,data in self.distributed_inputs_on_grid.items():
@@ -139,8 +138,8 @@ class RollingWheelDataSet(DataSet):
     def generate(self,
                  simulator: "GetfemSimulator",
                  actor,
-                 path_out,
-                 nb_samples,
+                 nb_samples: int,
+                 path_out: Union[str, None]= None,
                  simulator_seed: Union[None, int] = None,
                  actor_seed: Union[None, int] = None):
         """
@@ -328,12 +327,7 @@ class RollingWheelDataSet(DataSet):
         data = copy.deepcopy(self.data)
 
         if concat:
-            attr_x = self._attr_x
-            for el in attr_x:
-                if len(data[el].shape)==1:
-                    data[el] = np.transpose(data[el].astype(np.float32)[np.newaxis])
-
-            extract_x = np.concatenate([data[el].astype(np.float32) for el in attr_x], axis=1)
+            extract_x = np.concatenate([data[el].astype(np.float32) for el in self._attr_x], axis=1)
             extract_y = np.concatenate([data[el].astype(np.float32) for el in self._attr_y], axis=1)
             return extract_x, extract_y
         else:
@@ -376,14 +370,14 @@ if __name__ == '__main__':
     rollingWheelDataSet.generate(simulator=training_simulator,
                                     actor=training_actor,
                                     path_out="WheelDir",
-                                    nb_samples=3,
+                                    nb_samples=5,
                                     actor_seed=42
                                     )
     # print(rollingWheelDataSet.get_data(index=0))
     # print(rollingWheelDataSet.data)
 
     #Interpolation on grid
-    grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(4,4)}
+    grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(16,16)}
     myTransformer=DataSetInterpolatorOnGrid(simulator=training_simulator,
                                             dataset=rollingWheelDataSet,
                                             grid_support=grid_support)
