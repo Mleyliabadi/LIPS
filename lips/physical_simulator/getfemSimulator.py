@@ -32,6 +32,9 @@ class GetfemSimulator(PhysicalSimulator):
     def get_variable_value(self,field_name):
         return self._simulator.GetVariableValue(field_name)
 
+    def get_solverOrder_positions(self):
+        return self._simulator.GetSolverOrderPosition()
+
     def get_state(self):
         """
         TODO
