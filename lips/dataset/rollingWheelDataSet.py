@@ -325,15 +325,17 @@ class RollingWheelDataSet(DataSet):
         """
         # init the sizes and everything
         data = copy.deepcopy(self.data)
+        extract_x = [data[el].astype(np.float32) for el in self._attr_x]
+        extract_y = [data[el].astype(np.float32) for el in self._attr_y]
 
         if concat:
-            extract_x = np.concatenate([data[el].astype(np.float32) for el in self._attr_x], axis=1)
+            nb_x_var_axis=len(data[self._attr_x[0]].shape)
+            extract_x = np.stack([data[el].astype(np.float32) for el in self._attr_x], axis=nb_x_var_axis)
+            axis_indexes=list(range(nb_x_var_axis+1))
+            new_axis_indexes=tuple([axis_indexes[0]]+[axis_indexes[-1]]+axis_indexes[1:len(axis_indexes)-1])
+            extract_x=np.transpose(extract_x,new_axis_indexes)
             extract_y = np.concatenate([data[el].astype(np.float32) for el in self._attr_y], axis=1)
-            return extract_x, extract_y
-        else:
-            extract_x = [data[el].astype(np.float32) for el in self._attr_x]
-            extract_y = [data[el].astype(np.float32) for el in self._attr_y]
-            return extract_x, extract_y
+        return extract_x, extract_y
 
 if __name__ == '__main__':
     import math

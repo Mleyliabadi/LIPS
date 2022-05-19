@@ -125,8 +125,9 @@ class TorchUnet(nn.Module):
         self.params.update(kwargs)
 
         self.bilinear = True
-        self.n_channels = None if kwargs.get("input_size") is None else kwargs["input_size"]
-        self.n_classes = None if kwargs.get("output_size") is None else kwargs["output_size"]
+
+        self.n_channels = self.params["input_channel_size"]
+        self.n_classes = self.params["output_channel_size"]
 
 
     def build_model(self):
@@ -138,10 +139,10 @@ class TorchUnet(nn.Module):
         self.down3 = Down(256, 512)
         factor = 2 if self.bilinear else 1
         self.down4 = Down(512, 1024 // factor)
-        self.up1 = Up(1024, 512 // factor, bilinear)
-        self.up2 = Up(512, 256 // factor, bilinear)
-        self.up3 = Up(256, 128 // factor, bilinear)
-        self.up4 = Up(128, 64, bilinear)
+        self.up1 = Up(1024, 512 // factor, self.bilinear)
+        self.up2 = Up(512, 256 // factor, self.bilinear)
+        self.up3 = Up(256, 128 // factor, self.bilinear)
+        self.up4 = Up(128, 64, self.bilinear)
         self.outc = OutConv(64, self.n_classes)
 
     def forward(self, x):

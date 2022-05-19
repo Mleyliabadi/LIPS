@@ -79,8 +79,8 @@ class StandardScalerPerChannel():
 
     def fit_transform(self, x, y):
         self.fit(x, y)
-        transformed_x, transformed_x=self.transform(x,y)
-        return transformed_x, transformed_x
+        transformed_x, transformed_y=self.transform(x,y)
+        return transformed_x, transformed_y
 
     def inverse_transform(self, y):
         shapeBychannel_y=y.shape[:self.channel_index_y]+y.shape[self.channel_index_y+1:]
@@ -105,6 +105,8 @@ if __name__ =="__main__":
 
     myScaler=StandardScalerPerChannel()
     transformed_x, transformed_y=myScaler.fit_transform(x=featuresRandom, y=labelsRandom)
+    assert transformed_x.shape==featuresRandom.shape
+    assert transformed_y.shape==labelsRandom.shape
 
     myOtherScaler=StandardScalerPerChannel()
     double_transformed_x,double_transformed_y=myOtherScaler.fit_transform(x=transformed_x, y=transformed_y)
