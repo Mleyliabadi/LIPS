@@ -330,11 +330,7 @@ class RollingWheelDataSet(DataSet):
         extract_y = [data[el].astype(np.float32) for el in self._attr_y]
 
         if concat:
-            nb_x_var_axis=len(data[self._attr_x[0]].shape)
-            extract_x = np.stack([data[el].astype(np.float32) for el in self._attr_x], axis=nb_x_var_axis)
-            axis_indexes=list(range(nb_x_var_axis+1))
-            new_axis_indexes=tuple([axis_indexes[0]]+[axis_indexes[-1]]+axis_indexes[1:len(axis_indexes)-1])
-            extract_x=np.transpose(extract_x,new_axis_indexes)
+            extract_x = np.concatenate([data[el].astype(np.float32) for el in self._attr_x], axis=1)
             extract_y = np.concatenate([data[el].astype(np.float32) for el in self._attr_y], axis=1)
         return extract_x, extract_y
 
