@@ -180,12 +180,29 @@ class TorchUnet(nn.Module):
         if training:
             self._infer_size(dataset)
             batch_size = self.params["train_batch_size"]
-            extract_x, extract_y = dataset.extract_data()
+            extract_x, extract_y = dataset.extract_data(concat=False)
+
+            nb_x_var_axis=len(dataset.data[dataset._attr_x[0]].shape)
+            extract_x = np.stack(extract_x, axis=nb_x_var_axis)
+            axis_indexes=list(range(nb_x_var_axis+1))
+            new_axis_indexes=tuple([axis_indexes[0]]+[axis_indexes[-1]]+axis_indexes[1:len(axis_indexes)-1])
+            extract_x=np.transpose(extract_x,new_axis_indexes)
+            extract_y = np.concatenate(extract_y, axis=1)
+
             if self.scaler is not None:
                 extract_x, extract_y = self.scaler.fit_transform(extract_x, extract_y)
         else:
             batch_size = self.params["eval_batch_size"]
-            extract_x, extract_y = dataset.extract_data()
+            extract_x, extract_y = dataset.extract_data(concat=False)
+
+            nb_x_var_axis=len(dataset.data[dataset._attr_x[0]].shape)
+            extract_x = np.stack(extract_x, axis=nb_x_var_axis)
+            axis_indexes=list(range(nb_x_var_axis+1))
+            new_axis_indexes=tuple([axis_indexes[0]]+[axis_indexes[-1]]+axis_indexes[1:len(axis_indexes)-1])
+            extract_x=np.transpose(extract_x,new_axis_indexes)
+            extract_y = np.concatenate(extract_y, axis=1)
+
+
             if self.scaler is not None:
                 extract_x, extract_y = self.scaler.transform(extract_x, extract_y)
 
