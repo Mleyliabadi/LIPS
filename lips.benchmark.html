@@ -47,7 +47,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">lips.benchmark package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-lips.benchmark.Benchmark">lips.benchmark.Benchmark module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#lips-benchmark-powergridbenchmark-module">lips.benchmark.powergridBenchmark module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lips.benchmark.powergridBenchmark">lips.benchmark.powergridBenchmark module</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lips.config.html">lips.config package</a></li>
@@ -510,8 +510,155 @@ overrides the normal algorithm (and the outcome is cached).</p>
 </dd></dl>
 
 </section>
-<section id="lips-benchmark-powergridbenchmark-module">
-<h2>lips.benchmark.powergridBenchmark module<a class="headerlink" href="#lips-benchmark-powergridbenchmark-module" title="Permalink to this headline"></a></h2>
+<section id="module-lips.benchmark.powergridBenchmark">
+<span id="lips-benchmark-powergridbenchmark-module"></span><h2>lips.benchmark.powergridBenchmark module<a class="headerlink" href="#module-lips.benchmark.powergridBenchmark" title="Permalink to this headline"></a></h2>
+<dl class="simple">
+<dt>Licence:</dt><dd><p>Copyright (c) 2021, IRT SystemX (<a class="reference external" href="https://www.irt-systemx.fr/en/">https://www.irt-systemx.fr/en/</a>)
+See AUTHORS.txt
+This Source Code Form is subject to the terms of the Mozilla Public License, version 2.0.
+If a copy of the Mozilla Public License, version 2.0 was not distributed with this file,
+you can obtain one at <a class="reference external" href="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</a>.
+SPDX-License-Identifier: MPL-2.0
+This file is part of LIPS, LIPS is a python platform for power networks benchmarking</p>
+</dd>
+</dl>
+<p><strong>Classes:</strong></p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark" title="lips.benchmark.powergridBenchmark.PowerGridBenchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PowerGridBenchmark</span></code></a>(benchmark_path[, ...])</p></td>
+<td><p>PowerGrid Benchmark class</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Functions:</strong></p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.benchmark.powergridBenchmark.get_env" title="lips.benchmark.powergridBenchmark.get_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_env</span></code></a>(env_kwargs)</p></td>
+<td><p>Getter for the environment</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="lips.benchmark.powergridBenchmark.PowerGridBenchmark">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lips.benchmark.powergridBenchmark.</span></span><span class="sig-name descname"><span class="pre">PowerGridBenchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">benchmark_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Benchmark1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_data_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="lips.evaluation.html#lips.evaluation.powergrid_evaluation.PowerGridEvaluation" title="lips.evaluation.powergrid_evaluation.PowerGridEvaluation"><span class="pre">lips.evaluation.powergrid_evaluation.PowerGridEvaluation</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_env_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_env_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_env_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_ood_topo_env_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_chronics_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_actor_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_actor_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_actor_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_ood_topo_actor_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/benchmark/powergridBenchmark.html#PowerGridBenchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lips.benchmark.Benchmark" title="lips.benchmark.benchmark.Benchmark"><code class="xref py py-class docutils literal notranslate"><span class="pre">lips.benchmark.benchmark.Benchmark</span></code></a></p>
+<p>PowerGrid Benchmark class</p>
+<p>This class allows to benchmark a power grid scenario which are defined in a config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>benchmark_path</strong> (<code class="docutils literal notranslate"><span class="pre">str</span></code>) – path to the benchmark</p></li>
+<li><p><strong>config_path</strong> (Union[<code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>], optional) – path to the configuration file. If config_path is <code class="docutils literal notranslate"><span class="pre">None</span></code>, the default config file
+present in config module will be used by using the benchmark_name as the section, by default None</p></li>
+<li><p><strong>benchmark_name</strong> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional) – the benchmark name which is used in turn as the config section, by default “Benchmark1”</p></li>
+<li><p><strong>load_data_set</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, optional) – whether to load the already generated datasets, by default False</p></li>
+<li><p><strong>evaluation</strong> (Union[<code class="docutils literal notranslate"><span class="pre">PowerGridEvaluation</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>], optional) – a <code class="docutils literal notranslate"><span class="pre">PowerGridEvaluation</span></code> instance. If not indicated, the benchmark creates its
+own evaluation instance using appropriate config, by default None</p></li>
+<li><p><strong>log_path</strong> (Union[<code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>], optional) – path to the logs, by default None</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>Add all the seeds into the config file</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>An independent class for each benchmark is maybe a better idea.
+This class can be served as the base class for powergrid and a specific class for each benchmark
+can extend this class.</p>
+</div>
+<p><strong>Methods:</strong></p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark.load" title="lips.benchmark.powergridBenchmark.PowerGridBenchmark.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>()</p></td>
+<td><p>load the already generated datasets</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark.generate" title="lips.benchmark.powergridBenchmark.PowerGridBenchmark.generate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate</span></code></a>(nb_sample_train, nb_sample_val, ...)</p></td>
+<td><p>generate the different datasets required for the benchmark</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark.evaluate_simulator" title="lips.benchmark.powergridBenchmark.PowerGridBenchmark.evaluate_simulator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_simulator</span></code></a>([dataset, ...])</p></td>
+<td><p>evaluate a trained augmented simulator on one or multiple test datasets</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="lips.benchmark.powergridBenchmark.PowerGridBenchmark.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/benchmark/powergridBenchmark.html#PowerGridBenchmark.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark.load" title="Permalink to this definition"></a></dt>
+<dd><p>load the already generated datasets</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lips.benchmark.powergridBenchmark.PowerGridBenchmark.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_sample_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_sample_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_sample_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_sample_test_ood_topo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_samples_per_chronic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">288</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/benchmark/powergridBenchmark.html#PowerGridBenchmark.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark.generate" title="Permalink to this definition"></a></dt>
+<dd><p>generate the different datasets required for the benchmark</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lips.benchmark.powergridBenchmark.PowerGridBenchmark.evaluate_simulator">
+<span class="sig-name descname"><span class="pre">evaluate_simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augmented_simulator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="lips.physical_simulator.html#lips.physical_simulator.physicalSimulator.PhysicalSimulator" title="lips.physical_simulator.physicalSimulator.PhysicalSimulator"><span class="pre">lips.physical_simulator.physicalSimulator.PhysicalSimulator</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="lips.augmented_simulators.html#lips.augmented_simulators.AugmentedSimulator" title="lips.augmented_simulators.augmented_simulator.AugmentedSimulator"><span class="pre">lips.augmented_simulators.augmented_simulator.AugmentedSimulator</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/lips/benchmark/powergridBenchmark.html#PowerGridBenchmark.evaluate_simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.benchmark.powergridBenchmark.PowerGridBenchmark.evaluate_simulator" title="Permalink to this definition"></a></dt>
+<dd><p>evaluate a trained augmented simulator on one or multiple test datasets</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>str</em><em>, </em><em>optional</em>) – dataset on which the evaluation should be performed, by default “all”</p></li>
+<li><p><strong>augmented_simulator</strong> (<em>Union</em><em>[</em><a class="reference internal" href="lips.physical_simulator.html#lips.physical_simulator.PhysicalSimulator" title="lips.physical_simulator.PhysicalSimulator"><em>PhysicalSimulator</em></a><em>, </em><a class="reference internal" href="lips.augmented_simulators.html#lips.augmented_simulators.AugmentedSimulator" title="lips.augmented_simulators.AugmentedSimulator"><em>AugmentedSimulator</em></a><em>, </em><em>None</em><em>]</em><em>, </em><em>optional</em>) – An instance of the class augmented simulator, by default None</p></li>
+<li><p><strong>save_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>None</em><em>]</em><em>, </em><em>optional</em>) – the path that the evaluation results should be saved, by default None</p></li>
+<li><p><strong>save_predictions</strong> (<em>bool</em>) – Whether to save the predictions made by an augmented simulator
+The predictions will be saved at the same directory of the generated data
+# TODO : to save predictions, the directory shoud look like <code class="docutils literal notranslate"><span class="pre">benchmark_nameugmented_simulator.name\</span></code></p></li>
+<li><p><strong>**kwargs</strong> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>) – additional arguments that will be passed to the augmented simulator</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id8">
+<p class="admonition-title">Todo</p>
+<p>TODO: add active flow in config file</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the results dictionary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – Unknown dataset selected</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lips.benchmark.powergridBenchmark.get_env">
+<span class="sig-prename descclassname"><span class="pre">lips.benchmark.powergridBenchmark.</span></span><span class="sig-name descname"><span class="pre">get_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/benchmark/powergridBenchmark.html#get_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.benchmark.powergridBenchmark.get_env" title="Permalink to this definition"></a></dt>
+<dd><p>Getter for the environment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>env_kwargs</strong> (<em>dict</em>) – environment parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A grid2op environment with the given parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>grid2op.Environment</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
