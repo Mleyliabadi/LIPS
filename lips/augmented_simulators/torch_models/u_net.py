@@ -126,8 +126,8 @@ class TorchUnet(nn.Module):
 
         self.bilinear = True
 
-        self.n_channels = self.params["input_channel_size"]
-        self.n_classes = self.params["output_channel_size"]
+        self.n_channels = None if kwargs.get("input_channel_size") is None else kwargs["input_channel_size"]
+        self.n_classes = None if kwargs.get("output_channel_size") is None else kwargs["output_channel_size"]
 
 
     def build_model(self):
@@ -228,8 +228,8 @@ class TorchUnet(nn.Module):
         None
             _description_
         """
-        *dim_inputs, self.output_size = dataset.get_sizes()
-        self.input_size = np.sum(dim_inputs)
+        *dim_inputs, self.n_classes = dataset.get_sizes()
+        self.n_channels = np.sum(dim_inputs)
 
     def get_metadata(self):
         res_json = {}
