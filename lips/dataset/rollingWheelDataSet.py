@@ -189,6 +189,7 @@ class RollingWheelDataSet(DataSet):
             self._store_obs(current_size=current_size,obs=simulator)
 
         self.size = nb_samples
+        self._infer_sizes()
 
         if path_out is not None:
             # I should save the data
@@ -259,11 +260,16 @@ class RollingWheelDataSet(DataSet):
             self.data[attr_nm] = np.load(path_this_array)["data"]
             self.size = self.data[attr_nm].shape[0]
 
+        self._infer_sizes()
+
+
     def _infer_sizes(self):
         data = copy.deepcopy(self.data)
-        self._sizes_x = np.array([data[el].shape[1] for el in self._attr_x], dtype=int)
-        self._sizes_y = np.array([data[el].shape[1] for el in self._attr_y], dtype=int)
+        attrs_x=np.array([np.expand_dims(data[el], axis=1) for el in self._attr_x], dtype=int)
+        self._sizes_x = np.array([attr_x.shape[1] for attr_x in attrs_x], dtype=int)
         self._size_x = np.sum(self._sizes_x)
+
+        self._sizes_y = np.array([data[el].shape[1] for el in self._attr_y], dtype=int)
         self._size_y = np.sum(self._sizes_y)
 
     def get_sizes(self):
@@ -330,8 +336,9 @@ class RollingWheelDataSet(DataSet):
         extract_y = [data[el].astype(np.float32) for el in self._attr_y]
 
         if concat:
-            extract_x = np.concatenate([data[el].astype(np.float32) for el in self._attr_x], axis=1)
-            extract_y = np.concatenate([data[el].astype(np.float32) for el in self._attr_y], axis=1)
+            extract_x = [single_x.reshape((single_x.shape[0],1)) for single_x in extract_x]
+            extract_x = np.concatenate(extract_x, axis=1)
+            extract_y = np.concatenate(extract_y, axis=1)
         return extract_x, extract_y
 
 if __name__ == '__main__':
