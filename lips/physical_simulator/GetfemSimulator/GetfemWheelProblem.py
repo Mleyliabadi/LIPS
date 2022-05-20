@@ -215,7 +215,8 @@ class GetfemMecaProblem(GetfemProblemBase):
 
         behaviourLawByName={"LinearElasticity":PhySolver.AddLinearElasticity,
                             "IncompressibleMooneyRivlin":PhySolver.AddIncompMooneyRivlin,
-                            "SaintVenantKirchhoff":PhySolver.AddSaintVenantKirchhoff
+                            "SaintVenantKirchhoff":PhySolver.AddSaintVenantKirchhoff,
+                            "CompressibleNeoHookean":PhySolver.AddCompressibleNeoHookean
                             }
         materialsbricks=[]
         for tagname,material in self.materials:

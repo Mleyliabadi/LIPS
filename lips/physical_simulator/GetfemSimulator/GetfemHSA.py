@@ -280,6 +280,17 @@ def AddIncompMooneyRivlin(model,mim,params):
     idBrick=model.add_finite_strain_elasticity_brick(mim, lawname, 'u', 'paramsIMR')
     return idBrick
 
+def AddCompressibleNeoHookean(model,mim,params):
+    E,nu=params["young"],params["poisson"]
+    clambda = E*nu/((1+nu)*(1-2*nu)) 
+    cmu = E/(2*(1+nu))               
+    clambdastar = 2*clambda*cmu/(clambda+2*cmu)
+    model.add_initialized_data('cmu', [cmu])
+    model.add_initialized_data('clambda', [clambdastar])
+    idBrick=model.add_nonlinear_generic_assembly_brick(mim,
+                                "(cmu/2)* ( Trace(Right_Cauchy_Green(Grad_u+Id(2))) - 2 - 2*log(Det(Grad_u+Id(2))) )+ (clambda/2)* pow(2*log(Det(Grad_u+Id(2))),2) ")
+    return idBrick
+
 def AddSaintVenantKirchhoff(model,mim,params):
     lawname = 'SaintVenant Kirchhoff'
     clambda,cmu = params["clambda"],params["cmu"]
