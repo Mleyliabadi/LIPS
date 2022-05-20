@@ -77,6 +77,8 @@ class PowerGridDataSet(DataSet):
             self._attr_names = self.ALL_VARIABLES
         self.size = 0
 
+        self.chronics_info = dict()
+
         # logger
         self.logger = CustomLogger(__class__.__name__, log_path).logger
         # config
@@ -184,6 +186,7 @@ class PowerGridDataSet(DataSet):
         self._init_sample()
         self._infer_sizes()
         self._store_env_data(simulator._simulator)
+        self._store_chronics_info(simulator)
         if path_out is not None:
             # I should save the data
             self._save_internal_data(path_out)
@@ -193,6 +196,14 @@ class PowerGridDataSet(DataSet):
         for attr_nm in self._attr_names:
             array_ = getattr(obs, attr_nm)
             self.data[attr_nm][current_size, :] = array_
+
+    def _store_chronics_info(self, simulator):
+        """store the chronics info"""
+        chronics_features = ["chronics_id", "chronics_name", "chronics_name_unique", "time_stamps"]
+        for attr_nm in chronics_features:
+            array_ = getattr(simulator, attr_nm)
+            self.chronics_info[attr_nm] = array_
+
 
     def _store_env_data(self, env):
         """store the environment data in self.env_data"""
@@ -210,6 +221,13 @@ class PowerGridDataSet(DataSet):
         self.env_data["_attr_x"] = self._attr_x
         self.env_data["_attr_tau"] = self._attr_tau
         self.env_data["_attr_y"] = self._attr_y
+
+    def _save_chronics_info(self, path_out: str):
+        """save chronics information as npz"""
+        chronics_path = os.path.join(path_out, "chronics")
+        os.mkdir(chronics_path)
+        for attr_nm, array_ in self.chronics_info.items():
+            np.savez_compressed(f"{os.path.join(chronics_path, attr_nm)}.npz", data=array_)
 
     def _save_internal_data(self, path_out:str):
         """save the self.data in a proper format
@@ -244,6 +262,7 @@ class PowerGridDataSet(DataSet):
         for attr_nm in self._attr_names:
             np.savez_compressed(f"{os.path.join(full_path_out, attr_nm)}.npz", data=self.data[attr_nm])
 
+        self._save_chronics_info(full_path_out)
         # save static_data
         with open(os.path.join(full_path_out ,"metadata.json"), "w", encoding="utf-8") as f:
             json.dump(obj=self.env_data, fp=f, indent=4, sort_keys=True, cls=NpEncoder)
@@ -296,6 +315,7 @@ class PowerGridDataSet(DataSet):
         self._init_sample()
         self._infer_sizes()
         self._load_env_data(full_path)
+        self._load_chronics_info(full_path)
 
     def _load_env_data(self, path:str):
         """load the environment data from a path
@@ -323,6 +343,15 @@ class PowerGridDataSet(DataSet):
 
         with open(os.path.join(path, "metadata.json"), "r", encoding="utf-8") as f:
             self.env_data = json.load(fp=f)
+
+    def _load_chronics_info(self, path: str):
+        """save chronics information as npz"""
+        chronics_features = ["chronics_id", "chronics_name", "chronics_name_unique", "time_stamps"]
+        chronics_path = os.path.join(path, "chronics")
+        if os.path.exists(chronics_path):
+            for attr_nm in chronics_features:
+                path_this_array = f"{os.path.join(chronics_path, attr_nm)}.npz"
+                self.chronics_info[attr_nm] = np.load(path_this_array, allow_pickle=True)["data"]
 
     def _init_sample(self):
         """initialize the sample
