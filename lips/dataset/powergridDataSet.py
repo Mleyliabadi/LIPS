@@ -227,6 +227,8 @@ class PowerGridDataSet(DataSet):
         chronics_path = os.path.join(path_out, "chronics")
         os.mkdir(chronics_path)
         for attr_nm, array_ in self.chronics_info.items():
+            if attr_nm == "time_stamps":
+                array_ = np.asanyarray(array_, dtype=object)
             np.savez_compressed(f"{os.path.join(chronics_path, attr_nm)}.npz", data=array_)
 
     def _save_internal_data(self, path_out:str):
