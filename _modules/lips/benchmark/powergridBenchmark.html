@@ -97,11 +97,9 @@
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
-<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="c1">#import importlib</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">grid2op</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">Benchmark</span>
@@ -109,15 +107,14 @@
 <span class="kn">from</span> <span class="nn">..physical_simulator</span> <span class="kn">import</span> <span class="n">PhysicalSimulator</span>
 <span class="kn">from</span> <span class="nn">..physical_simulator</span> <span class="kn">import</span> <span class="n">Grid2opSimulator</span>
 <span class="kn">from</span> <span class="nn">..physical_simulator.dcApproximationAS</span> <span class="kn">import</span> <span class="n">DCApproximationAS</span>
-<span class="kn">from</span> <span class="nn">..dataset.powergridDataSet</span> <span class="kn">import</span> <span class="n">PowerGridDataSet</span>
+<span class="kn">from</span> <span class="nn">..dataset</span> <span class="kn">import</span> <span class="n">PowerGridDataSet</span>
 <span class="kn">from</span> <span class="nn">..dataset.utils.powergrid_utils</span> <span class="kn">import</span> <span class="n">get_kwargs_simulator_scenario</span>
 <span class="kn">from</span> <span class="nn">..dataset.utils.powergrid_utils</span> <span class="kn">import</span> <span class="n">XDepthAgent</span><span class="p">,</span> <span class="n">get_action_list</span>
-<span class="kn">from</span> <span class="nn">..evaluation.powergrid_evaluation</span> <span class="kn">import</span> <span class="n">PowerGridEvaluation</span>
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">NpEncoder</span>
+<span class="kn">from</span> <span class="nn">..evaluation</span> <span class="kn">import</span> <span class="n">PowerGridEvaluation</span>
 
 
 
-<div class="viewcode-block" id="PowerGridBenchmark"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.powergridBenchmark.PowerGridBenchmark">[docs]</a><span class="k">class</span> <span class="nc">PowerGridBenchmark</span><span class="p">(</span><span class="n">Benchmark</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerGridBenchmark"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.PowerGridBenchmark">[docs]</a><span class="k">class</span> <span class="nc">PowerGridBenchmark</span><span class="p">(</span><span class="n">Benchmark</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;PowerGrid Benchmark class</span>
 
 <span class="sd">    This class allows to benchmark a power grid scenario which are defined in a config file.</span>
@@ -246,7 +243,7 @@
         <span class="k">if</span> <span class="n">load_data_set</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
 
-<div class="viewcode-block" id="PowerGridBenchmark.load"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.powergridBenchmark.PowerGridBenchmark.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerGridBenchmark.load"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.PowerGridBenchmark.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        load the already generated datasets</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -262,9 +259,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_test_ood_topo_dataset</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="PowerGridBenchmark.generate"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.powergridBenchmark.PowerGridBenchmark.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_sample_train</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_sample_val</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                 <span class="n">nb_sample_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_sample_test_ood_topo</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                 <span class="n">nb_samples_per_chronic</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">288</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerGridBenchmark.generate"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.PowerGridBenchmark.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_sample_train</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_sample_val</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">nb_sample_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_sample_test_ood_topo</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        generate the different datasets required for the benchmark</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -283,33 +279,28 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">train_dataset</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">training_simulator</span><span class="p">,</span>
                                     <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">training_actor</span><span class="p">,</span>
                                     <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
-                                    <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_train</span><span class="p">,</span>
-                                    <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="n">nb_samples_per_chronic</span>
+                                    <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_train</span>
                                     <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">val_dataset</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_simulator</span><span class="p">,</span>
                                   <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_actor</span><span class="p">,</span>
                                   <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
-                                  <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_val</span><span class="p">,</span>
-                                  <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="n">nb_samples_per_chronic</span>
+                                  <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_val</span>
                                   <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_test_dataset</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_simulator</span><span class="p">,</span>
                                     <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_actor</span><span class="p">,</span>
                                     <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
-                                    <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_test</span><span class="p">,</span>
-                                    <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="n">nb_samples_per_chronic</span>
+                                    <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_test</span>
                                     <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_test_ood_topo_dataset</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_simulator</span><span class="p">,</span>
                                              <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_actor</span><span class="p">,</span>
                                              <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
-                                             <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_test_ood_topo</span><span class="p">,</span>
-                                             <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="n">nb_samples_per_chronic</span>
+                                             <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_test_ood_topo</span>
                                              <span class="p">)</span></div>
 
-<div class="viewcode-block" id="PowerGridBenchmark.evaluate_simulator"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.powergridBenchmark.PowerGridBenchmark.evaluate_simulator">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="PowerGridBenchmark.evaluate_simulator"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.PowerGridBenchmark.evaluate_simulator">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                            <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
                            <span class="n">augmented_simulator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PhysicalSimulator</span><span class="p">,</span> <span class="n">AugmentedSimulator</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                            <span class="n">save_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                           <span class="n">save_predictions</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;evaluate a trained augmented simulator on one or multiple test datasets</span>
 
@@ -321,10 +312,6 @@
 <span class="sd">            An instance of the class augmented simulator, by default None</span>
 <span class="sd">        save_path : Union[str, None], optional</span>
 <span class="sd">            the path that the evaluation results should be saved, by default None</span>
-<span class="sd">        save_predictions: bool</span>
-<span class="sd">            Whether to save the predictions made by an augmented simulator</span>
-<span class="sd">            The predictions will be saved at the same directory of the generated data</span>
-<span class="sd">            # TODO : to save predictions, the directory shoud look like ``benchmark_name\augmented_simulator.name\``</span>
 <span class="sd">        **kwargs: ``dict``</span>
 <span class="sd">            additional arguments that will be passed to the augmented simulator</span>
 <span class="sd">        Todo</span>
@@ -365,17 +352,14 @@
             <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aux_evaluate_on_single_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset_</span><span class="p">,</span>
                                                        <span class="n">augmented_simulator</span><span class="o">=</span><span class="n">augmented_simulator</span><span class="p">,</span>
                                                        <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
-                                                       <span class="n">save_predictions</span><span class="o">=</span><span class="n">save_predictions</span><span class="p">,</span>
                                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">res</span><span class="p">[</span><span class="n">nm_</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">res</span></div>
 
     <span class="k">def</span> <span class="nf">_aux_evaluate_on_single_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                                         <span class="n">dataset</span><span class="p">:</span> <span class="n">PowerGridDataSet</span><span class="p">,</span>
-                                        <span class="n">augmented_simulator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PhysicalSimulator</span><span class="p">,</span> <span class="n">AugmentedSimulator</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">augmented_simulator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PhysicalSimulator</span><span class="p">,</span> <span class="n">AugmentedSimulator</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                         <span class="n">save_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                                        <span class="n">save_predictions</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Evaluate a single dataset</span>
 <span class="sd">        This function will evalute a simulator (physical or augmented) using various criteria predefined in evaluator object</span>
@@ -392,10 +376,8 @@
 <span class="sd">        active_flow : bool, optional</span>
 <span class="sd">            whether to compute KCL on active (True) or reactive (False) powers, by default True</span>
 <span class="sd">        save_path : Union[str, None], optional</span>
-<span class="sd">            the path where the predictions should be saved, by default None</span>
-<span class="sd">        save_predictions: bool</span>
-<span class="sd">            Whether to save the predictions made by an augmented simulator</span>
-<span class="sd">            The predictions will be saved at the same directory of the generated data</span>
+<span class="sd">            if indicated the evaluation results will be saved to indicated path, by default None</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
@@ -417,27 +399,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
 
         <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">observations</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                                       <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span>
+                                       <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">,</span>
+                                       <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span>
                                        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">):</span>
-                <span class="n">save_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
-            <span class="n">save_path</span> <span class="o">=</span> <span class="n">save_path</span> <span class="o">/</span> <span class="n">augmented_simulator</span><span class="o">.</span><span class="n">name</span> <span class="o">/</span> <span class="n">dataset</span><span class="o">.</span><span class="n">name</span>
-            <span class="k">if</span> <span class="n">save_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Deleting path </span><span class="si">%s</span><span class="s2"> that might contain previous runs&quot;</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span>
-                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
-            <span class="n">save_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-            <span class="k">with</span> <span class="nb">open</span><span class="p">((</span><span class="n">save_path</span> <span class="o">/</span> <span class="s2">&quot;eval_res.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">res</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">NpEncoder</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">save_predictions</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">attr_nm</span> <span class="ow">in</span> <span class="n">predictions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">attr_nm</span><span class="p">)</span><span class="si">}</span><span class="s2">.npz&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">predictions</span><span class="p">[</span><span class="n">attr_nm</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="n">save_predictions</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;You indicate to save the predictions, without providing a path. No predictions will be saved!&quot;</span><span class="p">)</span>
-
-
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="k">def</span> <span class="nf">_create_training_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -501,7 +465,7 @@
                                                <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_actor_seed</span><span class="p">,</span>
                                                <span class="n">log_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_path</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="get_env"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.powergridBenchmark.get_env">[docs]</a><span class="k">def</span> <span class="nf">get_env</span><span class="p">(</span><span class="n">env_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<div class="viewcode-block" id="get_env"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.get_env">[docs]</a><span class="k">def</span> <span class="nf">get_env</span><span class="p">(</span><span class="n">env_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Getter for the environment</span>
 
 <span class="sd">    Parameters</span>
