@@ -33,8 +33,8 @@ def SimulatorGeneration(physicalDomain,physicalProperties):
     classNameByProblemType = {
                                "StaticMechanicalStandard":"GetfemMecaProblem",
                                "StaticMechanicalRolling":"GetfemRollingWheelProblem",
-                               "QuasiStaticMechanicalStandard":"QuasiStaticRollingProblem",
-                               "QuasiStaticMechanicalRolling":"QuasiStaticMecanicalProblem"
+                               "QuasiStaticMechanicalStandard":"QuasiStaticMecanicalProblem",
+                               "QuasiStaticMechanicalRolling":"QuasiStaticRollingProblem"
                                }
 
     try:
