@@ -77,17 +77,17 @@ def check_quasi_static_rolling():
         "tread_Angle_deg":5.0,
         "teeth_Size":(10/3.0,10/6.0),
         "mesh_size":2,
-        "meshFilename":"toto"
+        "meshFilename":"DentedWheel"
     }
 
     from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import MeshGeneration
     machin=MeshGeneration(physicalDomain)
 
-    exit(0)
     dt = 10e-4
     physicalProperties={
         "ProblemType":"QuasiStaticMechanicalRolling",
         "materials":[["ALL", {"law": "IncompressibleMooneyRivlin", "MooneyRivlinC1": 1, "MooneyRivlinC2": 1} ]],
+        "incompressibility":True,
         "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0.0}] ],
         "rolling":["HOLE_BOUND",{"type" : "DIS_Rolling", "theta_Rolling":150., 'd': 1.}],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.6}] ],
@@ -96,7 +96,7 @@ def check_quasi_static_rolling():
     mySimulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     mySimulator.build_model()
     mySimulator.run_problem()
-    mySimulator._simulator.ExportSolutionInGmsh(filename="toto.msh")
+    mySimulator._simulator.ExportSolutionInGmsh(filename="RollingSol.pos")
 
 if __name__ == '__main__':
     #check_static()

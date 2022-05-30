@@ -182,8 +182,20 @@ def AddWheelBoundaryConditionsRolling(mesh,wheelDimensions,RefNumByRegion):
     return mesh
 
 
+def TagWheelMesh(mesh,wheelDimensions,center,refNumByRegion):
+    epsilon = 0.1
+    origin_x,origin_y=center
+    r_inner,r_ext=wheelDimensions
+    all_faces = mesh.outer_faces_in_box([-origin_x - r_ext - epsilon, -origin_y - r_ext -epsilon], [origin_x + r_ext + epsilon, origin_y + r_ext +epsilon])
+    rim_faces = mesh.outer_faces_in_ball([origin_x,origin_y], r_inner + epsilon)
+
+    mesh.set_region(refNumByRegion["HOLE_BOUND"], rim_faces)
+    mesh.set_region(refNumByRegion["CONTACT_BOUND"], all_faces)
+    mesh.region_subtract(refNumByRegion["CONTACT_BOUND"], refNumByRegion["HOLE_BOUND"])
+    return mesh
+
 def ImportGMSHWheel(meshFile,wheelDimensions,RefNumByRegion):
-    mesh=gf.Mesh('import', 'gmsh', meshFile)
+    mesh=ImportGmshMesh(meshFile)
     return AddWheelBoundaryConditions(mesh, wheelDimensions, RefNumByRegion)
 
 def ImportGmshMesh(meshFile):
