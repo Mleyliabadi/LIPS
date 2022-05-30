@@ -22,7 +22,7 @@ class Sampler(metaclass=abc.ABCMeta):
     def _define_sampling_method(self,nb_samples,sampler_seed=None):
         pass
 
-    def save(self,path_out,samples=None):
+    def get_attributes_as_data(self,samples=None):
         if samples is None:
             samples=self.sampling_output
 
@@ -30,10 +30,13 @@ class Sampler(metaclass=abc.ABCMeta):
         if fieldNum.count(fieldNum[0]) != len(fieldNum):
             raise RuntimeError("Samples do not have the same input parameters")
 
-        value_by_input_attrib = {attribName: [sample[attribName] for sample in samples] for attribName in samples[0]}
+        value_by_input_attrib = {attribName: np.array([sample[attribName] for sample in samples]) for attribName in samples[0]}
+        return value_by_input_attrib
+
+    def save(self,path_out,samples=None):
+        value_by_input_attrib = self.get_attributes_as_data(samples=samples)
         for attrib_name,data in value_by_input_attrib.items():
             np.savez_compressed(f"{os.path.join(path_out, attrib_name)}.npz", data=data)
-
 
     def __str__(self): 
         sInfo="Type of sampling: "+self.sampling_name+"\n"

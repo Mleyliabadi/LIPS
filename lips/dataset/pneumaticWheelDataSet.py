@@ -101,8 +101,17 @@ class DataSetInterpolatorOnGrid():
         for attrib_name,data in self.distributed_inputs_on_grid.items():
             np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=data)
 
+class WheelDataSet(DataSet):
+    def __init__(self,
+                 name="train",
+                 attr_names=("disp",),
+                 config: Union[ConfigManager, None]=None,
+                 log_path: Union[str, None]=None
+                 ):
+        super(WheelDataSet,self).__init__(name=name)
 
-class SamplerStaticWheelDataSet(DataSet):
+
+class SamplerStaticWheelDataSet(WheelDataSet):
     """
     This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
     """
@@ -113,7 +122,7 @@ class SamplerStaticWheelDataSet(DataSet):
                  config: Union[ConfigManager, None]=None,
                  log_path: Union[str, None]=None
                  ):
-        DataSet.__init__(self, name=name)
+        super(SamplerStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
         self._attr_names = copy.deepcopy(attr_names)
         self.size = 0
         self._inputs = []
@@ -188,6 +197,8 @@ class SamplerStaticWheelDataSet(DataSet):
             
             self._store_obs(current_size=current_size,obs=simulator)
         self.size = nb_samples
+        actor_attrib=actor.get_attributes_as_data()
+        self.data={**self.data, **actor_attrib}
         self._infer_sizes()
 
         if path_out is not None:
@@ -371,7 +382,10 @@ if __name__ == '__main__':
     import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
     attr_names=(PFN.displacement,PFN.contactMultiplier)
 
-    staticWheelDataSet=SamplerStaticWheelDataSet("train",attr_names=attr_names)
+    wheelConfig=ConfigManager(path="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/lips/config/confWheel.ini",
+                              section_name="BenchmarkWheelFFNN")
+
+    staticWheelDataSet=SamplerStaticWheelDataSet("train",attr_names=attr_names,config=wheelConfig)
     staticWheelDataSet.generate(simulator=training_simulator,
                                     actor=training_actor,
                                     path_out="WheelDir",
