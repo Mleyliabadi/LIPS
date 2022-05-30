@@ -47,7 +47,7 @@ class GetfemSimulator(PhysicalSimulator):
         """
         self._simulator.SetPhyParams(actor)
 
-if __name__ == '__main__':
+def check_static():
     import math
     physicalDomain={
         "Mesher":"Getfem",
@@ -67,3 +67,29 @@ if __name__ == '__main__':
     mySimulator = GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     mySimulator.build_model()
     mySimulator.run_problem()
+
+def check_quasi_static_rolling():
+    physicalDomain={
+        "Mesher":"Getfem",
+        "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
+        "wheelDimensions":(8.,15.),
+        "meshSize":1
+    }
+
+    dt = 10e-4
+    physicalProperties={
+        "ProblemType":"QuasiStaticMechanicalRolling",
+        "materials":[["ALL", {"law": "IncompressibleMooneyRivlin", "MooneyRivlinC1": 1, "MooneyRivlinC2": 1} ]],
+        "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0.0}] ],
+        "rolling":["HOLE_BOUND",{"type" : "DIS_Rolling", "theta_Rolling":150., 'd': 1.}],
+        "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.6}] ],
+        "transientParams":{"time": 5*dt, "timeStep": dt}
+    }
+    mySimulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    mySimulator.build_model()
+    mySimulator.run_problem()
+    mySimulator._simulator.ExportSolutionInGmsh(filename="toto.msh")
+
+if __name__ == '__main__':
+    #check_static()
+    check_quasi_static_rolling()

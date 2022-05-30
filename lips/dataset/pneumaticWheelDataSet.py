@@ -111,6 +111,20 @@ class WheelDataSet(DataSet):
         super(WheelDataSet,self).__init__(name=name)
 
 
+class QuasiStaticWheelDataSet(WheelDataSet):
+    """
+    This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
+    """
+
+    def __init__(self,
+                 name="train",
+                 attr_names=("disp",),
+                 config: Union[ConfigManager, None]=None,
+                 log_path: Union[str, None]=None
+                 ):
+        super(QuasiStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
+
+
 class SamplerStaticWheelDataSet(WheelDataSet):
     """
     This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
@@ -352,9 +366,13 @@ class SamplerStaticWheelDataSet(WheelDataSet):
             extract_y = np.concatenate(extract_y, axis=1)
         return extract_x, extract_y
 
-if __name__ == '__main__':
-    import math
-    from lips.physical_simulator.getfemSimulator import GetfemSimulator
+
+#Check integrities
+
+import math
+from lips.physical_simulator.getfemSimulator import GetfemSimulator
+
+def check_static_samples_generation():
     physicalDomain={
         "Mesher":"Getfem",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
@@ -403,3 +421,26 @@ if __name__ == '__main__':
                                             grid_support=grid_support)
     dofnum_by_field={PFN.displacement:2}
     myTransformer.generate(dofnum_by_field=dofnum_by_field,path_out="wheel_interpolated")
+
+def check_quasi_static_generation():
+    physicalDomain={
+        "Mesher":"Getfem",
+        "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
+        "wheelDimensions":(8.,15.),
+        "meshSize":1
+    }
+
+    dt = 10e-4
+    physicalProperties={
+        "ProblemType":"QuasiStaticMechanicalRolling",
+        "materials":[["ALL", {"law": "IncompressibleMooneyRivlin", "MooneyRivlinC1": 1, "MooneyRivlinC2": 1} ]],
+        "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0.0}] ],
+        "rolling":["HOLE_BOUND",{"type" : "DIS_Rolling", "theta_Rolling":150., 'd': 1.}],
+        "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.6}] ],
+        "transientParams":{"time": 5*dt, "timeStep": dt}
+    }
+    training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+
+
+if __name__ == '__main__':
+    check_quasi_static_generation()
