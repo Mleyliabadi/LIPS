@@ -32,6 +32,12 @@ def MeshGeneration(physicalDomain):
                                                mesh_size=physicalDomain["mesh_size"]
                                                )
             myDentedWheel.GenerateMesh(outputFile=physicalDomain["meshFilename"])
+            mesh=PhySolver.ImportGmshMesh(physicalDomain["meshFilename"]+".msh")
+            taggedMesh=PhySolver.TagWheelMesh(mesh=mesh,
+                                              wheelDimensions=(min(physicalDomain["wheel_Dimensions"]),max(physicalDomain["wheel_Dimensions"])),
+                                              center=(0.0,max(physicalDomain["wheel_Dimensions"])),
+                                              refNumByRegion=physicalDomain["refNumByRegion"])
+            return taggedMesh
 
     else:
         raise Exception("Mesher "+str(physicalDomain["Mesher"])+" not supported")
