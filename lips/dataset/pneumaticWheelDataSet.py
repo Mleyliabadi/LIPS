@@ -109,34 +109,6 @@ class WheelDataSet(DataSet):
                  log_path: Union[str, None]=None
                  ):
         super(WheelDataSet,self).__init__(name=name)
-
-
-class QuasiStaticWheelDataSet(WheelDataSet):
-    """
-    This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
-    """
-
-    def __init__(self,
-                 name="train",
-                 attr_names=("disp",),
-                 config: Union[ConfigManager, None]=None,
-                 log_path: Union[str, None]=None
-                 ):
-        super(QuasiStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
-
-
-class SamplerStaticWheelDataSet(WheelDataSet):
-    """
-    This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
-    """
-
-    def __init__(self,
-                 name="train",
-                 attr_names=("disp",),
-                 config: Union[ConfigManager, None]=None,
-                 log_path: Union[str, None]=None
-                 ):
-        super(SamplerStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
         self._attr_names = copy.deepcopy(attr_names)
         self.size = 0
         self._inputs = []
@@ -156,136 +128,6 @@ class SamplerStaticWheelDataSet(WheelDataSet):
         self._sizes_y = None  # dimension of each variable
         self._attr_x = self.config.get_option("attr_x")
         self._attr_y = self.config.get_option("attr_y")
-
-
-    def generate(self,
-                 simulator: "GetfemSimulator",
-                 actor,
-                 nb_samples: int,
-                 path_out: Union[str, None]= None,
-                 simulator_seed: Union[None, int] = None,
-                 actor_seed: Union[None, int] = None):
-        """
-        For this dataset, we use a GetfemSimulator and a Sampler to generate data from a rolling wheel.
-
-        Parameters
-        ----------
-        simulator:
-           In this case, this should be a getfem-based instance
-
-        actor:
-           In this case, it is the sampler used for the input parameters space discretization
-
-        path_out:
-            The path where the data will be saved
-
-        nb_samples:
-            Number of rows (examples) in the final dataset
-
-        simulator_seed:
-            Seed used to set the simulator for reproducible experiments
-
-        actor_seed:
-            Seed used to set the actor for reproducible experiments
-
-        Returns
-        -------
-
-        """
-        try:
-            import getfem
-        except ImportError as exc_:
-            raise RuntimeError("Impossible to `generate` rolling wheel datet if you don't have "
-                               "the getfem package installed") from exc_
-        if nb_samples <= 0:
-            raise RuntimeError("Impossible to generate a negative number of data.")
-
-        self._inputs=actor.generate_samples(nb_samples=nb_samples,sampler_seed=actor_seed)
-        self._init_store_data(simulator=simulator,nb_samples=nb_samples)
-
-        for current_size,sample in enumerate(tqdm(self._inputs, desc=self.name)):
-            simulator=type(simulator)(simulatorInstance=simulator)
-            simulator.modify_state(actor=sample)
-            simulator.build_model()
-            solverState=simulator.run_problem()
-            
-            self._store_obs(current_size=current_size,obs=simulator)
-
-        self.size = nb_samples
-        actor_attrib=actor.get_attributes_as_data()
-        self.data={**self.data, **actor_attrib}
-        self._infer_sizes()
-
-        if path_out is not None:
-            # I should save the data
-            self._save_internal_data(path_out)
-            full_path_out = os.path.join(os.path.abspath(path_out), self.name)
-            actor.save(path_out=full_path_out)
-
-
-    def _init_store_data(self,simulator,nb_samples):
-        self.data=dict()
-        for attr_nm in self._attr_names:
-            array_ = simulator.get_variable_value(field_name=attr_nm)
-            self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
-
-    def _store_obs(self, current_size, obs):
-        for attr_nm in self._attr_names:
-            array_ = obs.get_solution(field_name=attr_nm)
-            self.data[attr_nm][current_size, :] = array_
-
-    def _save_internal_data(self, path_out):
-        """save the self.data in a proper format"""
-        full_path_out = os.path.join(os.path.abspath(path_out), self.name)
-
-        if not os.path.exists(os.path.abspath(path_out)):
-            os.mkdir(os.path.abspath(path_out))
-            # TODO logger
-            #print(f"Creating the path {path_out} to store the datasets [data will be stored under {full_path_out}]")
-            self.logger.info(f"Creating the path {path_out} to store the datasets [data will be stored under {full_path_out}]")
-
-        if os.path.exists(full_path_out):
-            # deleting previous saved data
-            # TODO logger
-            #print(f"Deleting previous run at {full_path_out}")
-            self.logger.warning(f"Deleting previous run at {full_path_out}")
-            shutil.rmtree(full_path_out)
-
-        os.mkdir(full_path_out)
-        # TODO logger
-        #print(f"Creating the path {full_path_out} to store the dataset name {self.name}")
-        self.logger.info(f"Creating the path {full_path_out} to store the dataset name {self.name}")
-
-        for attr_nm in self._attr_names:
-            np.savez_compressed(f"{os.path.join(full_path_out, attr_nm)}.npz", data=self.data[attr_nm])
-
-    def load(self, path):
-        if not os.path.exists(path):
-            raise RuntimeError(f"{path} cannot be found on your computer")
-        if not os.path.isdir(path):
-            raise RuntimeError(f"{path} is not a valid directory")
-        full_path = os.path.join(path, self.name)
-        if not os.path.exists(full_path):
-            raise RuntimeError(f"There is no data saved in {full_path}. Have you called `dataset.generate()` with "
-                               f"a given `path_out` ?")
-        #for attr_nm in (*self._attr_names, *self._theta_attr_names):
-        for attr_nm in self._attr_names:
-            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
-            if not os.path.exists(path_this_array):
-                raise RuntimeError(f"Impossible to load data {attr_nm}. Have you called `dataset.generate()` with "
-                                   f"a given `path_out` and such that `dataset` is built with the right `attr_names` ?")
-
-        if self.data is not None:
-            warnings.warn(f"Deleting previous run in attempting to load the new one located at {path}")
-        self.data = {}
-        self.size = None
-        #for attr_nm in (*self._attr_names, *self._theta_attr_names):
-        for attr_nm in self._attr_names:
-            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
-            self.data[attr_nm] = np.load(path_this_array)["data"]
-            self.size = self.data[attr_nm].shape[0]
-
-        self._infer_sizes()
 
 
     def _infer_sizes(self):
@@ -343,6 +185,175 @@ class SamplerStaticWheelDataSet(WheelDataSet):
 
         return res
 
+    def _save_internal_data(self, path_out):
+        """save the self.data in a proper format"""
+        full_path_out = os.path.join(os.path.abspath(path_out), self.name)
+
+        if not os.path.exists(os.path.abspath(path_out)):
+            os.mkdir(os.path.abspath(path_out))
+            # TODO logger
+            #print(f"Creating the path {path_out} to store the datasets [data will be stored under {full_path_out}]")
+            self.logger.info(f"Creating the path {path_out} to store the datasets [data will be stored under {full_path_out}]")
+
+        if os.path.exists(full_path_out):
+            # deleting previous saved data
+            # TODO logger
+            #print(f"Deleting previous run at {full_path_out}")
+            self.logger.warning(f"Deleting previous run at {full_path_out}")
+            shutil.rmtree(full_path_out)
+
+        os.mkdir(full_path_out)
+        # TODO logger
+        #print(f"Creating the path {full_path_out} to store the dataset name {self.name}")
+        self.logger.info(f"Creating the path {full_path_out} to store the dataset name {self.name}")
+
+        for attr_nm in self._attr_names:
+            np.savez_compressed(f"{os.path.join(full_path_out, attr_nm)}.npz", data=self.data[attr_nm])
+
+
+class QuasiStaticWheelDataSet(WheelDataSet):
+    """
+    This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
+    """
+
+    def __init__(self,
+                 name="train",
+                 attr_names=("disp",),
+                 config: Union[ConfigManager, None]=None,
+                 log_path: Union[str, None]=None
+                 ):
+        super(QuasiStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
+
+    def generate(self,
+                 simulator: "GetfemSimulator",
+                 path_out: Union[str, None]= None):
+        try:
+            import getfem
+        except ImportError as exc_:
+            raise RuntimeError("Impossible to `generate` a wheel dateset if you don't have "
+                               "the getfem package installed") from exc_
+
+        self._init_store_data(simulator=simulator)
+        simulator.build_model()
+        solverState=simulator.run_problem()
+            
+        self._store_obs(obs=simulator)
+
+        self.data["time"]=getattr(simulator._simulator,"timeSteps")
+        self._infer_sizes()
+
+        if path_out is not None:
+            # I should save the data
+            self._save_internal_data(path_out)
+            full_path_out = os.path.join(os.path.abspath(path_out), self.name)
+
+
+    def _init_store_data(self,simulator):
+        transientParams=getattr(simulator._simulator,"transientParams")
+        nb_samples=int(transientParams["time"]//transientParams["timeStep"]) + 1
+
+        self.data=dict()
+        for attr_nm in self._attr_names:
+            array_ = simulator.get_variable_value(field_name=attr_nm)
+            self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
+
+    def _store_obs(self, obs):
+        for attr_nm in self._attr_names:
+            array_ = obs.get_solution(field_name=attr_nm)
+            self.data[attr_nm] = array_
+
+
+class SamplerStaticWheelDataSet(WheelDataSet):
+    """
+    This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
+    """
+
+    def __init__(self,
+                 name="train",
+                 attr_names=("disp",),
+                 config: Union[ConfigManager, None]=None,
+                 log_path: Union[str, None]=None
+                 ):
+        super(SamplerStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
+
+    def generate(self,
+                 simulator: "GetfemSimulator",
+                 actor,
+                 nb_samples: int,
+                 path_out: Union[str, None]= None,
+                 simulator_seed: Union[None, int] = None,
+                 actor_seed: Union[None, int] = None):
+
+        try:
+            import getfem
+        except ImportError as exc_:
+            raise RuntimeError("Impossible to `generate` a wheel dateset  if you don't have "
+                               "the getfem package installed") from exc_
+        if nb_samples <= 0:
+            raise RuntimeError("Impossible to generate a negative number of data.")
+
+        self._inputs=actor.generate_samples(nb_samples=nb_samples,sampler_seed=actor_seed)
+        self._init_store_data(simulator=simulator,nb_samples=nb_samples)
+
+        for current_size,sample in enumerate(tqdm(self._inputs, desc=self.name)):
+            simulator=type(simulator)(simulatorInstance=simulator)
+            simulator.modify_state(actor=sample)
+            simulator.build_model()
+            solverState=simulator.run_problem()
+            
+            self._store_obs(current_size=current_size,obs=simulator)
+
+        self.size = nb_samples
+        actor_attrib=actor.get_attributes_as_data()
+        self.data={**self.data, **actor_attrib}
+        self._infer_sizes()
+
+        if path_out is not None:
+            # I should save the data
+            self._save_internal_data(path_out)
+            full_path_out = os.path.join(os.path.abspath(path_out), self.name)
+            actor.save(path_out=full_path_out)
+
+
+    def _init_store_data(self,simulator,nb_samples):
+        self.data=dict()
+        for attr_nm in self._attr_names:
+            array_ = simulator.get_variable_value(field_name=attr_nm)
+            self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
+
+    def _store_obs(self, current_size, obs):
+        for attr_nm in self._attr_names:
+            array_ = obs.get_solution(field_name=attr_nm)
+            self.data[attr_nm][current_size, :] = array_
+
+    def load(self, path):
+        if not os.path.exists(path):
+            raise RuntimeError(f"{path} cannot be found on your computer")
+        if not os.path.isdir(path):
+            raise RuntimeError(f"{path} is not a valid directory")
+        full_path = os.path.join(path, self.name)
+        if not os.path.exists(full_path):
+            raise RuntimeError(f"There is no data saved in {full_path}. Have you called `dataset.generate()` with "
+                               f"a given `path_out` ?")
+        #for attr_nm in (*self._attr_names, *self._theta_attr_names):
+        for attr_nm in self._attr_names:
+            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
+            if not os.path.exists(path_this_array):
+                raise RuntimeError(f"Impossible to load data {attr_nm}. Have you called `dataset.generate()` with "
+                                   f"a given `path_out` and such that `dataset` is built with the right `attr_names` ?")
+
+        if self.data is not None:
+            warnings.warn(f"Deleting previous run in attempting to load the new one located at {path}")
+        self.data = {}
+        self.size = None
+        #for attr_nm in (*self._attr_names, *self._theta_attr_names):
+        for attr_nm in self._attr_names:
+            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
+            self.data[attr_nm] = np.load(path_this_array)["data"]
+            self.size = self.data[attr_nm].shape[0]
+
+        self._infer_sizes()
+
     def extract_data(self, concat: bool=True) -> tuple:
         """extract the x and y data from the dataset
 
@@ -371,6 +382,7 @@ class SamplerStaticWheelDataSet(WheelDataSet):
 
 import math
 from lips.physical_simulator.getfemSimulator import GetfemSimulator
+import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
 
 def check_static_samples_generation():
     physicalDomain={
@@ -398,7 +410,6 @@ def check_static_samples_generation():
 
     training_actor=LHSSampler(space_params=trainingInput)
 
-    import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
     attr_names=(PFN.displacement,PFN.contactMultiplier)
 
     wheelConfig=ConfigManager(path="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/lips/config/confWheel.ini",
@@ -437,10 +448,18 @@ def check_quasi_static_generation():
         "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0.0}] ],
         "rolling":["HOLE_BOUND",{"type" : "DIS_Rolling", "theta_Rolling":150., 'd': 1.}],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.6}] ],
-        "transientParams":{"time": 5*dt, "timeStep": dt}
+        "transientParams":{"time": 3*dt, "timeStep": dt}
     }
-    training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
 
+    training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    attr_names=(PFN.displacement,PFN.contactMultiplier)
+    wheelConfig=ConfigManager(path="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/lips/config/confWheel.ini",
+                              section_name="RollingWheel")
+
+    quasiStaticWheelDataSet=QuasiStaticWheelDataSet("train",attr_names=attr_names,config=wheelConfig)
+    quasiStaticWheelDataSet.generate(simulator=training_simulator,
+                                    path_out="WheelRolDir",
+                                    )
 
 if __name__ == '__main__':
     check_quasi_static_generation()
