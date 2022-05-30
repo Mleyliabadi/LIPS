@@ -336,6 +336,8 @@ class GetfemMecaProblem(GetfemProblemBase):
         return contactBricks
 
     def AddIncompressibilityCondition(self):
+        self.problemCharacsByType["Incompressibility"]=[["ALL",{"finite strain incompressibility":True}]]
+
         mfp=PhySolver.DefineClassicalDiscontinuousFESpace(mesh=self.mesh,elements_degree=1,dof=1)
         PhySolver.AddVariable(model=self.model,var="p",mfvar=mfp)
         incompressibilityBrick=PhySolver.AddIncompressibilityBrick(model=self.model,mim=self.integrMethods["standard"])
