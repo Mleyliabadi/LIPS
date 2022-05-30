@@ -141,7 +141,8 @@
                  <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_name</span> <span class="o">=</span> <span class="n">benchmark_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_path</span> <span class="o">=</span> <span class="n">benchmark_path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">benchmark_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">benchmark_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">benchmark_path</span> <span class="k">else</span> <span class="kc">None</span>
+
 
         <span class="c1"># Object of class DataSet contianing datasets for testing</span>
         <span class="c1"># It contains the last dataset used for evaluation</span>
