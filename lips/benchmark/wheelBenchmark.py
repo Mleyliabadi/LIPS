@@ -23,7 +23,7 @@ from lips.benchmark import Benchmark
 from lips.evaluation.transport_evaluation import TransportEvaluation
 from lips.physical_simulator.getfemSimulator import PhysicalSimulator,GetfemSimulator
 from lips.augmented_simulators.augmented_simulator import AugmentedSimulator
-from lips.dataset.pneumaticWheelDataSet.py import SamplerStaticWheelDataSet
+from lips.dataset.pneumaticWheelDataSet import SamplerStaticWheelDataSet
 
 
 class WheelBenchmark(Benchmark):
