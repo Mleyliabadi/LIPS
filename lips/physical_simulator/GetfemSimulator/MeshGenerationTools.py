@@ -34,6 +34,7 @@ def GenerateWheelMeshFileStandardVersion(outputFile, wheelDimensions, meshSize):
     gmsh.model.mesh.setAlgorithm(2, 30, 2)
     gmsh.option.setNumber("Mesh.ElementOrder", 2)
     gmsh.model.mesh.generate(2)
+    gmsh.option.setNumber("Mesh.MshFileVersion", 2)
     gmsh.write("%s.msh" % model_name)
     gmsh.finalize()
 
@@ -206,6 +207,7 @@ def GenerateWheelMeshFileTreadVersion(outputFile, wheelDimensions, meshSize):
     # # gmsh.model.mesh.setAlgorithm(2, 30, 2)
     gmsh.option.setNumber("Mesh.ElementOrder", 2)
     gmsh.model.mesh.generate(2)
+    gmsh.option.setNumber("Mesh.MshFileVersion", 2)
     gmsh.write("%s.msh" % outputFile)
 
     # Launch the GUI to see the results:
@@ -282,6 +284,7 @@ def GenerateWheelMeshFileAsymVersion(outputFile, wheelDimensions, meshSize, refM
         # # gmsh.model.mesh.setAlgorithm(2, 30, 2)
     gmsh.option.setNumber("Mesh.ElementOrder", 2)
     gmsh.model.mesh.generate(2)
+    gmsh.option.setNumber("Mesh.MshFileVersion", 2)
     gmsh.write("%s.msh" % outputFile)
 
     gmsh.finalize()
@@ -296,6 +299,7 @@ def MergeMeshes(outputFile, meshFiles):
     for mesh in meshFiles:
         gmsh.merge(mesh)
     gmsh.model.mesh.generate(2)
+    gmsh.option.setNumber("Mesh.MshFileVersion", 2)
     gmsh.write("%s.msh" % outputFile)
 
     gmsh.finalize()
@@ -323,6 +327,7 @@ def GenerateUnitSquareMesh(outputFile, meshSize):
     gmsh.model.mesh.setTransfiniteSurface(1)
     gmsh.option.setNumber("Mesh.MeshSizeMax", meshSize)
     gmsh.model.mesh.generate()
+    gmsh.option.setNumber("Mesh.MshFileVersion", 2)
     gmsh.write("%s.msh" % outputFile)
 
     gmsh.finalize()

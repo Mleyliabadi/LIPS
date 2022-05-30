@@ -18,12 +18,21 @@ def MeshGeneration(physicalDomain):
                                     meshSize=physicalDomain["meshSize"],\
                                     RefNumByRegion=physicalDomain["refNumByRegion"])
     elif physicalDomain["Mesher"]=="Gmsh":
-        return ExternalMesher.GenerateCoincidentHFLFMeshes(wheelExtMeshFile="wheel_ext",\
+        if "subcategory" not in physicalDomain.keys():
+            return ExternalMesher.GenerateCoincidentHFLFMeshes(wheelExtMeshFile="wheel_ext",\
                                                            wheelMeshFile=physicalDomain["meshFilename"],\
                                                            interRadius=physicalDomain["interRadius"],\
                                                            wheelDim=physicalDomain["wheelDimensions"],\
                                                            meshSize=physicalDomain["meshSize"],\
                                                            version=physicalDomain["version"])
+        elif physicalDomain["subcategory"]=="DentedWheelGenerator":
+            myDentedWheel = ExternalMesher.DentedWheelGenerator(wheel_Dimensions=physicalDomain["wheel_Dimensions"],
+                                               teeth_Size=physicalDomain["teeth_Size"],
+                                               tread_Angle_deg=physicalDomain["tread_Angle_deg"],
+                                               mesh_size=physicalDomain["mesh_size"]
+                                               )
+            myDentedWheel.GenerateMesh(outputFile=physicalDomain["meshFilename"])
+
     else:
         raise Exception("Mesher "+str(physicalDomain["Mesher"])+" not supported")
 

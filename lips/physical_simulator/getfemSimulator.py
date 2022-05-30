@@ -70,12 +70,20 @@ def check_static():
 
 def check_quasi_static_rolling():
     physicalDomain={
-        "Mesher":"Getfem",
+        "Mesher":"Gmsh",
+        "subcategory":"DentedWheelGenerator",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
-        "wheelDimensions":(8.,15.),
-        "meshSize":1
+        "wheel_Dimensions":(30.,36.,40.),
+        "tread_Angle_deg":5.0,
+        "teeth_Size":(10/3.0,10/6.0),
+        "mesh_size":2,
+        "meshFilename":"toto"
     }
 
+    from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import MeshGeneration
+    machin=MeshGeneration(physicalDomain)
+
+    exit(0)
     dt = 10e-4
     physicalProperties={
         "ProblemType":"QuasiStaticMechanicalRolling",
