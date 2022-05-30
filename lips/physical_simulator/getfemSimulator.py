@@ -47,6 +47,9 @@ class GetfemSimulator(PhysicalSimulator):
         """
         self._simulator.SetPhyParams(actor)
 
+    def __str__(self):
+        return str(self._simulator)
+
 def check_static():
     import math
     physicalDomain={
@@ -95,6 +98,7 @@ def check_quasi_static_rolling():
     }
     mySimulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     mySimulator.build_model()
+    print(mySimulator)
     mySimulator.run_problem()
     mySimulator._simulator.ExportSolutionInGmsh(filename="RollingSol.pos")
 
