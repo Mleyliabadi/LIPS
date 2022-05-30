@@ -102,7 +102,7 @@ class DataSetInterpolatorOnGrid():
             np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=data)
 
 
-class RollingWheelDataSet(DataSet):
+class SamplerStaticWheelDataSet(DataSet):
     """
     This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
     """
@@ -372,20 +372,20 @@ if __name__ == '__main__':
     import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
     attr_names=(PFN.displacement,PFN.contactMultiplier)
 
-    rollingWheelDataSet=RollingWheelDataSet("train",attr_names=attr_names)
-    rollingWheelDataSet.generate(simulator=training_simulator,
+    staticWheelDataSet=SamplerStaticWheelDataSet("train",attr_names=attr_names)
+    staticWheelDataSet.generate(simulator=training_simulator,
                                     actor=training_actor,
                                     path_out="WheelDir",
                                     nb_samples=5,
                                     actor_seed=42
                                     )
-    # print(rollingWheelDataSet.get_data(index=0))
-    # print(rollingWheelDataSet.data)
+    # print(staticWheelDataSet.get_data(index=0))
+    # print(staticWheelDataSet.data)
 
     #Interpolation on grid
     grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(16,16)}
     myTransformer=DataSetInterpolatorOnGrid(simulator=training_simulator,
-                                            dataset=rollingWheelDataSet,
+                                            dataset=staticWheelDataSet,
                                             grid_support=grid_support)
     dofnum_by_field={PFN.displacement:2}
     myTransformer.generate(dofnum_by_field=dofnum_by_field,path_out="wheel_interpolated")

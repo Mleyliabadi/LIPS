@@ -23,7 +23,7 @@ from lips.benchmark import Benchmark
 from lips.evaluation.transport_evaluation import TransportEvaluation
 from lips.physical_simulator.getfemSimulator import PhysicalSimulator,GetfemSimulator
 from lips.augmented_simulators.augmented_simulator import AugmentedSimulator
-from lips.dataset.rollingWheelDataSet import RollingWheelDataSet
+from lips.dataset.pneumaticWheelDataSet.py import SamplerStaticWheelDataSet
 
 
 class WheelBenchmark(Benchmark):
@@ -87,25 +87,25 @@ class WheelBenchmark(Benchmark):
                      +self.config.get_option("attr_y")
 
 
-        self.train_dataset = RollingWheelDataSet("train",
+        self.train_dataset = SamplerStaticWheelDataSet("train",
                                               attr_names=attr_names,
                                               config=self.config,
                                               log_path=log_path
                                               )
 
-        self.val_dataset = RollingWheelDataSet("val",
+        self.val_dataset = SamplerStaticWheelDataSet("val",
                                             attr_names=attr_names,
                                             config=self.config,
                                             log_path=log_path
                                             )
 
-        self._test_dataset = RollingWheelDataSet("test",
+        self._test_dataset = SamplerStaticWheelDataSet("test",
                                               attr_names=attr_names,
                                               config=self.config,
                                               log_path=log_path
                                               )
 
-        self._test_ood_topo_dataset = RollingWheelDataSet("test_ood_topo",
+        self._test_ood_topo_dataset = SamplerStaticWheelDataSet("test_ood_topo",
                                                        attr_names=attr_names,
                                                        config=self.config,
                                                        log_path=log_path
@@ -221,7 +221,7 @@ class WheelBenchmark(Benchmark):
         return res
 
     def _aux_evaluate_on_single_dataset(self,
-                                        dataset: RollingWheelDataSet,
+                                        dataset: SamplerStaticWheelDataSet,
                                         augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
                                         save_path: Union[str, None]=None,
                                         **kwargs) -> dict:
@@ -231,7 +231,7 @@ class WheelBenchmark(Benchmark):
 
         Parameters
         ------
-        dataset : RollingWheelDataSet
+        dataset : SamplerStaticWheelDataSet
             the dataset
         augmented_simulator : Union[PhysicalSimulator, AugmentedSimulator, None], optional
             a trained augmented simulator, by default None
