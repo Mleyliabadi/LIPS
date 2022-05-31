@@ -297,7 +297,7 @@ def GetStrainEnergyExpression(lawname,modelParams,modelVar):
     if lawname=="Linear Elasticity":
         strainEnergy="Trace(("+modelParams["clambda"]+"*Trace(epsilon)*Id(2) + 2*"+modelParams["cmu"]+"*epsilon)'*epsilon)/2"
     elif lawname=="SaintVenant Kirchhoff":
-        strainEnergy="Saint_Venant_Kirchhoff_potential(Grad_"+modelVar+", ["+modelParams["clambda"]+"; "+modelParams["cmu"]+"])"
+        strainEnergy="Plane_Strain_Saint_Venant_Kirchhoff_potential(Grad_"+modelVar+", ["+modelParams["clambda"]+"; "+modelParams["cmu"]+"])"
     elif lawname=="Incompressible Mooney Rivlin":
         strainEnergy="Plane_Strain_Incompressible_Mooney_Rivlin_potential(Grad_"+modelVar+", ["+modelParams["c1"]+";"+modelParams["c2"]+"])"
     elif lawname=="Compressible NeoHookean":
@@ -311,10 +311,7 @@ def ComputeVonMises(model,material,mesh,mim):
         vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(cmu*(Grad_u+Grad_u')))",mfvm)
         #vonMises=model.compute_isotropic_linearized_Von_Mises_or_Tresca("u", "clambda","cmu", mfvm)
     elif materialBlock["law"]=="SaintVenantKirchhoff":
-        vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(Cauchy_stress_from_PK2(Saint_Venant_Kirchhoff_PK2(Grad_u, [clambda; cmu]),Grad_u)))",mfvm)
-        # strainEnergyExpression=GetStrainEnergyExpression(lawname="SaintVenant Kirchhoff",modelParams={"clambda":"clambda","cmu":"cmu"},modelVar="u")
-        # model.add_macro("SII", "Derivative_"+strainEnergyExpression)
-        # vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(Cauchy_stress_from_PK2(SII,Grad_u)))",mfvm)
+        vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(Cauchy_stress_from_PK2(Plane_Strain_Saint_Venant_Kirchhoff_PK2(Grad_u, [clambda; cmu]),Grad_u)))",mfvm)
     elif materialBlock["law"]=="IncompressibleMooneyRivlin":
         vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(Cauchy_stress_from_PK2(Incompressible_Mooney_Rivlin_PK2(Grad_u, [paramsIMR(1);paramsIMR(2)]),Grad_u)))",mfvm)
     return vonMises
@@ -497,7 +494,8 @@ def PrintBricks(model):
     model.brick_list()
 
 def AddRimRigidityNeumannCondition(neumannZone,neumannId,model,mfl,mim,params):
-    pressure=[params["Force"]/(8*2*np.pi)]
+    area=gf.asm_generic(mim, 0, "1", neumannZone)
+    pressure=[params["Force"]/area]
     model.add_filtered_fem_variable('lambda_D',mfl, neumannZone)
     neumannVariable='F'+str(neumannId)
     model.add_initialized_data(neumannVariable, pressure)
@@ -639,7 +637,7 @@ def AssembleProblem(model):
     model.assembly()
 
 def Solve(model,max_iter,max_residual,noisiness=True):
-    solveArgs=['max_res', max_residual, 'max_iter', max_iter]
+    solveArgs=['max_res', max_residual, 'max_iter', max_iter]#,'lsearch', 'simplest', 'alpha max ratio', 1.5, 'alpha min', 0.2, 'alpha mult', 0.6]
     if noisiness:
         solveArgs+=['noisy']
     solverIt=model.solve(*tuple(solveArgs))
