@@ -86,7 +86,7 @@ def PhysicalCriteriaComputation(criteriaType,physicalProblem,field,criteriaParam
     except KeyError:
         raise(Exception("Unable to treat this kind of problem !"))
 
-    criteria.SetExternalSolutions(extSol)
+    criteria.SetExternalSolutions(field)
     if criteriaParams is not None:
         return criteria.ComputeValue(**criteriaParams)
     return criteria.ComputeValue()

@@ -217,6 +217,28 @@ class WheelDataSet(DataSet):
             np.savez_compressed(f"{os.path.join(full_path_out, attr_nm)}.npz", data=self.data[attr_nm])
 
 
+    def reconstruct_output(self, data: "np.ndarray") -> dict:
+        """It reconstruct the data from the extracted data
+
+        Parameters
+        ----------
+        data : ``np.ndarray``
+            the array that should be reconstruted
+
+        Returns
+        -------
+        dict
+            the reconstructed data with variable names in a dictionary
+        """
+        predictions = {}
+        prev_ = 0
+        for var_id, this_var_size in enumerate(self._sizes_y):
+            attr_nm = self._attr_y[var_id]
+            predictions[attr_nm] = data[:, prev_:(prev_ + this_var_size)]
+            prev_ += this_var_size
+        return predictions
+
+
 class QuasiStaticWheelDataSet(WheelDataSet):
     """
     This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
