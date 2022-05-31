@@ -25,8 +25,35 @@ from lips.physical_simulator.getfemSimulator import PhysicalSimulator,GetfemSimu
 from lips.augmented_simulators.augmented_simulator import AugmentedSimulator
 from lips.dataset.pneumaticWheelDataSet import SamplerStaticWheelDataSet
 
-
 class WheelBenchmark(Benchmark):
+    def __init__(self,
+                 benchmark_path: str,
+                 config_path: Union[str, None]=None,
+                 benchmark_name: str="Benchmark1",
+                 load_data_set: bool=False,
+                 evaluation: Union[TransportEvaluation, None]=None,
+                 log_path: Union[str, None]=None,
+                 train_env_seed: int = 1,
+                 val_env_seed: int = 2,
+                 test_env_seed: int = 3,
+                 test_ood_topo_env_seed: int = 4,
+                 initial_chronics_id: int = 0,
+                 train_actor_seed: int = 5,
+                 val_actor_seed: int = 6,
+                 test_actor_seed: int = 7,
+                 test_ood_topo_actor_seed: int = 8,
+                 ):
+        super().__init__(benchmark_name=benchmark_name,
+                         dataset=None,
+                         augmented_simulator=None,
+                         evaluation=evaluation,
+                         benchmark_path=benchmark_path,
+                         log_path=log_path,
+                         config_path=config_path
+                        )
+
+
+class WeightSustainingWheelBenchmark(Benchmark):
     def __init__(self,
                  benchmark_path: str,
                  config_path: Union[str, None]=None,
@@ -56,7 +83,7 @@ class WheelBenchmark(Benchmark):
         self.is_loaded=False
         # TODO : it should be reset if the config file is modified on the fly
         if evaluation is None:
-            myEval=TransportEvaluation()
+            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
             self.evaluation = myEval.from_benchmark(benchmark=self)
 
         # print(self.config.get_options_dict())
@@ -268,34 +295,19 @@ class WheelBenchmark(Benchmark):
 
         """
         if self.training_simulator is None:
-            self.training_simulator = GetfemSimulator(get_kwargs_simulator_scenario(self.config),
-                                                       initial_chronics_id=self.initial_chronics_id,
-                                                       # i use 994 chronics out of the 904 for training
-                                                       chronics_selected_regex="^((?!(.*9[0-9][0-9].*)).)*$"
-                                                       )
+            scenario_params=self.config.get_option("env_params")
+            self.training_simulator = GetfemSimulator(**scenario_params)
 
     def _fills_actor_simulator(self):
         """This function is only called when the data are simulated"""
         self._create_training_simulator()
-        self.training_simulator.seed(self.train_env_seed)
 
-        self.val_simulator = GetfemSimulator(get_kwargs_simulator_scenario(self.config),
-                                              initial_chronics_id=self.initial_chronics_id,
-                                              # i use 50 full chronics for testing
-                                              chronics_selected_regex=".*9[0-4][0-9].*")
-        self.val_simulator.seed(self.val_env_seed)
+        scenario_params=self.config.get_option("env_params")
+        self.val_simulator = GetfemSimulator(**scenario_params)
 
-        self.test_simulator = GetfemSimulator(get_kwargs_simulator_scenario(self.config),
-                                               initial_chronics_id=self.initial_chronics_id,
-                                               # i use 25 full chronics for testing
-                                               chronics_selected_regex=".*9[5-9][0-4].*")
-        self.test_simulator.seed(self.test_env_seed)
+        self.test_simulator = GetfemSimulator(**scenario_params)
 
-        self.test_ood_topo_simulator = GetfemSimulator(get_kwargs_simulator_scenario(self.config),
-                                                        initial_chronics_id=self.initial_chronics_id,
-                                                        # i use 25 full chronics for testing
-                                                        chronics_selected_regex=".*9[5-9][5-9].*")
-        self.test_ood_topo_simulator.seed(self.test_ood_topo_env_seed)
+        self.test_ood_topo_simulator = GetfemSimulator(**scenario_params)
 
 
 if __name__ == '__main__':
