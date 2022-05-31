@@ -6,7 +6,7 @@ import lips.physical_simulator.GetfemSimulator.MeshGenerationTools as ExternalMe
 from lips.physical_simulator.GetfemSimulator.GetfemWheelProblem import GetfemMecaProblem,GetfemRollingWheelProblem
 from lips.physical_simulator.GetfemSimulator.GetfemWheelProblemQuasiStatic import QuasiStaticRollingProblem,QuasiStaticMecanicalProblem
 from lips.physical_simulator.GetfemSimulator.GetfemInterpolationTools import FEMInterpolationOnSupport
-
+import lips.physical_simulator.GetfemSimulator.PhysicalCriteria as PhyCriteria 
 
 def GetfemInterpolationOnSupport(simulator,field,gridSupport):
     physical_problem=simulator._simulator
@@ -66,4 +66,24 @@ def SimulatorGeneration(physicalDomain,physicalProperties):
 
     return simulator
 
+def PhysicalCriteriaComputation(criteriaType,physicalProblem,field,criteriaParams=None):
+
+    classNameByCriteriaType = {
+                               "DeformedVolume":"DeformedVolume",
+                               "NormalContactForces":"UnilateralContactPressure",
+                               "FrictionContactForces":"FrictionalContactPressure",
+                               "StrainEnergy":"TotalElasticEnergy",
+                               "MaxStress":"MaxVonMises",
+                               "MaxDeflection":"MaxDisp",
+                               }
+
+    try:
+        criteria = globals()[classNameByCriteriaType[criteriaType]]()
+    except KeyError:
+        raise(Exception("Unable to treat this kind of problem !"))
+
+    criteria.SetExternalSolutions(extSol)
+    if criteriaParams is not None:
+        return criteria.ComputeValue(**criteriaParams)
+    return criteria.ComputeValue()
 
