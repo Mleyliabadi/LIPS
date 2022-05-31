@@ -139,6 +139,12 @@ class WheelDataSet(DataSet):
         self._sizes_y = np.array([data[el].shape[1] for el in self._attr_y], dtype=int)
         self._size_y = np.sum(self._sizes_y)
 
+    def _init_store_data(self,simulator,nb_samples):
+        self.data=dict()
+        for attr_nm in self._attr_names:
+            array_ = simulator.get_variable_value(field_name=attr_nm)
+            self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
+
     def get_sizes(self):
         """Get the sizes of the dataset
 
@@ -233,29 +239,25 @@ class QuasiStaticWheelDataSet(WheelDataSet):
             raise RuntimeError("Impossible to `generate` a wheel dateset if you don't have "
                                "the getfem package installed") from exc_
 
-        self._init_store_data(simulator=simulator)
+        transientParams=getattr(simulator._simulator,"transientParams")
+        nb_samples=int(transientParams["time"]//transientParams["timeStep"]) + 1
+        self._init_store_data(simulator=simulator,nb_samples=nb_samples)
         simulator.build_model()
         solverState=simulator.run_problem()
             
         self._store_obs(obs=simulator)
 
-        self.data["time"]=getattr(simulator._simulator,"timeSteps")
+        timesteps=getattr(simulator._simulator,"timeSteps")
+        self.data["time"]=timesteps
         self._infer_sizes()
 
         if path_out is not None:
             # I should save the data
             self._save_internal_data(path_out)
+            attrib_name="timesteps"
             full_path_out = os.path.join(os.path.abspath(path_out), self.name)
+            np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=timesteps)
 
-
-    def _init_store_data(self,simulator):
-        transientParams=getattr(simulator._simulator,"transientParams")
-        nb_samples=int(transientParams["time"]//transientParams["timeStep"]) + 1
-
-        self.data=dict()
-        for attr_nm in self._attr_names:
-            array_ = simulator.get_variable_value(field_name=attr_nm)
-            self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
 
     def _store_obs(self, obs):
         for attr_nm in self._attr_names:
@@ -314,12 +316,6 @@ class SamplerStaticWheelDataSet(WheelDataSet):
             full_path_out = os.path.join(os.path.abspath(path_out), self.name)
             actor.save(path_out=full_path_out)
 
-
-    def _init_store_data(self,simulator,nb_samples):
-        self.data=dict()
-        for attr_nm in self._attr_names:
-            array_ = simulator.get_variable_value(field_name=attr_nm)
-            self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
 
     def _store_obs(self, current_size, obs):
         for attr_nm in self._attr_names:
