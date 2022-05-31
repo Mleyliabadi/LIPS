@@ -355,6 +355,9 @@ class GetfemProblemBase:
         feSpace,solutions=self.feSpaces[fieldType],self.GetSolution(fieldType)
         return PhySolver.GetSolutionAsField(feSpace,solutions)
 
+    def GetSolverOrderPosition(self):
+        return PhySolver.GetUniqueBasicCoordinates(self.feSpaces[PFN.displacement]).transpose()
+
     def GetBasicCoordinates(self,fieldType=PFN.displacement):
         """
         .. py:method:: GetBasicCoordinates(fieldType)
