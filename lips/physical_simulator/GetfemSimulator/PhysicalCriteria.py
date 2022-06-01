@@ -20,8 +20,12 @@ class PhysicalCriteriaBase(metaclass=abc.ABCMeta):
 
     def SetExternalSolutions(self,fields):
         if self.AllRequiredFieldForCriteria(fields.keys()):
-            for fieldName,fieldValue in fields.items():
-                modelVarName=PhySolver.modelVarByPhyField[fieldName]
+            if set(fields.keys())>set(self.requiredFields):
+                print("Warning: some fields provided are not required for the criteria "+str(self.__class__.__name__)+".\n Ignored Field:")
+                print("\t",', '.join("{}".format(k) for k in list(set(fields.keys())-set(self.requiredFields))))
+            for requiredField in self.requiredFields:
+                modelVarName=PhySolver.modelVarByPhyField[requiredField]
+                fieldValue=fields[requiredField]
                 PhySolver.SetModelVariableValue(self.model,modelVarName,fieldValue)
         else:
             missingFields=list(set(self.requiredFields) - set(fields.keys()))
