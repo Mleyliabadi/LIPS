@@ -212,8 +212,10 @@ class TorchUnet(nn.Module):
 
     def _post_process(self, data):
         if self.scaler is not None:
+            data=data.numpy()
             processed = self.scaler.inverse_transform(data)
-        return processed
+            data=torch.from_numpy(processed)
+        return data
 
     def _infer_size(self, dataset: DataSet):
         """Infer the size of the model
@@ -233,8 +235,8 @@ class TorchUnet(nn.Module):
 
     def get_metadata(self):
         res_json = {}
-        res_json["input_size"] = self.input_size
-        res_json["output_size"] = self.output_size
+        res_json["input_size"] = self.n_channels
+        res_json["output_size"] = self.n_classes
         return res_json
 
     def _save_metadata(self, path: str):
@@ -242,8 +244,8 @@ class TorchUnet(nn.Module):
         #if self.scaler is not None:
         #    self.scaler.save(path)
         res_json = {}
-        res_json["input_size"] = self.input_size
-        res_json["output_size"] = self.output_size
+        res_json["input_size"] = self.n_channels
+        res_json["output_size"] = self.n_classes
         with open((path / "metadata.json"), "w", encoding="utf-8") as f:
             json.dump(obj=res_json, fp=f, indent=4, sort_keys=True, cls=NpEncoder)
 
