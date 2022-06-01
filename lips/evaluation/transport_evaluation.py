@@ -6,9 +6,12 @@
 
 from typing import Union
 from collections.abc import Iterable
+import numpy as np
 
 from lips.config.configmanager import ConfigManager
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import PhysicalCriteriaComputation
+from lips.physical_simulator.getfemSimulator import GetfemSimulator
+
 from lips.evaluation import Evaluation
 from lips.logger import CustomLogger
 
@@ -31,6 +34,10 @@ class TransportEvaluation(Evaluation):
         self.logger = CustomLogger(__class__.__name__, self.log_path).logger
         # read the criteria and their mapped functions for power grid
         self.criteria = self.mapper.map_generic_criteria()
+
+        scenario_params=self.config.get_option("env_params")
+        self.simulator = GetfemSimulator(**scenario_params)
+        self.simulator.build_model()
 
     @classmethod
     def from_benchmark(cls,
@@ -67,7 +74,6 @@ class TransportEvaluation(Evaluation):
         # call the base class for generic evaluations
         super().evaluate(observations, predictions, save_path)
 
-        # evaluate powergrid specific evaluations based on config
         for cat in self.eval_dict.keys():
             self._dispatch_evaluation(cat)
 
@@ -99,33 +105,49 @@ class TransportEvaluation(Evaluation):
             raise Exception("Not done yet, sorry")
 
     def evaluate_ml(self):
-        metric_dict = self.metrics[self.MACHINE_LEARNING]
+        metricVal_by_name = self.metrics[self.MACHINE_LEARNING]
         for metric_name in self.eval_dict[self.MACHINE_LEARNING]:
             metric_fun = self.criteria.get(metric_name)
-            metric_dict[metric_name] = {}
+            metricVal_by_name[metric_name] = {}
             for nm_, pred_ in self.predictions.items():
                 true_ = self.observations[nm_]
                 tmp = metric_fun(true_, pred_)
                 if isinstance(tmp, Iterable):
-                    metric_dict[metric_name][nm_] = [float(el) for el in tmp]
+                    metricVal_by_name[metric_name][nm_] = [float(el) for el in tmp]
                     self.logger.info("%s for %s: %s", metric_name, nm_, tmp)
                 else:
-                    metric_dict[metric_name][nm_] = float(tmp)
+                    metricVal_by_name[metric_name][nm_] = float(tmp)
                     self.logger.info("%s for %s: %.2f", metric_name, nm_, tmp)
 
     def evaluate_physics(self):
-        metric_dict = self.metrics[self.PHYSICS_COMPLIANCES]
+        metricVal_by_name = self.metrics[self.PHYSICS_COMPLIANCES]
+        attr_x=self.config.get_option("attr_x")
+        obs_inputs={key: self.observations[key] for key in attr_x}
+        inputsSeparated = [dict(zip(obs_inputs,t)) for t in zip(*obs_inputs.values())]
+
+        attr_y=self.config.get_option("attr_y")
+        obs_outputs={key: self.observations[key] for key in attr_y}
+        outputSeparated = [dict(zip(obs_outputs,t)) for t in zip(*obs_outputs.values())]
+        
+        predictionSeparated = [dict(zip(self.predictions,t)) for t in zip(*self.predictions.values())]
+
+        metricVal_by_name = {metric_name:[] for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]}
+        for obs_input,obs_output,predict_out in zip(inputsSeparated,outputSeparated,predictionSeparated):
+            simulator=type(self.simulator)(simulatorInstance=self.simulator)
+            simulator.modify_state(actor=obs_input)
+            simulator.build_model()
+
+            for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]:
+                obs_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=obs_output,criteriaParams=None)
+                pred_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=predict_out,criteriaParams=None)
+                delta=np.linalg.norm( (np.array(obs_crit)-np.array(pred_crit))/np.array(obs_crit) )  
+                metricVal_by_name[metric_name].append(delta)
+
         for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]:
-            metric_fun = self.criteria.get(metric_name)
-            metric_dict[metric_name] = {}
-            # tmp = metric_fun(self.predictions,
-            #                  log_path=self.log_path,
-            #                  observations=self.observations,
-            #                  config=self.config)
-            metric_dict[metric_name] = tmp
+            tmp=metricVal_by_name[metric_name]
             if isinstance(tmp, Iterable):
-                metric_dict[metric_name] = [float(el) for el in tmp]
-                self.logger.info("%s for %s", metric_name, phyCriteria)
+                metricVal_by_name[metric_name] = [float(el) for el in tmp]
+                self.logger.info("%s for %s", metric_name, tmp)
             else:
-                metric_dict[metric_name] = float(tmp)
-                self.logger.info("%s for %.2f", metric_name, phyCriteria)
+                metricVal_by_name[metric_name] = float(tmp)
+                self.logger.info("%s for %.2f", metric_name, tmp)
