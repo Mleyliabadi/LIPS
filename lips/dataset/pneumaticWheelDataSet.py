@@ -232,7 +232,10 @@ class WheelDataSet(DataSet):
         nb_sample = index.size
         #for el in (*self._attr_names, *self._theta_attr_names):
         for el in self._attr_names:
+            if len(self.data[el].shape)==1:
+                self.data[el]=np.expand_dims(self.data[el], axis=1)
             res[el] = np.zeros((nb_sample, self.data[el].shape[1]), dtype=self.data[el].dtype)
+
 
         #for el in (*self._attr_names, *self._theta_attr_names):
         for el in self._attr_names:
@@ -420,6 +423,9 @@ class SamplerStaticWheelDataSet(WheelDataSet):
             self.data[attr_nm] = np.load(path_this_array)["data"]
             self.size = self.data[attr_nm].shape[0]
 
+        inputs = {attr_x:self.data[attr_x] for attr_x in self._attr_x}
+        self._inputs = [dict(zip(inputs,t)) for t in zip(*inputs.values())]
+
         self._infer_sizes()
 
     def extract_data(self, concat: bool=True) -> tuple:
@@ -561,13 +567,17 @@ def check_interpolation_back_and_forth():
                                     path_out=path_out
                                     )
 
+    regular_dataset_reloaded=SamplerStaticWheelDataSet("train",attr_names=(PFN.displacement,PFN.contactMultiplier,"Force"),attr_x= ("Force",),attr_y= ("disp",))
+    regular_dataset_reloaded.load(path=path_out)
+
+
     charac_sizes=[32,48,64,96,128]
     abs_error=[None]*len(charac_sizes)
     for charac_id,charac_size in enumerate(charac_sizes):
         print("Interpolation for charac_size=",charac_size)
         grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(charac_size,charac_size)}
         interpolatedDatasetGrid=DataSetInterpolatorOnGrid(simulator=simulator,
-                                                    dataset=pneumaticWheelDataSetTrain,
+                                                    dataset=regular_dataset_reloaded,
                                                     grid_support=grid_support)
         dofnum_by_field={PFN.displacement:2}
         path_out="WeightInterpolated"
