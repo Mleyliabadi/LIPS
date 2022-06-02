@@ -307,7 +307,7 @@ class PowerGridBenchmark(Benchmark):
         if isinstance(self.augmented_simulator, DCApproximationAS):
             predictions = self.augmented_simulator.evaluate(dataset)
         else:
-            predictions = self.augmented_simulator.evaluate(dataset, **kwargs)
+            predictions = self.augmented_simulator.predict(dataset, **kwargs)
 
         self.predictions[dataset.name] = predictions
         self.observations[dataset.name] = dataset.data
@@ -333,7 +333,6 @@ class PowerGridBenchmark(Benchmark):
                     np.savez_compressed(f"{os.path.join(save_path, attr_nm)}.npz", data=predictions[attr_nm])
         elif save_predictions:
             warnings.warn(message="You indicate to save the predictions, without providing a path. No predictions will be saved!")
-
 
         return res
 
