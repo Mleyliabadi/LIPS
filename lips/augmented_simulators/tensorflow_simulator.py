@@ -131,9 +131,7 @@ class TensorflowSimulator(AugmentedSimulator):
         processed_x, _ = self.process_dataset(dataset, training=False)
 
         # make the predictions
-        _beg = time.time()
         predictions = self._model.predict(processed_x, batch_size=self.params["eval_batch_size"])
-        self.predict_time = time.time() - _beg
 
         predictions = self._post_process(dataset, predictions)
 
