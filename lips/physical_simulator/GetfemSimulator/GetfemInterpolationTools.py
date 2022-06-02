@@ -9,5 +9,5 @@ def FEMInterpolationOnSupport(phyProblem,originalField,targetSupport):
     return interpolatedField
 
 def InterpolateSolOnNodes(fieldSupport,fieldValue,targetSupport):
-     interpolatedField = griddata(points=fieldSupport, values=fieldValue, xi=targetSupport, method='nearest')
-     return interpolatedField
+    interpolatedField = griddata(points=fieldSupport, values=fieldValue, xi=targetSupport, method='nearest')
+    return interpolatedField
