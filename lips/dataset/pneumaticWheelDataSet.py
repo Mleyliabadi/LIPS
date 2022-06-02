@@ -26,7 +26,8 @@ def Domain2DGridGenerator(origin,lenghts,sizes):
     return grid_support_points
 
 class DataSetInterpolatorOnGrid():
-    def __init__(self,simulator,dataset,grid_support):
+    def __init__(self,name,simulator,dataset,grid_support):
+        self.name=name
         self.simulator=simulator
         self.dataset=dataset
         self.grid_support=grid_support
@@ -100,6 +101,37 @@ class DataSetInterpolatorOnGrid():
 
         for attrib_name,data in self.distributed_inputs_on_grid.items():
             np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=data)
+
+    def load(self,path):
+        if not os.path.exists(path):
+            raise RuntimeError(f"{path} cannot be found on your computer")
+        if not os.path.isdir(path):
+            raise RuntimeError(f"{path} is not a valid directory")
+        full_path = os.path.join(path, self.name)
+        if not os.path.exists(full_path):
+            raise RuntimeError(f"There is no data saved in {full_path}. Have you called `dataset.generate()` with "
+                               f"a given `path_out` ?")
+
+        from os import listdir
+        from os.path import isfile, join
+        onlyfiles = [f for f in listdir(full_path) if isfile(join(full_path, f))]
+        onlynames=[file.split('.')[0] for file in onlyfiles]
+
+        attr_nm="GridPoints"
+        path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
+        self.grid_support_points=np.load(path_this_array)["data"]
+
+        interpolated_nm=[name for name in onlynames if "Interpolated" in name]
+        for attr_nm in interpolated_nm:
+            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
+            new_attr_nm=attr_nm.replace('Interpolated','')
+            self.interpolated_dataset[new_attr_nm]=np.load(path_this_array)["data"]
+
+        remaining_nm=[name for name in onlynames if ("Interpolated" and "GridPoints") not in name]
+        for attr_nm in remaining_nm:
+            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
+            self.distributed_inputs_on_grid[attr_nm] = np.load(path_this_array)["data"]
+
 
 class DataSetInterpolatorOnMesh():
     def __init__(self,simulator,dataset):
@@ -575,19 +607,24 @@ def check_interpolation_back_and_forth():
     for charac_id,charac_size in enumerate(charac_sizes):
         print("Interpolation for charac_size=",charac_size)
         grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(charac_size,charac_size)}
-        interpolatedDatasetGrid=DataSetInterpolatorOnGrid(simulator=simulator,
+        interpolatedDatasetGrid=DataSetInterpolatorOnGrid(name="train",simulator=simulator,
                                                     dataset=regular_dataset_reloaded,
                                                     grid_support=grid_support)
         dofnum_by_field={PFN.displacement:2}
         path_out="WeightInterpolated"
         interpolatedDatasetGrid.generate(dofnum_by_field=dofnum_by_field,path_out=path_out)
 
+        interpolatedDatasetGrid_reloaded=DataSetInterpolatorOnGrid(name="train",simulator=simulator,
+                                                    dataset=regular_dataset_reloaded,
+                                                    grid_support=grid_support)
+        interpolatedDatasetGrid_reloaded.load(path=path_out)
+
         interpolatedDatasetMesh=DataSetInterpolatorOnMesh(simulator=simulator,
-                                                    dataset=interpolatedDatasetGrid)
+                                                    dataset=interpolatedDatasetGrid_reloaded)
 
         interpolatedDatasetMesh.generate(field_names=[PFN.displacement])
 
-        original_data=pneumaticWheelDataSetTrain.data["disp"]
+        original_data=regular_dataset_reloaded.data["disp"]
         reinterpolated_data=interpolatedDatasetMesh.interpolated_dataset["disp"]
         abs_error[charac_id]=np.linalg.norm(original_data-reinterpolated_data)
 
