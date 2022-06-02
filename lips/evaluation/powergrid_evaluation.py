@@ -128,7 +128,7 @@ class PowerGridEvaluation(Evaluation):
         """
         metric_dict = self.metrics[self.MACHINE_LEARNING]
         for metric_name in self.eval_dict[self.MACHINE_LEARNING]:
-            if metric_name == "time_inf":
+            if metric_name == "TIME_INF":
                 try:
                     augmented_simulator = kwargs["augmented_simulator"]
                     dataset = kwargs["dataset"]
@@ -189,7 +189,7 @@ class PowerGridEvaluation(Evaluation):
         """
         metric_dict = self.metrics[self.INDUSTRIAL_READINESS]
         for metric_name in self.eval_dict[self.INDUSTRIAL_READINESS]:
-            if metric_name == "time_inf":
+            if metric_name == "TIME_INF":
                 try:
                     augmented_simulator = kwargs["augmented_simulator"]
                     dataset = kwargs["dataset"]
@@ -198,7 +198,6 @@ class PowerGridEvaluation(Evaluation):
 
                 try:
                     eval_batch_size = self.eval_params["inf_batch_size"]
-                    print(eval_batch_size)
                 except KeyError:
                     eval_batch_size = kwargs.get("eval_batch_size", augmented_simulator.params["eval_batch_size"])
 
