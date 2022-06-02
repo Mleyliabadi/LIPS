@@ -239,6 +239,7 @@ class PowerGridBenchmark(Benchmark):
             Unknown dataset selected
 
         """
+        self.augmented_simulator = augmented_simulator
         self._create_training_simulator()
         li_dataset = []
         if dataset == "all":
@@ -302,7 +303,6 @@ class PowerGridBenchmark(Benchmark):
                                                                             augmented_simulator.name,
                                                                             dataset.name
                                                                             )
-        self.augmented_simulator = augmented_simulator
         # TODO: however, we can introduce the batch concept in DC, to have equitable comparison for time complexity
         if isinstance(self.augmented_simulator, DCApproximationAS):
             predictions = self.augmented_simulator.evaluate(dataset)
@@ -313,8 +313,11 @@ class PowerGridBenchmark(Benchmark):
         self.observations[dataset.name] = dataset.data
         self.dataset = dataset
 
+        kwargs["augmented_simulator"] = self.augmented_simulator
+        kwargs["dataset"] = dataset
         res = self.evaluation.evaluate(observations=dataset.data,
-                                       predictions=predictions
+                                       predictions=predictions,
+                                       **kwargs
                                        )
 
         if save_path:
