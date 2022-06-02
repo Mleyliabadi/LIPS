@@ -13,7 +13,7 @@ from tqdm import tqdm  # TODO remove for final push
 
 from lips.dataset.dataSet import DataSet
 from lips.logger import CustomLogger
-from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import GetfemInterpolationOnSupport
+from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import GetfemInterpolationOnSupport,InterpolationOnCloudPoints
 from lips.config.configmanager import ConfigManager
 
 
@@ -26,30 +26,27 @@ def Domain2DGridGenerator(origin,lenghts,sizes):
     return grid_support_points
 
 class DataSetInterpolatorOnGrid():
-    """
-    This specific DataSet uses Getfem framework to simulate data arising from a rolling wheel problem.
-    """
-
     def __init__(self,simulator,dataset,grid_support):
         self.simulator=simulator
         self.dataset=dataset
         self.grid_support=grid_support
+        self.grid_support_points=np.array([])
         self.interpolated_dataset = dict()
         self.distributed_inputs_on_grid = dict()
 
     def generate(self,dofnum_by_field,path_out=None):
-        self.generate_interpolation_fields(dofnum_by_field,path_out=path_out)
+        self.generate_interpolation_fields(dofnum_by_field)
         self.distribute_data_on_grid()
 
         if path_out is not None:
             # I should save the data
             self._save_internal_data(path_out)
     
-    def generate_interpolation_fields(self,dofnum_by_field,path_out=None):
+    def generate_interpolation_fields(self,dofnum_by_field):
         self._init_interpolation_fields(dofnum_by_field)
 
         grid_shape=self.grid_support["sizes"]
-        grid_support_points=Domain2DGridGenerator(origin=self.grid_support["origin"],
+        self.grid_support_points=Domain2DGridGenerator(origin=self.grid_support["origin"],
                                                lenghts=self.grid_support["lenghts"],
                                                sizes=grid_shape)
 
@@ -58,7 +55,7 @@ class DataSetInterpolatorOnGrid():
             for field_name,dofnum in dofnum_by_field.items():
                 single_field=np.zeros((dofnum,grid_shape[0],grid_shape[1]))
                 original_field=data_solver_obs[field_name]
-                interpolated_field=GetfemInterpolationOnSupport(self.simulator,original_field,grid_support_points)
+                interpolated_field=GetfemInterpolationOnSupport(self.simulator,original_field,self.grid_support_points)
                 for dof_index in range(dofnum):
                     intermediate_field=interpolated_field[dof_index::dofnum]
                     single_field[dof_index]=intermediate_field.reshape((grid_shape[0],grid_shape[1]))
@@ -95,19 +92,72 @@ class DataSetInterpolatorOnGrid():
 
         os.mkdir(full_path_out)
 
+        field_name="GridPoints"
+        np.savez_compressed(f"{os.path.join(full_path_out, field_name)}.npz", data=self.grid_support_points)
+
         for field_name,data in self.interpolated_dataset.items():
             np.savez_compressed(f"{os.path.join(full_path_out, field_name)}Interpolated.npz", data=data)
 
         for attrib_name,data in self.distributed_inputs_on_grid.items():
             np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=data)
 
+class DataSetInterpolatorOnMesh():
+    def __init__(self,simulator,dataset):
+        self.simulator=simulator
+        self.dataset=dataset
+        self.interpolated_dataset = dict()
+
+    def generate(self,field_names,path_out=None):
+        self.generate_projection_fields_on_mesh(field_names)
+        self.accumulate_data_from_grid()
+
+        if path_out is not None:
+            #I should save the data
+            self._save_internal_data(path_out)
+
+    def generate_projection_fields_on_mesh(self,field_names):
+        self._init_projection_fields(field_names)
+
+        for dataIndex in range(self.dataset.interpolated_dataset[field_names[0]].shape[0]):
+            for field_name in field_names:
+                grid_field=self.dataset.interpolated_dataset[field_name][dataIndex]
+                grid_field=np.transpose(grid_field.reshape(grid_field.shape[0],-1))
+                fieldSupport=np.transpose(self.dataset.grid_support_points)
+
+                #Clean true zeros
+                exteriorPointsRows = np.where(grid_field[:,0] == 0.0) and np.where(grid_field[:,1] == 0.0)
+                interpolatedInteriorSol = np.delete(grid_field, exteriorPointsRows, axis=0)
+                interpolatedInteriorCoords=np.delete(fieldSupport, exteriorPointsRows, axis=0)
+                
+                interpolated_field=InterpolationOnCloudPoints(fieldSupport=interpolatedInteriorCoords,fieldValue=interpolatedInteriorSol,phyProblem=self.simulator)
+                interleave_interpolated_field=np.empty((interpolated_field.shape[0]*interpolated_field.shape[1],))
+                for dof in range(interpolated_field.shape[1]):
+                    interleave_interpolated_field[dof::interpolated_field.shape[1]]=interpolated_field[:,dof]
+                self.interpolated_dataset[field_name][dataIndex]=interleave_interpolated_field
+
+    def accumulate_data_from_grid(self):
+        grid_inputs=self.dataset.distributed_inputs_on_grid
+        inputs_separated = [dict(zip(grid_inputs,t)) for t in zip(*grid_inputs.values())]
+        accumulated_data_from_grid=[None]*len(inputs_separated)
+        for obs_id,obs_input in enumerate(inputs_separated):
+            obs_input={key:np.mean(value) for key,value in obs_input.items()}
+            accumulated_data_from_grid[obs_id]=obs_input
+        self.accumulated_data_from_grid={key: [single_data[key] for single_data in accumulated_data_from_grid] for key in accumulated_data_from_grid[0]}
+
+    def _init_projection_fields(self,field_names):
+        nb_samples=self.dataset.interpolated_dataset[field_names[0]].shape[0]
+        for field_name in field_names:
+            array_ = self.simulator.get_variable_value(field_name=field_name)
+            self.interpolated_dataset[field_name] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
+
+
 class WheelDataSet(DataSet):
     def __init__(self,
                  name="train",
                  attr_names=("disp",),
                  config: Union[ConfigManager, None]=None,
-                 log_path: Union[str, None]=None
-                 ):
+                 log_path: Union[str, None]=None,
+                 **kwargs):
         super(WheelDataSet,self).__init__(name=name)
         self._attr_names = copy.deepcopy(attr_names)
         self.size = 0
@@ -126,9 +176,8 @@ class WheelDataSet(DataSet):
         self._size_y = None
         self._sizes_x = None  # dimension of each variable
         self._sizes_y = None  # dimension of each variable
-        self._attr_x = self.config.get_option("attr_x")
-        self._attr_y = self.config.get_option("attr_y")
-
+        self._attr_x = kwargs["attr_x"] if "attr_x" in kwargs.keys() else self.config.get_option("attr_x")
+        self._attr_y = kwargs["attr_y"] if "attr_y" in kwargs.keys() else self.config.get_option("attr_y")
 
     def _infer_sizes(self):
         data = copy.deepcopy(self.data)
@@ -296,9 +345,10 @@ class SamplerStaticWheelDataSet(WheelDataSet):
                  name="train",
                  attr_names=("disp",),
                  config: Union[ConfigManager, None]=None,
-                 log_path: Union[str, None]=None
+                 log_path: Union[str, None]=None,
+                 **kwargs
                  ):
-        super(SamplerStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
+        super(SamplerStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path,**kwargs)
 
     def generate(self,
                  simulator: "GetfemSimulator",
@@ -400,6 +450,7 @@ class SamplerStaticWheelDataSet(WheelDataSet):
 import math
 from lips.physical_simulator.getfemSimulator import GetfemSimulator
 import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
+from lips.dataset.sampler import LHSSampler
 
 def check_static_samples_generation():
     physicalDomain={
@@ -418,7 +469,6 @@ def check_static_samples_generation():
     }
     training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
 
-    from lips.dataset.sampler import LHSSampler
     trainingInput={
               "young":(75.0,85.0),
               "poisson":(0.38,0.44),
@@ -478,5 +528,63 @@ def check_quasi_static_generation():
                                     path_out="WheelRolDir",
                                     )
 
+def check_interpolation_back_and_forth():
+    physicalDomain={
+        "Mesher":"Getfem",
+        "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
+        "wheelDimensions":(8.0,15.0),
+        "meshSize":1
+    }
+
+    physicalProperties={
+        "ProblemType":"StaticMechanicalStandard",
+        "materials":[["ALL", {"law":"LinearElasticity","young":5.98e6,"poisson":0.495} ]],
+        "neumann":[["HOLE_BOUND", {"type": "RimRigidityNeumann", "Force": 1.0e7}]],
+        "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.0}] ]
+    }
+    simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+
+    trainingInput={
+              "Force":(1.0e4,1.0e7),
+              }
+
+    training_actor=LHSSampler(space_params=trainingInput)
+
+    attr_names=(PFN.displacement,PFN.contactMultiplier)
+    pneumaticWheelDataSetTrain=SamplerStaticWheelDataSet("train",attr_names=attr_names,attr_x= ("Force",),attr_y= ("disp",))
+    path_out="WeightRegular"
+    pneumaticWheelDataSetTrain.generate(simulator=simulator,
+                                    actor=training_actor,
+                                    nb_samples=3,
+                                    actor_seed=42,
+                                    path_out=path_out
+                                    )
+
+    charac_sizes=[32,48,64,96,128]
+    abs_error=[None]*len(charac_sizes)
+    for charac_id,charac_size in enumerate(charac_sizes):
+        print("Interpolation for charac_size=",charac_size)
+        grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(charac_size,charac_size)}
+        interpolatedDatasetGrid=DataSetInterpolatorOnGrid(simulator=simulator,
+                                                    dataset=pneumaticWheelDataSetTrain,
+                                                    grid_support=grid_support)
+        dofnum_by_field={PFN.displacement:2}
+        path_out="WeightInterpolated"
+        interpolatedDatasetGrid.generate(dofnum_by_field=dofnum_by_field,path_out=path_out)
+
+        interpolatedDatasetMesh=DataSetInterpolatorOnMesh(simulator=simulator,
+                                                    dataset=interpolatedDatasetGrid)
+
+        interpolatedDatasetMesh.generate(field_names=[PFN.displacement])
+
+        original_data=pneumaticWheelDataSetTrain.data["disp"]
+        reinterpolated_data=interpolatedDatasetMesh.interpolated_dataset["disp"]
+        abs_error[charac_id]=np.linalg.norm(original_data-reinterpolated_data)
+
+    #Check error is decreasing
+    print(abs_error)
+    np.testing.assert_equal(abs_error[::-1],np.sort(abs_error))
+
+
 if __name__ == '__main__':
-    check_quasi_static_generation()
+    check_interpolation_back_and_forth()
