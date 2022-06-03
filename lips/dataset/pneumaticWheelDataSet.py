@@ -280,6 +280,38 @@ class WheelDataSet(DataSet):
         return self._size_x, self._size_y
 
 
+    def load(self, path):
+        if not os.path.exists(path):
+            raise RuntimeError(f"{path} cannot be found on your computer")
+        if not os.path.isdir(path):
+            raise RuntimeError(f"{path} is not a valid directory")
+        full_path = os.path.join(path, self.name)
+        if not os.path.exists(full_path):
+            raise RuntimeError(f"There is no data saved in {full_path}. Have you called `dataset.generate()` with "
+                               f"a given `path_out` ?")
+
+        for attr_nm in self._attr_names:
+            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
+            if not os.path.exists(path_this_array):
+                raise RuntimeError(f"Impossible to load data {attr_nm}. Have you called `dataset.generate()` with "
+                                   f"a given `path_out` and such that `dataset` is built with the right `attr_names` ?")
+
+        if self.data is not None:
+            warnings.warn(f"Deleting previous run in attempting to load the new one located at {path}")
+        self.data = {}
+        self.size = None
+
+        for attr_nm in self._attr_names:
+            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
+            self.data[attr_nm] = np.load(path_this_array)["data"]
+            self.size = self.data[attr_nm].shape[0]
+
+        inputs = {attr_x:self.data[attr_x] for attr_x in self._attr_x}
+        self._inputs = [dict(zip(inputs,t)) for t in zip(*inputs.values())]
+
+        self._infer_sizes()
+
+
     def get_data(self, index):
         """
         This function returns the data in the data that match the index `index`
@@ -396,22 +428,20 @@ class QuasiStaticWheelDataSet(WheelDataSet):
         self._store_obs(obs=simulator)
 
         timesteps=getattr(simulator._simulator,"timeSteps")
-        self.data["time"]=timesteps
+        self.data["timeSteps"]=timesteps
         self._infer_sizes()
 
         if path_out is not None:
             # I should save the data
             self._save_internal_data(path_out)
-            attrib_name="timesteps"
+            attrib_name="timeSteps"
             full_path_out = os.path.join(os.path.abspath(path_out), self.name)
             np.savez_compressed(f"{os.path.join(full_path_out, attrib_name)}.npz", data=timesteps)
-
 
     def _store_obs(self, obs):
         for attr_nm in self._attr_names:
             array_ = obs.get_solution(field_name=attr_nm)
             self.data[attr_nm] = array_
-
 
 class SamplerStaticWheelDataSet(WheelDataSet):
     """
@@ -469,37 +499,6 @@ class SamplerStaticWheelDataSet(WheelDataSet):
         for attr_nm in self._attr_names:
             array_ = obs.get_solution(field_name=attr_nm)
             self.data[attr_nm][current_size, :] = array_
-
-    def load(self, path):
-        if not os.path.exists(path):
-            raise RuntimeError(f"{path} cannot be found on your computer")
-        if not os.path.isdir(path):
-            raise RuntimeError(f"{path} is not a valid directory")
-        full_path = os.path.join(path, self.name)
-        if not os.path.exists(full_path):
-            raise RuntimeError(f"There is no data saved in {full_path}. Have you called `dataset.generate()` with "
-                               f"a given `path_out` ?")
-        #for attr_nm in (*self._attr_names, *self._theta_attr_names):
-        for attr_nm in self._attr_names:
-            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
-            if not os.path.exists(path_this_array):
-                raise RuntimeError(f"Impossible to load data {attr_nm}. Have you called `dataset.generate()` with "
-                                   f"a given `path_out` and such that `dataset` is built with the right `attr_names` ?")
-
-        if self.data is not None:
-            warnings.warn(f"Deleting previous run in attempting to load the new one located at {path}")
-        self.data = {}
-        self.size = None
-        #for attr_nm in (*self._attr_names, *self._theta_attr_names):
-        for attr_nm in self._attr_names:
-            path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
-            self.data[attr_nm] = np.load(path_this_array)["data"]
-            self.size = self.data[attr_nm].shape[0]
-
-        inputs = {attr_x:self.data[attr_x] for attr_x in self._attr_x}
-        self._inputs = [dict(zip(inputs,t)) for t in zip(*inputs.values())]
-
-        self._infer_sizes()
 
     def extract_data(self, concat: bool=True) -> tuple:
         """extract the x and y data from the dataset

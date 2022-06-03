@@ -23,7 +23,7 @@ from lips.benchmark import Benchmark
 from lips.evaluation.transport_evaluation import TransportEvaluation
 from lips.physical_simulator.getfemSimulator import PhysicalSimulator,GetfemSimulator
 from lips.augmented_simulators.augmented_simulator import AugmentedSimulator
-from lips.dataset.pneumaticWheelDataSet import SamplerStaticWheelDataSet
+from lips.dataset.pneumaticWheelDataSet import SamplerStaticWheelDataSet,QuasiStaticWheelDataSet
 
 class WheelBenchmark(Benchmark):
     def __init__(self,
@@ -53,7 +53,7 @@ class WheelBenchmark(Benchmark):
                         )
 
 
-class WeightSustainingWheelBenchmark(Benchmark):
+class WeightSustainingWheelBenchmark(WheelBenchmark):
     def __init__(self,
                  benchmark_path: str,
                  config_path: Union[str, None]=None,
@@ -72,8 +72,6 @@ class WeightSustainingWheelBenchmark(Benchmark):
                  test_ood_topo_actor_seed: int = 8,
                  ):
         super().__init__(benchmark_name=benchmark_name,
-                         dataset=None,
-                         augmented_simulator=None,
                          evaluation=evaluation,
                          benchmark_path=benchmark_path,
                          log_path=log_path,
@@ -407,6 +405,93 @@ class WeightSustainingWheelBenchmark(Benchmark):
 
         self.test_ood_topo_simulator = GetfemSimulator(**scenario_params)
 
+
+class DispRollingWheelBenchmark(WheelBenchmark):
+    def __init__(self,
+                 benchmark_path: str,
+                 config_path: Union[str, None]=None,
+                 benchmark_name: str="Benchmark1",
+                 load_data_set: bool=False,
+                 evaluation: Union[TransportEvaluation, None]=None,
+                 log_path: Union[str, None]=None,
+                 train_env_seed: int = 1,
+                 val_env_seed: int = 2,
+                 test_env_seed: int = 3,
+                 test_ood_topo_env_seed: int = 4,
+                 initial_chronics_id: int = 0,
+                 train_actor_seed: int = 5,
+                 val_actor_seed: int = 6,
+                 test_actor_seed: int = 7,
+                 test_ood_topo_actor_seed: int = 8,
+                 ):
+        super().__init__(benchmark_name=benchmark_name,
+                         evaluation=evaluation,
+                         benchmark_path=benchmark_path,
+                         log_path=log_path,
+                         config_path=config_path
+                        )
+
+        self.is_loaded=False
+        # TODO : it should be reset if the config file is modified on the fly
+        if evaluation is None:
+            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
+            self.evaluation = myEval.from_benchmark(benchmark=self)
+
+        self.env_name = self.config.get_option("env_name")
+        self.training_simulator = None
+        self.val_simulator = None
+        self.test_simulator = None
+        self.test_ood_topo_simulator = None
+
+        self.training_actor = None
+        self.val_actor = None
+        self.test_actor = None
+        self.test_ood_topo_actor = None
+
+        self.train_env_seed = train_env_seed
+        self.val_env_seed = val_env_seed
+        self.test_env_seed = test_env_seed
+        self.test_ood_topo_env_seed = test_ood_topo_env_seed
+
+        self.train_actor_seed = train_actor_seed
+        self.val_actor_seed = val_actor_seed
+        self.test_actor_seed = test_actor_seed
+        self.test_ood_topo_actor_seed = test_ood_topo_actor_seed
+
+        self.initial_chronics_id = initial_chronics_id
+        # concatenate all the variables for data generation
+        attr_names = self.config.get_option("attr_x")\
+                     +self.config.get_option("attr_y")
+
+
+        self.train_dataset = QuasiStaticWheelDataSet("train",
+                                              attr_names=attr_names,
+                                              config=self.config,
+                                              log_path=log_path
+                                              )
+
+        if load_data_set:
+            self.load()
+
+    def load(self):
+        """
+        load the already generated datasets
+        """
+        if self.is_loaded:
+            self.logger.info("Previously saved data will be freed and new data will be reloaded")
+        if not os.path.exists(self.path_datasets):
+            raise RuntimeError(f"No data are found in {self.path_datasets}. Have you generated or downloaded "
+                               f"some data ?")
+        self.train_dataset.load(path=self.path_datasets)
+        self.is_loaded = True
+
+
+    def evaluate_simulator(self,
+                           dataset: str = "all",
+                           augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
+                           save_path: Union[str, None]=None,
+                           **kwargs) -> dict:
+        return 0
 
 if __name__ == '__main__':
     print("toto")
