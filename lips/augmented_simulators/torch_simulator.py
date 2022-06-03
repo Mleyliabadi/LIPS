@@ -65,7 +65,6 @@ class TorchSimulator(AugmentedSimulator):
         # scaler
         self.scaler = scaler() if scaler else None
         self._model = self.model(name, self.scaler, **kwargs)
-        print(type(self._model))
         self.params.update(self._model.params)
 
 
