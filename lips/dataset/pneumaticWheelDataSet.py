@@ -132,6 +132,11 @@ class DataSetInterpolatorOnGrid():
             path_this_array = f"{os.path.join(full_path, attr_nm)}.npz"
             self.distributed_inputs_on_grid[attr_nm] = np.load(path_this_array)["data"]
 
+    def load_from_data(self,grid_support_points,interpolated_dataset,distributed_inputs_on_grid):
+        self.grid_support_points=grid_support_points
+        self.interpolated_dataset=interpolated_dataset
+        self.distributed_inputs_on_grid=distributed_inputs_on_grid
+
 
 class DataSetInterpolatorOnMesh():
     def __init__(self,name,simulator,dataset):

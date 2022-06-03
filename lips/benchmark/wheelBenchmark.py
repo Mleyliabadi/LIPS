@@ -235,6 +235,57 @@ class WeightSustainingWheelBenchmark(Benchmark):
 
         return predictions
 
+
+    def evaluate_simulator_from_predictions(self,
+                                            predictions: dict,
+                                            observations: dict,
+                                            dataset: str = "all",
+                                            save_path: Union[str, None]=None,
+                                            **kwargs) -> dict:
+
+        li_dataset = []
+        if dataset == "all":
+            li_dataset = [self.val_dataset, self._test_dataset, self._test_ood_topo_dataset]
+            keys = ["val", "test", "test_ood_topo"]
+        elif dataset == "val" or dataset == "val_dataset":
+            li_dataset = [self.val_dataset]
+            keys = ["val"]
+        elif dataset == "test" or dataset == "test_dataset":
+            li_dataset = [self._test_dataset]
+            keys = ["test"]
+        elif dataset == "test_ood_topo" or dataset == "test_ood_topo_dataset":
+            li_dataset = [self._test_ood_topo_dataset]
+            keys = ["test_ood_topo"]
+        else:
+            raise RuntimeError(f"Unknown dataset {dataset}")
+
+        res = {}
+        for dataset_, nm_ in zip(li_dataset, keys):
+            # call the evaluate predictor function of Benchmark class
+            tmp = self._aux_evaluate_on_single_dataset_from_prediction(dataset=dataset_,
+                                                       predictions=predictions[nm_],
+                                                       observations=observations[nm_],
+                                                       save_path=save_path,
+                                                       **kwargs)
+            res[nm_] = copy.deepcopy(tmp)
+        return res
+
+    def _aux_evaluate_on_single_dataset_from_prediction(self,
+                                        dataset: SamplerStaticWheelDataSet,
+                                        predictions: dict,
+                                        observations: dict,
+                                        save_path: Union[str, None]=None,
+                                        **kwargs) -> dict:
+        self.predictions[dataset.name] = predictions
+        self.observations[dataset.name] = observations
+        self.dataset = dataset
+
+        res = self.evaluation.evaluate(observations=observations,
+                                       predictions=predictions,
+                                       save_path=save_path
+                                       )
+        return res
+
     def evaluate_simulator(self,
                            dataset: str = "all",
                            augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
