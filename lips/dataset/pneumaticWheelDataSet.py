@@ -16,7 +16,6 @@ from lips.logger import CustomLogger
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import GetfemInterpolationOnSupport,InterpolationOnCloudPoints
 from lips.config.configmanager import ConfigManager
 
-
 def Domain2DGridGenerator(origin,lenghts,sizes):
     origin_x,origin_y=origin
     lenght_x,lenght_y=lenghts
@@ -112,9 +111,7 @@ class DataSetInterpolatorOnGrid():
             raise RuntimeError(f"There is no data saved in {full_path}. Have you called `dataset.generate()` with "
                                f"a given `path_out` ?")
 
-        from os import listdir
-        from os.path import isfile, join
-        onlyfiles = [f for f in listdir(full_path) if isfile(join(full_path, f))]
+        onlyfiles = [f for f in os.listdir(full_path) if os.path.isfile(os.path.join(full_path, f))]
         onlynames=[file.split('.')[0] for file in onlyfiles]
 
         attr_nm="GridPoints"
@@ -377,9 +374,9 @@ class QuasiStaticWheelDataSet(WheelDataSet):
                  name="train",
                  attr_names=("disp",),
                  config: Union[ConfigManager, None]=None,
-                 log_path: Union[str, None]=None
-                 ):
-        super(QuasiStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path)
+                 log_path: Union[str, None]=None,
+                 **kwargs):
+        super(QuasiStaticWheelDataSet,self).__init__(name=name,attr_names=attr_names,config=config,log_path=log_path,**kwargs)
 
     def generate(self,
                  simulator: "GetfemSimulator",
@@ -563,10 +560,7 @@ def check_static_samples_generation():
 
     attr_names=(PFN.displacement,PFN.contactMultiplier)
 
-    wheelConfig=ConfigManager(path="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/lips/config/confWheel.ini",
-                              section_name="BenchmarkWheelFFNN")
-
-    staticWheelDataSet=SamplerStaticWheelDataSet("train",attr_names=attr_names,config=wheelConfig)
+    staticWheelDataSet=SamplerStaticWheelDataSet("train",attr_names=attr_names,attr_x= ("young","poisson","fricCoeff"),attr_y= ("disp",))
     staticWheelDataSet.generate(simulator=training_simulator,
                                     actor=training_actor,
                                     path_out="WheelDir",
@@ -578,7 +572,8 @@ def check_static_samples_generation():
 
     #Interpolation on grid
     grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(16,16)}
-    myTransformer=DataSetInterpolatorOnGrid(simulator=training_simulator,
+    myTransformer=DataSetInterpolatorOnGrid(name="train",
+                                            simulator=training_simulator,
                                             dataset=staticWheelDataSet,
                                             grid_support=grid_support)
     dofnum_by_field={PFN.displacement:2}
@@ -604,10 +599,8 @@ def check_quasi_static_generation():
 
     training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     attr_names=(PFN.displacement,PFN.contactMultiplier)
-    wheelConfig=ConfigManager(path="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/lips/config/confWheel.ini",
-                              section_name="RollingWheel")
 
-    quasiStaticWheelDataSet=QuasiStaticWheelDataSet("train",attr_names=attr_names,config=wheelConfig)
+    quasiStaticWheelDataSet=QuasiStaticWheelDataSet("train",attr_names=attr_names,attr_x = ("time",),attr_y = ("disp","contactMult"))
     quasiStaticWheelDataSet.generate(simulator=training_simulator,
                                     path_out="WheelRolDir",
                                     )
@@ -689,3 +682,5 @@ def check_interpolation_back_and_forth():
 
 if __name__ == '__main__':
     check_interpolation_back_and_forth()
+    check_static_samples_generation()
+    check_quasi_static_generation()
