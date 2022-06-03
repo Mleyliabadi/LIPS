@@ -134,11 +134,6 @@ class TransportEvaluation(Evaluation):
         metricVal_by_name = {metric_name:[] for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]}
         for obs_input,obs_output,predict_out in zip(inputsSeparated,outputSeparated,predictionSeparated):
             simulator=type(self.simulator)(simulatorInstance=self.simulator)
-            # if "dispInterpolated" in attr_y:
-            #     obs_input={key:np.mean(value) for key,value in obs_input.items()}
-            #     obs_output={key:value.reshape(value.shape[0],-1) for key,value in obs_output.items()}
-            #     predict_out={key:value.reshape(value.shape[0],-1) for key,value in predict_out.items()}
-
             simulator.modify_state(actor=obs_input)
             simulator.build_model()
 
