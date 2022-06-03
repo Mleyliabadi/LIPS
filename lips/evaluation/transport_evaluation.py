@@ -125,7 +125,7 @@ class TransportEvaluation(Evaluation):
         obs_inputs={key: self.observations[key] for key in attr_x}
         inputsSeparated = [dict(zip(obs_inputs,t)) for t in zip(*obs_inputs.values())]
 
-        attr_y=self.config.get_option("attr_y")
+        attr_y=self.config.get_option("attr_y_eval")
         obs_outputs={key: self.observations[key] for key in attr_y}
         outputSeparated = [dict(zip(obs_outputs,t)) for t in zip(*obs_outputs.values())]
         
