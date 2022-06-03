@@ -120,9 +120,6 @@ def check_quasi_static_rolling():
         "meshFilename":"DentedWheel"
     }
 
-    from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import MeshGeneration
-    machin=MeshGeneration(physicalDomain)
-
     dt = 10e-4
     physicalProperties={
         "ProblemType":"QuasiStaticMechanicalRolling",
