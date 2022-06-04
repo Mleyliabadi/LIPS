@@ -408,6 +408,28 @@ class WheelDataSet(DataSet):
             prev_ += this_var_size
         return predictions
 
+    def extract_data(self, concat: bool=True) -> tuple:
+        """extract the x and y data from the dataset
+
+        Parameters
+        ----------
+        concat : ``bool``
+            If True, the data will be concatenated in a single array.
+        Returns
+        -------
+        tuple
+            extracted inputs and outputs
+        """
+        # init the sizes and everything
+        data = copy.deepcopy(self.data)
+        extract_x = [data[el].astype(np.float32) for el in self._attr_x]
+        extract_y = [data[el].astype(np.float32) for el in self._attr_y]
+
+        if concat:
+            extract_x = [single_x.reshape((single_x.shape[0],1)) for single_x in extract_x]
+            extract_x = np.concatenate(extract_x, axis=1)
+            extract_y = np.concatenate(extract_y, axis=1)
+        return extract_x, extract_y
 
 class QuasiStaticWheelDataSet(WheelDataSet):
     """
@@ -512,29 +534,6 @@ class SamplerStaticWheelDataSet(WheelDataSet):
         for attr_nm in self._attr_names:
             array_ = obs.get_solution(field_name=attr_nm)
             self.data[attr_nm][current_size, :] = array_
-
-    def extract_data(self, concat: bool=True) -> tuple:
-        """extract the x and y data from the dataset
-
-        Parameters
-        ----------
-        concat : ``bool``
-            If True, the data will be concatenated in a single array.
-        Returns
-        -------
-        tuple
-            extracted inputs and outputs
-        """
-        # init the sizes and everything
-        data = copy.deepcopy(self.data)
-        extract_x = [data[el].astype(np.float32) for el in self._attr_x]
-        extract_y = [data[el].astype(np.float32) for el in self._attr_y]
-
-        if concat:
-            extract_x = [single_x.reshape((single_x.shape[0],1)) for single_x in extract_x]
-            extract_x = np.concatenate(extract_x, axis=1)
-            extract_y = np.concatenate(extract_y, axis=1)
-        return extract_x, extract_y
 
 
 #Check integrities

@@ -142,6 +142,11 @@ class TorchFullyConnected(nn.Module):
         data_loader = DataLoader(torch_dataset, batch_size=batch_size, shuffle=self.params["shuffle"])
         return data_loader
 
+    def _post_process_with_input(self,input_model,data):
+        if self.scaler is not None:
+            processed = self.scaler.inverse_transform(input_model,data)
+        return processed
+
     def _post_process(self, data):
         if self.scaler is not None:
             processed = self.scaler.inverse_transform(data)

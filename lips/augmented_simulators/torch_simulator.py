@@ -63,7 +63,10 @@ class TorchSimulator(AugmentedSimulator):
         # logger
         self.logger = CustomLogger(__class__.__name__, self.log_path).logger
         # scaler
-        self.scaler = scaler() if scaler else None
+        if "scalerParams" not in kwargs.keys():
+            self.scaler = scaler() if scaler else None
+        else:
+            self.scaler = scaler(**kwargs["scalerParams"])
         self._model = self.model(name, self.scaler, **kwargs)
         self.params.update(self._model.params)
 
@@ -299,8 +302,14 @@ class TorchSimulator(AugmentedSimulator):
                 _beg = time.time()
                 prediction = self._model(data)
                 total_time += time.time() - _beg
-                prediction = self._model._post_process(prediction)
-                target = self._model._post_process(target)
+                if "input_required_for_post_process" in kwargs and kwargs["input_required_for_post_process"]:
+                    input_model=data
+                    prediction = self._model._post_process_with_input(input_model,prediction)
+                    target = self._model._post_process_with_input(input_model,target)
+                else:
+                    prediction = self._model._post_process(prediction)
+                    target = self._model._post_process(target)
+                
                 predictions.append(prediction.numpy())
                 observations.append(target.numpy())
 
