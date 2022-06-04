@@ -50,6 +50,8 @@ class WheelBenchmark(Benchmark):
                          log_path=log_path,
                          config_path=config_path
                         )
+        self.training_simulator = None
+
 
     def evaluate_simulator(self,
                            dataset: str = "all",
@@ -110,6 +112,15 @@ class WheelBenchmark(Benchmark):
             res[nm_] = copy.deepcopy(tmp)
         return res
 
+    def _create_training_simulator(self):
+        """
+        Initialize the simulator used for training
+
+        """
+        if self.training_simulator is None:
+            scenario_params=self.config.get_option("env_params")
+            self.training_simulator = GetfemSimulator(**scenario_params)
+
 class WeightSustainingWheelBenchmark(WheelBenchmark):
     def __init__(self,
                  benchmark_path: str,
@@ -143,7 +154,6 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
 
         # print(self.config.get_options_dict())
         self.env_name = self.config.get_option("env_name")
-        self.training_simulator = None
         self.val_simulator = None
         self.test_simulator = None
         self.test_ood_topo_simulator = None
@@ -383,15 +393,6 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                                        )
         return res
 
-    def _create_training_simulator(self):
-        """
-        Initialize the simulator used for training
-
-        """
-        if self.training_simulator is None:
-            scenario_params=self.config.get_option("env_params")
-            self.training_simulator = GetfemSimulator(**scenario_params)
-
     def _fills_actor_simulator(self):
         """This function is only called when the data are simulated"""
         self._create_training_simulator()
@@ -430,9 +431,9 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                         )
 
         self.is_loaded=False
-        # if evaluation is None:
-        #     myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
-        #     self.evaluation = myEval.from_benchmark(benchmark=self)
+        if evaluation is None:
+            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
+            self.evaluation = myEval.from_benchmark(benchmark=self)
 
         self.env_name = self.config.get_option("env_name")
 
@@ -453,7 +454,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                                               log_path=log_path
                                               )
 
-        self.test_dataset = QuasiStaticWheelDataSet("test",
+        self._test_dataset = QuasiStaticWheelDataSet("test",
                                               attr_names=attr_names,
                                               config=self.config,
                                               log_path=log_path
@@ -511,17 +512,37 @@ class DispRollingWheelBenchmark(WheelBenchmark):
         for name,dataset in datasets.items():
             stacked_dataset[name]={variable: np.squeeze(np.array([data[variable] for data in dataset])) for variable in dataset[0]}
 
-        internal_datasets=dict(zip(["train","test","valid"],[self.train_dataset,self.test_dataset,self.val_dataset]))
+        internal_datasets=dict(zip(["train","test","valid"],[self.train_dataset,self._test_dataset,self.val_dataset]))
         for internal_name,internal_dataset in internal_datasets.items():
             if internal_name in indices_by_dataset.keys():
                 internal_dataset.load_from_data(data=stacked_dataset[internal_name])
 
-    def _aux_predict_on_single_dataset(self,
+
+    def _aux_evaluate_on_single_dataset(self,
                                         dataset: SamplerStaticWheelDataSet,
                                         augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
                                         save_path: Union[str, None]=None,
                                         **kwargs) -> dict:
+        """Evaluate a single dataset
+        This function will evalute a simulator (physical or augmented) using various criteria predefined in evaluator object
+        on a ``single test dataset``. It can be overloaded or called to evaluate the performance on multiple datasets
 
+        Parameters
+        ------
+        dataset : SamplerStaticWheelDataSet
+            the dataset
+        augmented_simulator : Union[PhysicalSimulator, AugmentedSimulator, None], optional
+            a trained augmented simulator, by default None
+        batch_size : int, optional
+            batch_size used for inference, by default 32
+        save_path : Union[str, None], optional
+            if indicated the evaluation results will be saved to indicated path, by default None
+
+        Returns
+        -------
+        dict
+            the results dictionary
+        """
         self.logger.info("Benchmark %s, evaluation using %s on %s dataset", self.benchmark_name,
                                                                             augmented_simulator.name,
                                                                             dataset.name
@@ -529,4 +550,13 @@ class DispRollingWheelBenchmark(WheelBenchmark):
         self.augmented_simulator = augmented_simulator
         predictions = self.augmented_simulator.evaluate(dataset=dataset,input_required_for_post_process=True)
 
-        return predictions
+        self.predictions[dataset.name] = predictions
+        self.observations[dataset.name] = dataset.data
+        self.dataset = dataset
+
+        res = self.evaluation.evaluate(observations=dataset.data,
+                                       predictions=predictions,
+                                       save_path=save_path
+                                       )
+        return res
+

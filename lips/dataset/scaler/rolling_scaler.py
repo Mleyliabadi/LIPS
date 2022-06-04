@@ -33,7 +33,8 @@ class RollingWheelScaler():
         return transformed_x, transformed_y
 
     def inverse_transform(self, x, y):
-        scale=self.wheel_velocity*np.einsum('i,ij->ij',x,np.ones_like(y[:,0::2]))
+        squeezed_x=np.squeeze(x)
+        scale=self.wheel_velocity*np.einsum('i,ij->ij',squeezed_x,np.ones_like(y[:,0::2]))
 
         transformed_y = np.zeros_like(y)
         transformed_y[:,0::2] = y[:,0::2] + scale

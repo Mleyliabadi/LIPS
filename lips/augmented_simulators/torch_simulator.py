@@ -310,6 +310,7 @@ class TorchSimulator(AugmentedSimulator):
                     prediction = self._model._post_process(prediction)
                     target = self._model._post_process(target)
                 
+                #if type(prediction) is np.ndarray: 
                 predictions.append(prediction.numpy())
                 observations.append(target.numpy())
 
