@@ -51,6 +51,64 @@ class WheelBenchmark(Benchmark):
                          config_path=config_path
                         )
 
+    def evaluate_simulator(self,
+                           dataset: str = "all",
+                           augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
+                           save_path: Union[str, None]=None,
+                           **kwargs) -> dict:
+        """evaluate a trained augmented simulator on one or multiple test datasets
+
+        Parameters
+        ----------
+        dataset : str, optional
+            dataset on which the evaluation should be performed, by default "all"
+        augmented_simulator : Union[PhysicalSimulator, AugmentedSimulator, None], optional
+            An instance of the class augmented simulator, by default None
+        save_path : Union[str, None], optional
+            the path that the evaluation results should be saved, by default None
+        **kwargs: ``dict``
+            additional arguments that will be passed to the augmented simulator
+        Todo
+        ----
+        TODO: add active flow in config file
+
+        Returns
+        -------
+        dict
+            the results dictionary
+
+        Raises
+        ------
+        RuntimeError
+            Unknown dataset selected
+
+        """
+        self._create_training_simulator()
+        li_dataset = []
+        if dataset == "all":
+            li_dataset = [self.val_dataset, self._test_dataset, self._test_ood_topo_dataset]
+            keys = ["val", "test", "test_ood_topo"]
+        elif dataset == "val" or dataset == "val_dataset":
+            li_dataset = [self.val_dataset]
+            keys = ["val"]
+        elif dataset == "test" or dataset == "test_dataset":
+            li_dataset = [self._test_dataset]
+            keys = ["test"]
+        elif dataset == "test_ood_topo" or dataset == "test_ood_topo_dataset":
+            li_dataset = [self._test_ood_topo_dataset]
+            keys = ["test_ood_topo"]
+        else:
+            raise RuntimeError(f"Unknown dataset {dataset}")
+
+        res = {}
+        for dataset_, nm_ in zip(li_dataset, keys):
+            # call the evaluate simulator function of Benchmark class
+            tmp = self._aux_evaluate_on_single_dataset(dataset=dataset_,
+                                                       augmented_simulator=augmented_simulator,
+                                                       save_path=save_path,
+                                                       **kwargs)
+            res[nm_] = copy.deepcopy(tmp)
+        return res
 
 class WeightSustainingWheelBenchmark(WheelBenchmark):
     def __init__(self,
@@ -283,65 +341,6 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                                        )
         return res
 
-    def evaluate_simulator(self,
-                           dataset: str = "all",
-                           augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
-                           save_path: Union[str, None]=None,
-                           **kwargs) -> dict:
-        """evaluate a trained augmented simulator on one or multiple test datasets
-
-        Parameters
-        ----------
-        dataset : str, optional
-            dataset on which the evaluation should be performed, by default "all"
-        augmented_simulator : Union[PhysicalSimulator, AugmentedSimulator, None], optional
-            An instance of the class augmented simulator, by default None
-        save_path : Union[str, None], optional
-            the path that the evaluation results should be saved, by default None
-        **kwargs: ``dict``
-            additional arguments that will be passed to the augmented simulator
-        Todo
-        ----
-        TODO: add active flow in config file
-
-        Returns
-        -------
-        dict
-            the results dictionary
-
-        Raises
-        ------
-        RuntimeError
-            Unknown dataset selected
-
-        """
-        self._create_training_simulator()
-        li_dataset = []
-        if dataset == "all":
-            li_dataset = [self.val_dataset, self._test_dataset, self._test_ood_topo_dataset]
-            keys = ["val", "test", "test_ood_topo"]
-        elif dataset == "val" or dataset == "val_dataset":
-            li_dataset = [self.val_dataset]
-            keys = ["val"]
-        elif dataset == "test" or dataset == "test_dataset":
-            li_dataset = [self._test_dataset]
-            keys = ["test"]
-        elif dataset == "test_ood_topo" or dataset == "test_ood_topo_dataset":
-            li_dataset = [self._test_ood_topo_dataset]
-            keys = ["test_ood_topo"]
-        else:
-            raise RuntimeError(f"Unknown dataset {dataset}")
-
-        res = {}
-        for dataset_, nm_ in zip(li_dataset, keys):
-            # call the evaluate simulator function of Benchmark class
-            tmp = self._aux_evaluate_on_single_dataset(dataset=dataset_,
-                                                       augmented_simulator=augmented_simulator,
-                                                       save_path=save_path,
-                                                       **kwargs)
-            res[nm_] = copy.deepcopy(tmp)
-        return res
-
     def _aux_evaluate_on_single_dataset(self,
                                         dataset: SamplerStaticWheelDataSet,
                                         augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
@@ -460,7 +459,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                                               log_path=log_path
                                               )
 
-        self.valid_dataset = QuasiStaticWheelDataSet("valid",
+        self.val_dataset = QuasiStaticWheelDataSet("valid",
                                               attr_names=attr_names,
                                               config=self.config,
                                               log_path=log_path
@@ -512,16 +511,22 @@ class DispRollingWheelBenchmark(WheelBenchmark):
         for name,dataset in datasets.items():
             stacked_dataset[name]={variable: np.squeeze(np.array([data[variable] for data in dataset])) for variable in dataset[0]}
 
-        internal_datasets=dict(zip(["train","test","valid"],[self.train_dataset,self.test_dataset,self.valid_dataset]))
+        internal_datasets=dict(zip(["train","test","valid"],[self.train_dataset,self.test_dataset,self.val_dataset]))
         for internal_name,internal_dataset in internal_datasets.items():
             if internal_name in indices_by_dataset.keys():
                 internal_dataset.load_from_data(data=stacked_dataset[internal_name])
 
+    def _aux_predict_on_single_dataset(self,
+                                        dataset: SamplerStaticWheelDataSet,
+                                        augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
+                                        save_path: Union[str, None]=None,
+                                        **kwargs) -> dict:
 
+        self.logger.info("Benchmark %s, evaluation using %s on %s dataset", self.benchmark_name,
+                                                                            augmented_simulator.name,
+                                                                            dataset.name
+                                                                            )
+        self.augmented_simulator = augmented_simulator
+        predictions = self.augmented_simulator.evaluate(dataset=dataset,input_required_for_post_process=True)
 
-    def evaluate_simulator(self,
-                           dataset: str = "all",
-                           augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
-                           save_path: Union[str, None]=None,
-                           **kwargs) -> dict:
-        return 0
+        return predictions
