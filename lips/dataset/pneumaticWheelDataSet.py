@@ -311,6 +311,18 @@ class WheelDataSet(DataSet):
 
         self._infer_sizes()
 
+    def load_from_data(self,data):
+        self.data = {}
+        self.size = None
+
+        for attr_nm in self._attr_names:
+            self.data[attr_nm] = data[attr_nm]
+            self.size = self.data[attr_nm].shape[0]
+
+        inputs = {attr_x:self.data[attr_x] for attr_x in self._attr_x}
+        self._inputs = [dict(zip(inputs,t)) for t in zip(*inputs.values())]
+
+        self._infer_sizes()
 
     def get_data(self, index):
         """
