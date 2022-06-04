@@ -15,10 +15,9 @@ import shutil
 import warnings
 import copy
 from typing import Union
-import importlib
+import numpy as np
 
 from lips.benchmark import Benchmark
-# from .utils.powergrid_utils import get_kwargs_simulator_scenario
 
 from lips.evaluation.transport_evaluation import TransportEvaluation
 from lips.physical_simulator.getfemSimulator import PhysicalSimulator,GetfemSimulator
@@ -432,39 +431,36 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                         )
 
         self.is_loaded=False
-        # TODO : it should be reset if the config file is modified on the fly
-        if evaluation is None:
-            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
-            self.evaluation = myEval.from_benchmark(benchmark=self)
+        # if evaluation is None:
+        #     myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
+        #     self.evaluation = myEval.from_benchmark(benchmark=self)
 
         self.env_name = self.config.get_option("env_name")
-        self.training_simulator = None
-        self.val_simulator = None
-        self.test_simulator = None
-        self.test_ood_topo_simulator = None
 
-        self.training_actor = None
-        self.val_actor = None
-        self.test_actor = None
-        self.test_ood_topo_actor = None
-
-        self.train_env_seed = train_env_seed
-        self.val_env_seed = val_env_seed
-        self.test_env_seed = test_env_seed
-        self.test_ood_topo_env_seed = test_ood_topo_env_seed
-
-        self.train_actor_seed = train_actor_seed
-        self.val_actor_seed = val_actor_seed
-        self.test_actor_seed = test_actor_seed
-        self.test_ood_topo_actor_seed = test_ood_topo_actor_seed
-
-        self.initial_chronics_id = initial_chronics_id
         # concatenate all the variables for data generation
         attr_names = self.config.get_option("attr_x")\
                      +self.config.get_option("attr_y")
 
 
+        self.base_dataset = QuasiStaticWheelDataSet("base",
+                                              attr_names=attr_names,
+                                              config=self.config,
+                                              log_path=log_path
+                                              )
+
         self.train_dataset = QuasiStaticWheelDataSet("train",
+                                              attr_names=attr_names,
+                                              config=self.config,
+                                              log_path=log_path
+                                              )
+
+        self.test_dataset = QuasiStaticWheelDataSet("test",
+                                              attr_names=attr_names,
+                                              config=self.config,
+                                              log_path=log_path
+                                              )
+
+        self.valid_dataset = QuasiStaticWheelDataSet("valid",
                                               attr_names=attr_names,
                                               config=self.config,
                                               log_path=log_path
@@ -482,8 +478,45 @@ class DispRollingWheelBenchmark(WheelBenchmark):
         if not os.path.exists(self.path_datasets):
             raise RuntimeError(f"No data are found in {self.path_datasets}. Have you generated or downloaded "
                                f"some data ?")
-        self.train_dataset.load(path=self.path_datasets)
+        self.base_dataset.load(path=self.path_datasets)
         self.is_loaded = True
+
+    def split_train_test_valid(self,train_ratio,test_ratio,valid_ratio):
+        if sum([train_ratio,test_ratio,valid_ratio])>1.0:
+            raise Exception("Sum of splitted ratio can not exceed 1")
+
+        base_dataset_size=len(self.base_dataset)
+
+        train_dataset_size=np.floor(train_ratio*base_dataset_size)
+        test_dataset_size=np.floor(test_ratio*base_dataset_size)
+        valid_dataset_size=np.floor(valid_ratio*base_dataset_size)
+
+        if sum([train_dataset_size,test_dataset_size,valid_dataset_size]) != base_dataset_size:
+            raise Exception("Train/Test/Valid split does not cover the whole dataset!")
+
+        indices_by_dataset={
+            "train":np.arange(0,train_dataset_size),
+            "test":np.arange(train_dataset_size,train_dataset_size+test_dataset_size),
+            "valid":np.arange(train_dataset_size+test_dataset_size,train_dataset_size+test_dataset_size+valid_dataset_size)
+        }
+        indices_by_dataset={key:val for key,val in indices_by_dataset.items() if val.size!=0 }
+
+        datasets={name:[] for name in indices_by_dataset.keys()}
+        indices_name,indices_val=indices_by_dataset.keys(),indices_by_dataset.values()
+        for index in range(len(self.base_dataset)):
+            num_linked_to_index=np.where(np.array(list(indices_val))==index)[0][0]
+            name_linked_to_index=list(indices_name)[num_linked_to_index]
+            datasets[name_linked_to_index].append(self.base_dataset.get_data(index=index))
+
+        stacked_dataset=dict()
+        for name,dataset in datasets.items():
+            stacked_dataset[name]={variable: np.squeeze(np.array([data[variable] for data in dataset])) for variable in dataset[0]}
+
+        internal_datasets=dict(zip(["train","test","valid"],[self.train_dataset,self.test_dataset,self.valid_dataset]))
+        for internal_name,internal_dataset in internal_datasets.items():
+            if internal_name in indices_by_dataset.keys():
+                internal_dataset.load_from_data(data=stacked_dataset[internal_name])
+
 
 
     def evaluate_simulator(self,
@@ -492,6 +525,3 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                            save_path: Union[str, None]=None,
                            **kwargs) -> dict:
         return 0
-
-if __name__ == '__main__':
-    print("toto")
