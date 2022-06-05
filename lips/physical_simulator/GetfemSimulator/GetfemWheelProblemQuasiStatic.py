@@ -135,6 +135,9 @@ class QuasiStaticMecaProblemBase(metaclass=abc.ABCMeta):
         u = self._staticProblem.GetSolution(PFN.displacement)
         return u
 
+    def SetPhyParams(self,actor):
+        pass
+
     @abc.abstractmethod
     def UpdateStaticProblem(self,time):
         pass

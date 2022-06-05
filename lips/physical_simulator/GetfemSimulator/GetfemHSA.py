@@ -313,7 +313,7 @@ def ComputeVonMises(model,material,mesh,mim):
     elif materialBlock["law"]=="SaintVenantKirchhoff":
         vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(Cauchy_stress_from_PK2(Plane_Strain_Saint_Venant_Kirchhoff_PK2(Grad_u, [clambda; cmu]),Grad_u)))",mfvm)
     elif materialBlock["law"]=="IncompressibleMooneyRivlin":
-        vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(Cauchy_stress_from_PK2(Incompressible_Mooney_Rivlin_PK2(Grad_u, [paramsIMR(1);paramsIMR(2)]),Grad_u)))",mfvm)
+        vonMises=model.local_projection(mim,"sqrt(1.5)*Norm(Deviator(Cauchy_stress_from_PK2(Plane_Strain_Incompressible_Mooney_Rivlin_PK2(Grad_u, [paramsIMR(1);paramsIMR(2)]),Grad_u)))",mfvm)
     return vonMises
 
 def ComputeEquilibriumResidual(model,material,mesh,mim):
