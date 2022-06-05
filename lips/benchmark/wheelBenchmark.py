@@ -422,6 +422,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                  val_actor_seed: int = 6,
                  test_actor_seed: int = 7,
                  test_ood_topo_actor_seed: int = 8,
+                 **kwargs
                  ):
         super().__init__(benchmark_name=benchmark_name,
                          evaluation=evaluation,
@@ -429,6 +430,8 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                          log_path=log_path,
                          config_path=config_path
                         )
+
+        self.input_required_for_post_process= False if "input_required_for_post_process" not in kwargs else kwargs["input_required_for_post_process"]
 
         self.is_loaded=False
         if evaluation is None:
@@ -548,7 +551,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                                                                             dataset.name
                                                                             )
         self.augmented_simulator = augmented_simulator
-        predictions = self.augmented_simulator.evaluate(dataset=dataset,input_required_for_post_process=True)
+        predictions = self.augmented_simulator.evaluate(dataset=dataset,input_required_for_post_process=self.input_required_for_post_process)
 
         self.predictions[dataset.name] = predictions
         self.observations[dataset.name] = dataset.data
