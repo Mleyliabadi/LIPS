@@ -145,6 +145,8 @@ class TorchFullyConnected(nn.Module):
     def _post_process_with_input(self,input_model,data):
         if self.scaler is not None:
             processed = self.scaler.inverse_transform(input_model,data)
+            if type(processed) is np.ndarray:
+                processed=torch.from_numpy(processed)
         return processed
 
     def _post_process(self, data):
