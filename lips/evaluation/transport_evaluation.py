@@ -30,6 +30,7 @@ class TransportEvaluation(Evaluation):
 
         self.eval_dict = self.config.get_option("eval_dict")
         self.eval_params = self.config.get_option("eval_params")
+        self.eval_crit_args = self.config.get_option("eval_crit_args")
 
         self.logger = CustomLogger(__class__.__name__, self.log_path).logger
         # read the criteria and their mapped functions for power grid
@@ -138,8 +139,12 @@ class TransportEvaluation(Evaluation):
             simulator.build_model()
 
             for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]:
-                obs_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=obs_output,criteriaParams=None)
-                pred_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=predict_out,criteriaParams=None)
+                if self.eval_crit_args and self.eval_crit_args[metric_name]:
+                    criteriaParams=self.eval_crit_args[metric_name]
+                else:
+                    criteriaParams=None
+                obs_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=obs_output,criteriaParams=criteriaParams)
+                pred_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=predict_out,criteriaParams=criteriaParams)
                 delta=np.linalg.norm( (np.array(obs_crit)-np.array(pred_crit))/np.array(obs_crit) )  
                 metricVal_by_name[metric_name].append(delta)
 
@@ -147,7 +152,7 @@ class TransportEvaluation(Evaluation):
             tmp=metricVal_by_name[metric_name]
             if isinstance(tmp, Iterable):
                 metricVal_by_name[metric_name] = [float(el) for el in tmp]
-                self.logger.info("%s for %s", metric_name, tmp)
+                self.logger.info("%s relative error for %s", metric_name, tmp)
             else:
                 metricVal_by_name[metric_name] = float(tmp)
-                self.logger.info("%s for %.2f", metric_name, tmp)
+                self.logger.info("%s relative error for %.2f", metric_name, tmp)
