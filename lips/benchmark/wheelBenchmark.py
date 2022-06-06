@@ -435,7 +435,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
 
         self.is_loaded=False
         if evaluation is None:
-            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
+            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name,log_path=log_path)
             self.evaluation = myEval.from_benchmark(benchmark=self)
 
         self.env_name = self.config.get_option("env_name")
@@ -489,13 +489,15 @@ class DispRollingWheelBenchmark(WheelBenchmark):
             raise Exception("Sum of splitted ratio can not exceed 1")
 
         base_dataset_size=len(self.base_dataset)
-
-        train_dataset_size=np.floor(train_ratio*base_dataset_size)
-        test_dataset_size=np.floor(test_ratio*base_dataset_size)
-        valid_dataset_size=np.floor(valid_ratio*base_dataset_size)
+        train_dataset_size=np.floor(train_ratio*base_dataset_size).astype(int)
+        test_dataset_size=np.floor(test_ratio*base_dataset_size).astype(int)
+        valid_dataset_size=np.floor(valid_ratio*base_dataset_size).astype(int)
 
         if sum([train_dataset_size,test_dataset_size,valid_dataset_size]) != base_dataset_size:
-            raise Exception("Train/Test/Valid split does not cover the whole dataset!")
+            num_data_excluded= base_dataset_size- sum([train_dataset_size,test_dataset_size,valid_dataset_size])
+            print("Warning: Train/Test/Valid split does not cover the whole dataset!")
+            print("Number of sets transfered to validation: %d" %num_data_excluded)
+            valid_dataset_size += num_data_excluded
 
         indices_by_dataset={
             "train":np.arange(0,train_dataset_size),
@@ -504,10 +506,21 @@ class DispRollingWheelBenchmark(WheelBenchmark):
         }
         indices_by_dataset={key:val for key,val in indices_by_dataset.items() if val.size!=0 }
 
-        datasets={name:[] for name in indices_by_dataset.keys()}
-        indices_name,indices_val=indices_by_dataset.keys(),indices_by_dataset.values()
+        nb_data_max=max([data.shape[0] for data in indices_by_dataset.values()])
+        indices_by_dataset_extended=dict()
+        for key,val in indices_by_dataset.items():
+            init_extended_val=np.full((nb_data_max), -1)
+            init_extended_val[:val.shape[0]]=val
+            indices_by_dataset_extended[key]=init_extended_val
+
+        datasets={name:[] for name in indices_by_dataset_extended.keys()}
+        indices_name,indices_val=indices_by_dataset_extended.keys(),indices_by_dataset_extended.values()
         for index in range(len(self.base_dataset)):
-            num_linked_to_index=np.where(np.array(list(indices_val))==index)[0][0]
+            indices_dataset=np.array(list(indices_val))
+            indices_dataset_loc=np.where(indices_dataset==index)
+            if not indices_dataset_loc: 
+                raise Exception("index %d not found" %d)
+            num_linked_to_index=indices_dataset_loc[0][0]
             name_linked_to_index=list(indices_name)[num_linked_to_index]
             datasets[name_linked_to_index].append(self.base_dataset.get_data(index=index))
 
