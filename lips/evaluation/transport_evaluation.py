@@ -118,7 +118,7 @@ class TransportEvaluation(Evaluation):
                     self.logger.info("%s for %s: %s", metric_name, nm_, tmp)
                 else:
                     metricVal_by_name[metric_name][nm_] = float(tmp)
-                    self.logger.info("%s for %s: %.2f", metric_name, nm_, tmp)
+                    self.logger.info("%s for %s: %.2E", metric_name, nm_, tmp)
 
     def evaluate_physics(self):
         metricVal_by_name = self.metrics[self.PHYSICS_COMPLIANCES]
@@ -145,14 +145,29 @@ class TransportEvaluation(Evaluation):
                     criteriaParams=None
                 obs_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=obs_output,criteriaParams=criteriaParams)
                 pred_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=predict_out,criteriaParams=criteriaParams)
-                delta=np.linalg.norm( (np.array(obs_crit)-np.array(pred_crit))/np.array(obs_crit) )  
+
+                delta_absolute=np.array(obs_crit)-np.array(pred_crit) 
+                delta_relative=delta_absolute/np.array(obs_crit)  
+                delta={
+                    "absolute":delta_absolute,
+                    "relative":delta_relative
+                } 
                 metricVal_by_name[metric_name].append(delta)
 
         for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]:
-            tmp=metricVal_by_name[metric_name]
-            if isinstance(tmp, Iterable):
-                metricVal_by_name[metric_name] = [float(el) for el in tmp]
-                self.logger.info("%s relative error for %s", metric_name, tmp)
+            deltas=metricVal_by_name[metric_name]
+            deltas_united = {error_type: np.array([single_comparison[error_type] for single_comparison in deltas]) for error_type in deltas[0]}
+
+            mean_relative_error=np.mean(deltas_united["relative"],axis=0)
+            if isinstance(mean_relative_error, Iterable):
+                for component_id,value in enumerate(mean_relative_error):
+                    self.logger.info("%s mean relative error for component %d: %.2E", metric_name, component_id, value)
             else:
-                metricVal_by_name[metric_name] = float(tmp)
-                self.logger.info("%s relative error for %.2f", metric_name, tmp)
+                self.logger.info("%s mean relative error for %.2E", metric_name, mean_relative_error)
+
+            mean_absolute_error=np.mean(deltas_united["absolute"],axis=0)
+            if isinstance(mean_absolute_error, Iterable):
+                for component_id,value in enumerate(mean_absolute_error):
+                    self.logger.info("%s mean absolute error for component %d: %.2E", metric_name, component_id, value)
+            else:
+                self.logger.info("%s mean absolute error for %.2E", metric_name, mean_absolute_error)

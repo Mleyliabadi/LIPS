@@ -149,7 +149,7 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
         self.is_loaded=False
         # TODO : it should be reset if the config file is modified on the fly
         if evaluation is None:
-            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name)
+            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name,log_path=log_path)
             self.evaluation = myEval.from_benchmark(benchmark=self)
 
         # print(self.config.get_options_dict())
