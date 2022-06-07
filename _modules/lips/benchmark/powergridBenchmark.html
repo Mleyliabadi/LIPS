@@ -322,9 +322,6 @@
 <span class="sd">            Unknown dataset selected</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">get_env</span><span class="p">(</span><span class="n">get_kwargs_simulator_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">))</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span> <span class="o">=</span> <span class="n">augmented_simulator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_training_simulator</span><span class="p">()</span>
         <span class="n">li_dataset</span> <span class="o">=</span> <span class="p">[]</span>
