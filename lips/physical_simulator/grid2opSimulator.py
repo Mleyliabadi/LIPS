@@ -76,6 +76,9 @@ class Grid2opSimulator(PhysicalSimulator):
 
         self._time_powerflow = 0
         self.comp_time = 0
+        self._timer_preproc = 0
+        self._timer_solver = 0
+        self._timer_postproc = 0
 
     def seed(self, seed: int):
         """
@@ -148,18 +151,27 @@ class Grid2opSimulator(PhysicalSimulator):
             act = actor.act(self._obs, self._reward, done)
             _beg_time_pf = self._simulator._time_powerflow
             _beg_time_cp = self._simulator.backend.comp_time
+            _beg_time_solver = self._simulator.backend._timer_solver
+            _beg_time_preproc = self._simulator.backend._timer_preproc
+            _beg_time_postproc = self._simulator.backend._timer_postproc
             self._obs, self._reward, done, self._info = self._simulator.step(act)
-            _end_time_cp = self._simulator.backend.comp_time
-            _end_time_pf = self._simulator._time_powerflow
-            _diff_time_pf = _end_time_pf - _beg_time_pf
-            _diff_time_cp = _end_time_cp - _beg_time_cp
-
-            self._time_powerflow += _diff_time_pf
+            _diff_time_solver = self._simulator.backend._timer_solver - _beg_time_solver
+            _diff_time_preproc = self._simulator.backend._timer_preproc - _beg_time_preproc
+            _diff_time_postproc = self._simulator.backend._timer_postproc - _beg_time_postproc
+            _diff_time_pf = self._simulator._time_powerflow - _beg_time_pf
+            _diff_time_cp = self._simulator.backend.comp_time - _beg_time_cp
+            self._timer_solver += _diff_time_solver
+            self._timer_preproc += _diff_time_preproc
+            self._timer_postproc += _diff_time_postproc
             self.comp_time += _diff_time_cp
+            self._time_powerflow += _diff_time_pf
 
             if self._info["is_illegal"]:
                 self._time_powerflow -= _diff_time_pf
                 self.comp_time -= _diff_time_cp
+                self._timer_solver -= _diff_time_solver
+                self._timer_preproc -= _diff_time_preproc
+                self._timer_postproc -= _diff_time_postproc
                 raise RuntimeError("Your `actor` should not take illegal action. Please modify the environment "
                                    "or your actor.")
 
@@ -168,6 +180,9 @@ class Grid2opSimulator(PhysicalSimulator):
                 self._reset_simulator()
                 self._time_powerflow -= _diff_time_pf
                 self.comp_time -= _diff_time_cp
+                self._timer_solver -= _diff_time_solver
+                self._timer_preproc -= _diff_time_preproc
+                self._timer_postproc -= _diff_time_postproc
             else:
                 self.time_stamps[self._chronic_counter].append(self._simulator.chronics_handler.real_data.data.current_datetime)
                 self.chronics_id.append(self._chronic_id)
