@@ -171,6 +171,7 @@ class TorchSimulator(AugmentedSimulator):
             optimizer.zero_grad()
             # h_0 = self.model.init_hidden(data.size(0))
             # prediction, _ = self.model(data, h_0)
+            self._model=self._model.to(self.params["device"])
             prediction = self._model(data)
             loss = loss_func(prediction, target)
             loss.backward()
