@@ -175,6 +175,10 @@ class PowerGridEvaluation(Evaluation):
         - Verification of Kirchhoff's current law
         - Verification of Joule's law
         """
+        try:
+            env = kwargs["env"]
+        except KeyError:
+            self.logger.error("The environment (physical solver) is required for some physics critiera and should be provided")
         metric_dict = self.metrics[self.PHYSICS_COMPLIANCES]
         for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]:
             metric_fun = self.criteria.get(metric_name)
@@ -182,7 +186,8 @@ class PowerGridEvaluation(Evaluation):
             tmp = metric_fun(self.predictions,
                              log_path=self.log_path,
                              observations=self.observations,
-                             config=self.config)
+                             config=self.config,
+                             env=env)
             metric_dict[metric_name] = tmp
 
     def evaluate_industrial_readiness(self, **kwargs):
@@ -201,8 +206,6 @@ class PowerGridEvaluation(Evaluation):
                     dataset = kwargs["dataset"]
                 except KeyError:
                     self.logger.error("The augmented simulator or dataset are not provided to estimate the inference time.")
-
-
                 if not isinstance(augmented_simulator, DCApproximationAS):
                     try:
                         eval_batch_size = self.eval_params["inf_batch_size"]
@@ -221,4 +224,4 @@ class PowerGridEvaluation(Evaluation):
                     dc_comp_time = augmented_simulator.comp_time
                     metric_dict["time_inf"] = dc_comp_time
                     self.logger.info("%s for %s: %s", metric_name, augmented_simulator.name, dc_comp_time)
-
+                    
