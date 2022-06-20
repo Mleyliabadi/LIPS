@@ -182,7 +182,6 @@ class TorchSimulator(AugmentedSimulator):
             optimizer.zero_grad()
             # h_0 = self.model.init_hidden(data.size(0))
             # prediction, _ = self.model(data, h_0)
-            self._model=self._model.to(self.params["device"])
             prediction = self._model(data)
             loss = loss_func(prediction, target)
             loss.backward()
@@ -313,7 +312,6 @@ class TorchSimulator(AugmentedSimulator):
                 #prediction, _ = self.model(data, h_0)
                 prediction = self._model(data)
 
-                total_time += time.time() - _beg
                 if "input_required_for_post_process" in kwargs and kwargs["input_required_for_post_process"]:
                     input_model=data
                     prediction = self._model._post_process_with_input(input_model,prediction)
@@ -322,7 +320,6 @@ class TorchSimulator(AugmentedSimulator):
                     prediction = self._model._post_process(prediction)
                     target = self._model._post_process(target)
                 
-                #if type(prediction) is np.ndarray: 
                 predictions.append(prediction.numpy())
                 observations.append(target.numpy())
 

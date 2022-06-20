@@ -296,7 +296,7 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                                                                             dataset.name
                                                                             )
         self.augmented_simulator = augmented_simulator
-        predictions = self.augmented_simulator.evaluate(dataset)
+        predictions = self.augmented_simulator.predict(dataset)
 
         return predictions
 
@@ -381,7 +381,7 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                                                                             dataset.name
                                                                             )
         self.augmented_simulator = augmented_simulator
-        predictions = self.augmented_simulator.evaluate(dataset)
+        predictions = self.augmented_simulator.predict(dataset)
 
         self.predictions[dataset.name] = predictions
         self.observations[dataset.name] = dataset.data
@@ -564,7 +564,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                                                                             dataset.name
                                                                             )
         self.augmented_simulator = augmented_simulator
-        predictions = self.augmented_simulator.evaluate(dataset=dataset,input_required_for_post_process=self.input_required_for_post_process)
+        predictions = self.augmented_simulator.predict(dataset=dataset,input_required_for_post_process=self.input_required_for_post_process)
 
         self.predictions[dataset.name] = predictions
         self.observations[dataset.name] = dataset.data

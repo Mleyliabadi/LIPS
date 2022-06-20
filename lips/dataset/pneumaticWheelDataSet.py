@@ -609,7 +609,7 @@ def check_quasi_static_generation():
     training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     attr_names=(PFN.displacement,PFN.contactMultiplier)
 
-    quasiStaticWheelDataSet=QuasiStaticWheelDataSet("train",attr_names=attr_names,attr_x = ("time",),attr_y = ("disp","contactMult"))
+    quasiStaticWheelDataSet=QuasiStaticWheelDataSet("train",attr_names=attr_names,attr_x = ("timeSteps",),attr_y = ("disp","contactMult"))
     quasiStaticWheelDataSet.generate(simulator=training_simulator,
                                     path_out="WheelRolDir",
                                     )
