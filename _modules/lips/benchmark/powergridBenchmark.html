@@ -322,6 +322,10 @@
 <span class="sd">            Unknown dataset selected</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">get_env</span><span class="p">(</span><span class="n">get_kwargs_simulator_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">))</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span> <span class="o">=</span> <span class="n">augmented_simulator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_training_simulator</span><span class="p">()</span>
         <span class="n">li_dataset</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">dataset</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
@@ -385,19 +389,21 @@
                                                                             <span class="n">augmented_simulator</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                                                             <span class="n">dataset</span><span class="o">.</span><span class="n">name</span>
                                                                             <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span> <span class="o">=</span> <span class="n">augmented_simulator</span>
         <span class="c1"># TODO: however, we can introduce the batch concept in DC, to have equitable comparison for time complexity</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="p">,</span> <span class="n">DCApproximationAS</span><span class="p">):</span>
-            <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
 
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;augmented_simulator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span>
         <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">observations</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                                       <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span>
+                                       <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">,</span>
+                                       <span class="o">**</span><span class="n">kwargs</span>
                                        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
@@ -416,7 +422,6 @@
                     <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">attr_nm</span><span class="p">)</span><span class="si">}</span><span class="s2">.npz&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">predictions</span><span class="p">[</span><span class="n">attr_nm</span><span class="p">])</span>
         <span class="k">elif</span> <span class="n">save_predictions</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;You indicate to save the predictions, without providing a path. No predictions will be saved!&quot;</span><span class="p">)</span>
-
 
         <span class="k">return</span> <span class="n">res</span>
 
