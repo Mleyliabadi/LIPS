@@ -172,11 +172,12 @@ class PowerGridDataSet(DataSet):
             self.data[attr_nm] = np.zeros((nb_samples, array_.shape[0]), dtype=array_.dtype)
         
         #to save physical variables if desired
-        n_bus_bars = simulator._simulator.n_sub * 2
-        self.data["YBus"] = np.zeros((nb_samples, n_bus_bars,n_bus_bars), dtype=np.complex128) #for admittance matrix
-        self.data["SBus"] = np.zeros((nb_samples, n_bus_bars), dtype=np.complex128) #for vector of nodal injections
-        self.data["PV_nodes"] = np.zeros((nb_samples, n_bus_bars), dtype=bool) #for indices of P-V nodes
-        self.data["slack"] = np.zeros((nb_samples, 2), dtype=np.float16) #for indice of slack and active power adjusment from chronic
+        if (do_store_physics):
+            n_bus_bars = simulator._simulator.n_sub * 2
+            self.data["YBus"] = np.zeros((nb_samples, n_bus_bars,n_bus_bars), dtype=np.complex128) #for admittance matrix
+            self.data["SBus"] = np.zeros((nb_samples, n_bus_bars), dtype=np.complex128) #for vector of nodal injections
+            self.data["PV_nodes"] = np.zeros((nb_samples, n_bus_bars), dtype=bool) #for indices of P-V nodes
+            self.data["slack"] = np.zeros((nb_samples, 2), dtype=np.float16) #for indice of slack and active power adjusment from chronic
 
         #for ds_size in tqdm(range(nb_samples), desc=self.name):
         ds_size = 0

@@ -184,11 +184,11 @@ def test_power_grid_physics_informed_data():
     """This test aims at verifying that the generated data structure representing the physics (admittance matrix YBus, SBus vector)
     are consistent with the physical variables obtained
     """
-    benchmark3= PowerGridBenchmark(benchmark_path=DATA_PATH,
+    benchmark3= PowerGridBenchmark(benchmark_path=None,
                                         benchmark_name="Benchmark3",
                                         load_data_set=False,
                                         config_path=CONFIG_PATH,
-                                        log_path=LOG_PATH)
+                                        log_path=None)
 
     data_size = int(10)
     benchmark3.generate(nb_sample_train=data_size,
