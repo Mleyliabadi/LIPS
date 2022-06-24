@@ -132,7 +132,10 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#lips.metrics.power_grid.physics_compliances.verify_loss" title="lips.metrics.power_grid.physics_compliances.verify_loss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify_loss</span></code></a>(predictions[, log_path])</p></td>
 <td><p>Verify the energy loss</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.metrics.power_grid.physics_compliances.verify_kcl" title="lips.metrics.power_grid.physics_compliances.verify_kcl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify_kcl</span></code></a>(env, ref_obs, predictions[, tol])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.metrics.power_grid.physics_compliances.verify_energy_conservation" title="lips.metrics.power_grid.physics_compliances.verify_energy_conservation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify_energy_conservation</span></code></a>(predictions[, ...])</p></td>
+<td><p>This function verifies the law of conservation of energy (LCE)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#lips.metrics.power_grid.physics_compliances.verify_kcl" title="lips.metrics.power_grid.physics_compliances.verify_kcl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify_kcl</span></code></a>(env, ref_obs, predictions[, tol])</p></td>
 <td><p>This function used the check_solution function offered by lightsim2grid package, to verify the Kirchhoff's current law</p></td>
 </tr>
 </tbody>
@@ -274,6 +277,32 @@
 <li><p><strong>- EL</strong> (<cite>array</cite>) – array of energy losses for each iteration</p></li>
 <li><p><strong>- violation_percentage</strong> (<cite>float</cite>) – percentage of violation of loss</p></li>
 <li><p><strong>- failed_indices</strong> (<cite>list</cite>) – The indices of failed cases</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lips.metrics.power_grid.physics_compliances.verify_energy_conservation">
+<span class="sig-prename descclassname"><span class="pre">lips.metrics.power_grid.physics_compliances.</span></span><span class="sig-name descname"><span class="pre">verify_energy_conservation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/metrics/power_grid/physics_compliances.html#verify_energy_conservation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.metrics.power_grid.physics_compliances.verify_energy_conservation" title="Permalink to this definition"></a></dt>
+<dd><p>This function verifies the law of conservation of energy (LCE)</p>
+<p>productions = load + loss</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictions</strong> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>) – Predictions made by an augmented simulator</p></li>
+<li><p><strong>log_path</strong> (<code class="docutils literal notranslate"><span class="pre">str</span></code>, optional) – the path where the logs should be saved, by default None</p></li>
+<li><p><strong>**kwargs</strong> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>) – It should contain <cite>observations</cite> and <cite>config</cite> to load the tolerance</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dict</span></code> – a dictionary with useful information about the verification</p></li>
+<li><p><em>These informations are</em></p></li>
+<li><p><strong>- LCE</strong> (<cite>array</cite>) – an array including the law of conservation of energy values stored for each step (observation)</p></li>
+<li><p><strong>- violation_percentage</strong> (<cite>scalar</cite>) – a value expressed in percentage to indicate the percentage of</p></li>
+<li><p><strong>- failed_indices</strong> (<cite>array</cite>) – an array giving the indices of observations that not verify the law given the indicated tolerance</p></li>
 </ul>
 </p>
 </dd>

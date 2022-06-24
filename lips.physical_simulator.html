@@ -174,7 +174,7 @@ anything that emulates the behaviour of some “simulator”.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.physical_simulator.PhysicsSolver.compute" title="lips.physical_simulator.PhysicsSolver.compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code></a>(dataset)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.physical_simulator.PhysicsSolver.evaluate" title="lips.physical_simulator.PhysicsSolver.evaluate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate</span></code></a>(dataset)</p></td>
 <td><p>evaluate the model on the full dataset</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#lips.physical_simulator.PhysicsSolver.init" title="lips.physical_simulator.PhysicsSolver.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a>(**kwargs)</p></td>
@@ -195,8 +195,8 @@ anything that emulates the behaviour of some “simulator”.</p>
 </tbody>
 </table>
 <dl class="py method">
-<dt class="sig sig-object py" id="lips.physical_simulator.PhysicsSolver.compute">
-<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lips.dataset.html#lips.dataset.DataSet" title="lips.dataset.DataSet"><span class="pre">DataSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/physical_simulator/physicsSolver.html#PhysicsSolver.compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.physical_simulator.PhysicsSolver.compute" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="lips.physical_simulator.PhysicsSolver.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lips.dataset.html#lips.dataset.DataSet" title="lips.dataset.DataSet"><span class="pre">DataSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/physical_simulator/physicsSolver.html#PhysicsSolver.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.physical_simulator.PhysicsSolver.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>evaluate the model on the full dataset</p>
 </dd></dl>
 
@@ -377,7 +377,7 @@ as a example implementation for a specific <cite>AugmentedSimulator</cite>.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.physical_simulator.dcApproximationAS.DCApproximationAS.compute" title="lips.physical_simulator.dcApproximationAS.DCApproximationAS.compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code></a>(dataset)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.physical_simulator.dcApproximationAS.DCApproximationAS.evaluate" title="lips.physical_simulator.dcApproximationAS.DCApproximationAS.evaluate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate</span></code></a>(dataset)</p></td>
 <td><p>evaluate the model on the whole dataset.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#lips.physical_simulator.dcApproximationAS.DCApproximationAS.init" title="lips.physical_simulator.dcApproximationAS.DCApproximationAS.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a>(**kwargs)</p></td>
@@ -395,8 +395,8 @@ as a example implementation for a specific <cite>AugmentedSimulator</cite>.</p>
 </tbody>
 </table>
 <dl class="py method">
-<dt class="sig sig-object py" id="lips.physical_simulator.dcApproximationAS.DCApproximationAS.compute">
-<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lips.dataset.html#lips.dataset.powergridDataSet.PowerGridDataSet" title="lips.dataset.powergridDataSet.PowerGridDataSet"><span class="pre">lips.dataset.powergridDataSet.PowerGridDataSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/physical_simulator/dcApproximationAS.html#DCApproximationAS.compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.physical_simulator.dcApproximationAS.DCApproximationAS.compute" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="lips.physical_simulator.dcApproximationAS.DCApproximationAS.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lips.dataset.html#lips.dataset.powergridDataSet.PowerGridDataSet" title="lips.dataset.powergridDataSet.PowerGridDataSet"><span class="pre">lips.dataset.powergridDataSet.PowerGridDataSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/physical_simulator/dcApproximationAS.html#DCApproximationAS.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.physical_simulator.dcApproximationAS.DCApproximationAS.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>evaluate the model on the whole dataset. It returns a dictionnary with the keys in self._attr_y</p>
 </dd></dl>
 
@@ -681,7 +681,7 @@ anything that emulates the behaviour of some “simulator”.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.physical_simulator.physicsSolver.PhysicsSolver.compute" title="lips.physical_simulator.physicsSolver.PhysicsSolver.compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code></a>(dataset)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.physical_simulator.physicsSolver.PhysicsSolver.evaluate" title="lips.physical_simulator.physicsSolver.PhysicsSolver.evaluate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate</span></code></a>(dataset)</p></td>
 <td><p>evaluate the model on the full dataset</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#lips.physical_simulator.physicsSolver.PhysicsSolver.init" title="lips.physical_simulator.physicsSolver.PhysicsSolver.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a>(**kwargs)</p></td>
@@ -702,8 +702,8 @@ anything that emulates the behaviour of some “simulator”.</p>
 </tbody>
 </table>
 <dl class="py method">
-<dt class="sig sig-object py" id="lips.physical_simulator.physicsSolver.PhysicsSolver.compute">
-<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lips.dataset.html#lips.dataset.DataSet" title="lips.dataset.DataSet"><span class="pre">DataSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/physical_simulator/physicsSolver.html#PhysicsSolver.compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.physical_simulator.physicsSolver.PhysicsSolver.compute" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="lips.physical_simulator.physicsSolver.PhysicsSolver.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="lips.dataset.html#lips.dataset.DataSet" title="lips.dataset.DataSet"><span class="pre">DataSet</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/physical_simulator/physicsSolver.html#PhysicsSolver.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.physical_simulator.physicsSolver.PhysicsSolver.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>evaluate the model on the full dataset</p>
 </dd></dl>
 
