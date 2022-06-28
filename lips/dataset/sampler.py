@@ -1,11 +1,20 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-#This file introduce the sampling methods used to generate a space of parameters 
+"""
+Usage:
+    Introduce the sampling methods used to generate a space of parameters
+Licence:
+    copyright (c) 2021-2022, IRT SystemX and RTE (https://www.irt-systemx.fr/)
+    See AUTHORS.txt
+    This Source Code Form is subject to the terms of the Mozilla Public License, version 2.0.
+    If a copy of the Mozilla Public License, version 2.0 was not distributed with this file,
+    you can obtain one at http://mozilla.org/MPL/2.0/.
+    SPDX-License-Identifier: MPL-2.0
+    This file is part of LIPS, LIPS is a python platform for power networks benchmarking
+"""
+ 
 import abc
 import numpy as np
-import csv
 import pyDOE2 as doe
+from typing import Union
 import os
 
 class Sampler(metaclass=abc.ABCMeta):

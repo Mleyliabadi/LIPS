@@ -1,9 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# def TransportEvaluation():
-#     return None
-
+"""
+Usage:
+    Grid2opSimulator implementing powergrid physical simulator
+Licence:
+    copyright (c) 2021-2022, IRT SystemX and RTE (https://www.irt-systemx.fr/)
+    See AUTHORS.txt
+    This Source Code Form is subject to the terms of the Mozilla Public License, version 2.0.
+    If a copy of the Mozilla Public License, version 2.0 was not distributed with this file,
+    you can obtain one at http://mozilla.org/MPL/2.0/.
+    SPDX-License-Identifier: MPL-2.0
+    This file is part of LIPS, LIPS is a python platform for power networks benchmarking
+"""
 from typing import Union
 from collections.abc import Iterable
 import numpy as np
@@ -11,29 +17,42 @@ import numpy as np
 from lips.config.configmanager import ConfigManager
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import PhysicalCriteriaComputation
 from lips.physical_simulator.getfemSimulator import GetfemSimulator
-
 from lips.evaluation import Evaluation
 from lips.logger import CustomLogger
 
-class TransportEvaluation(Evaluation):
+class PneumaticEvaluation(Evaluation):
+    """Evaluation of the pneumatic specific metrics
+
+    It is a subclass of the Evaluation class
+
+    Parameters
+    ----------
+    config, optional
+        an object of `ConfigManager` class
+    config_path, optional
+        _description_, by default None
+    scenario, optional
+        one of the Power Grid Scenario names, by default None
+    log_path, optional
+        path where the log should be maintained, by default None
+    """
     def __init__(self,
                  config: Union[ConfigManager, None]=None,
                  config_path: Union[str, None]=None,
                  scenario: Union[str, None]=None,
                  log_path: Union[str, None]=None
                  ):
-        super(TransportEvaluation,self).__init__(config=config,
-                         config_path=config_path,
-                         config_section=scenario,
-                         log_path=log_path
-                         )
+        super(PneumaticEvaluation,self).__init__(config=config,
+                                                 config_path=config_path,
+                                                 config_section=scenario,
+                                                 log_path=log_path
+                                                 )
 
         self.eval_dict = self.config.get_option("eval_dict")
         self.eval_params = self.config.get_option("eval_params")
         self.eval_crit_args = self.config.get_option("eval_crit_args")
 
         self.logger = CustomLogger(__class__.__name__, self.log_path).logger
-        # read the criteria and their mapped functions for power grid
         self.criteria = self.mapper.map_generic_criteria()
 
         scenario_params=self.config.get_option("env_params")
@@ -106,6 +125,9 @@ class TransportEvaluation(Evaluation):
             raise Exception("Not done yet, sorry")
 
     def evaluate_ml(self):
+        """
+        Verify Pneumatic Machine Learning metrics
+        """
         metricVal_by_name = self.metrics[self.MACHINE_LEARNING]
         for metric_name in self.eval_dict[self.MACHINE_LEARNING]:
             metric_fun = self.criteria.get(metric_name)
@@ -121,6 +143,9 @@ class TransportEvaluation(Evaluation):
                     self.logger.info("%s for %s: %.2E", metric_name, nm_, tmp)
 
     def evaluate_physics(self):
+        """
+        function that evaluates physical criteria on given observations and may rely on the physical solver
+        """
         metricVal_by_name = self.metrics[self.PHYSICS_COMPLIANCES]
         attr_x=self.config.get_option("attr_x")
         obs_inputs={key: self.observations[key] for key in attr_x}

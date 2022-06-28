@@ -1,5 +1,5 @@
 """
-Tensorflow based augmented simulators
+Pytorch based augmented simulators
 """
 import os
 import pathlib

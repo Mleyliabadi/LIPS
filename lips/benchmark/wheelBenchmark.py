@@ -19,7 +19,7 @@ import numpy as np
 
 from lips.benchmark import Benchmark
 
-from lips.evaluation.transport_evaluation import TransportEvaluation
+from lips.evaluation.pneumatic_evaluation import PneumaticEvaluation
 from lips.physical_simulator.getfemSimulator import PhysicalSimulator,GetfemSimulator
 from lips.augmented_simulators.augmented_simulator import AugmentedSimulator
 from lips.dataset.pneumaticWheelDataSet import SamplerStaticWheelDataSet,QuasiStaticWheelDataSet
@@ -30,7 +30,7 @@ class WheelBenchmark(Benchmark):
                  config_path: Union[str, None]=None,
                  benchmark_name: str="Benchmark1",
                  load_data_set: bool=False,
-                 evaluation: Union[TransportEvaluation, None]=None,
+                 evaluation: Union[PneumaticEvaluation, None]=None,
                  log_path: Union[str, None]=None
                  ):
         super().__init__(benchmark_name=benchmark_name,
@@ -117,7 +117,7 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                  config_path: Union[str, None]=None,
                  benchmark_name: str="Benchmark1",
                  load_data_set: bool=False,
-                 evaluation: Union[TransportEvaluation, None]=None,
+                 evaluation: Union[PneumaticEvaluation, None]=None,
                  log_path: Union[str, None]=None,
                  ):
         super().__init__(benchmark_name=benchmark_name,
@@ -130,7 +130,7 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
         self.is_loaded=False
         # TODO : it should be reset if the config file is modified on the fly
         if evaluation is None:
-            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name,log_path=log_path)
+            myEval=PneumaticEvaluation(config_path=config_path,scenario=benchmark_name,log_path=log_path)
             self.evaluation = myEval.from_benchmark(benchmark=self)
 
         # print(self.config.get_options_dict())
@@ -381,7 +381,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                  config_path: Union[str, None]=None,
                  benchmark_name: str="Benchmark1",
                  load_data_set: bool=False,
-                 evaluation: Union[TransportEvaluation, None]=None,
+                 evaluation: Union[PneumaticEvaluation, None]=None,
                  log_path: Union[str, None]=None,
                  **kwargs
                  ):
@@ -396,7 +396,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
 
         self.is_loaded=False
         if evaluation is None:
-            myEval=TransportEvaluation(config_path=config_path,scenario=benchmark_name,log_path=log_path)
+            myEval=PneumaticEvaluation(config_path=config_path,scenario=benchmark_name,log_path=log_path)
             self.evaluation = myEval.from_benchmark(benchmark=self)
 
         self.env_name = self.config.get_option("env_name")

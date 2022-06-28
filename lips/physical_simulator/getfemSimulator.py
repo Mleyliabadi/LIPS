@@ -1,6 +1,6 @@
 """
 Usage:
-    Grid2opSimulator implementing powergrid physical simulator
+    getfem simulator implementing pneumatic physical simulator
 Licence:
     copyright (c) 2021-2022, IRT SystemX and RTE (https://www.irt-systemx.fr/)
     See AUTHORS.txt
@@ -17,7 +17,7 @@ from lips.physical_simulator.physicalSimulator import PhysicalSimulator
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import SimulatorGeneration
 
 def lipsToGetfemBridge(physicalDomain:dict,physicalProperties:dict):
-    """Bridge to adapt Getfem currently used API with lips API.
+    """Use to adapt Getfem currently used API with lips PhysicalSimulator API.
 
     Parameters
     ----------
