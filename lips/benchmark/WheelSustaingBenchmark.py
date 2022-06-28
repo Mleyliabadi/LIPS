@@ -23,7 +23,7 @@ def GenerateDataSets(simulator,config,path_out=None):
     space_params=config.get_option("samplerParams")
     training_actor=LHSSampler(space_params=space_params)
 
-    attr_names=(PFN.displacement,PFN.contactMultiplier)
+    attr_names=(PFN.displacement,)
 
     pneumaticWheelDataSetTrain=SamplerStaticWheelDataSet("train",attr_names=attr_names,config=config)
     pneumaticWheelDataSetTrain.generate(simulator=simulator,
@@ -111,9 +111,10 @@ def Benchmark1CNN():
     physicalProperties=envParams.get("physicalProperties")
     simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
 
-    attr_names=(PFN.displacement,PFN.contactMultiplier,"Force")
-    attr_x= ("Force",)
+    attr_x= wheelConfig.get_option("attr_x")
     attr_y= ("disp",)
+    attr_names=attr_x+attr_y
+
 
     pneumaticWheelDataSets=LoadDataSets(path_in="WeightSustainingWheelBenchmarkRegular",
                                         attr_names=attr_names,
@@ -192,7 +193,6 @@ def Benchmark1FFNN():
                                 config_path=CONFIG_PATH_BENCHMARK
                                )
 
-    # #print(benchmarkFFNN.config.get_options_dict())
     torch_sim = TorchSimulator(name="torch_ffnn",
                            model=TorchFullyConnected,
                            scaler=StandardScaler,
@@ -203,7 +203,7 @@ def Benchmark1FFNN():
 
     SAVE_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/getting_started/TestBenchmarkWheel/FFNNResults"
     torch_sim_config=ConfigManager(path=CONFIG_PATH_AUGMENTED_SIMULATOR_FC,
-                              section_name="DEFAULT")
+                              section_name="CONFIGWHEELSUSTAIN")
     torch_sim_params=torch_sim_config.get_options_dict()
 
     print("Training model")
@@ -244,6 +244,6 @@ def GenerateDataBaseBenchmark1():
 
 
 if __name__ == '__main__':
-    GenerateDataBaseBenchmark1()
+    #GenerateDataBaseBenchmark1()
     #Benchmark1FFNN()
-    #Benchmark1CNN()
+    Benchmark1CNN()

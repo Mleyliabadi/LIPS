@@ -484,7 +484,12 @@ class DispRollingWheelBenchmark(WheelBenchmark):
         self.base_dataset.load(path=self.path_datasets)
         self.is_loaded = True
 
-    def split_train_test_valid(self,train_ratio,test_ratio,valid_ratio):
+    def split_train_test_valid(self):
+        split_ratio=self.config.get_option("split_ratio")
+        train_ratio = split_ratio.get("train_ratio")
+        test_ratio= split_ratio.get("test_ratio")
+        valid_ratio= split_ratio.get("valid_ratio")
+
         if sum([train_ratio,test_ratio,valid_ratio])>1.0:
             raise Exception("Sum of splitted ratio can not exceed 1")
 
