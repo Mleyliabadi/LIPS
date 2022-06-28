@@ -1,19 +1,56 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""
+Usage:
+    Grid2opSimulator implementing powergrid physical simulator
+Licence:
+    copyright (c) 2021-2022, IRT SystemX and RTE (https://www.irt-systemx.fr/)
+    See AUTHORS.txt
+    This Source Code Form is subject to the terms of the Mozilla Public License, version 2.0.
+    If a copy of the Mozilla Public License, version 2.0 was not distributed with this file,
+    you can obtain one at http://mozilla.org/MPL/2.0/.
+    SPDX-License-Identifier: MPL-2.0
+    This file is part of LIPS, LIPS is a python platform for power networks benchmarking
+"""
+
+from typing import Union
 
 from lips.physical_simulator.physicalSimulator import PhysicalSimulator
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import SimulatorGeneration
 
-def lipsToGetfemBridge(physicalDomain,physicalProperties):
+def lipsToGetfemBridge(physicalDomain:dict,physicalProperties:dict):
+    """Bridge to adapt Getfem currently used API with lips API.
+
+    Parameters
+    ----------
+    physicalDomain : dict
+        physical domain geometric-related parameters
+    physicalProperties : dict
+        physical configuration properties parameters
+
+    Returns
+    -------
+    simulator
+        A getfem simulator instance endowed with physical caracteristics
+    """
     simulator=SimulatorGeneration(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
     return simulator
 
-
 class GetfemSimulator(PhysicalSimulator):
     """
-    This simulator uses the `Getfem` library to implement a physical simulator.
+    This simulator uses the 'Getfem' library to implement a physical simulator.
+    Parameters
+    ----------
+    physicalDomain : Union[dict, None], optional
+        physical domain geometric-related parameters
+    physicalProperties :  Union[dict, None], optional
+        physical configuration properties parameters
+    simulatorInstance : Union[dict, None], optional
+        Getfem simulator instance
     """
-    def __init__(self, physicalDomain=None,physicalProperties=None,simulatorInstance=None):
+    def __init__(self,
+                 physicalDomain: Union[dict, None] = None,
+                 physicalProperties: Union[dict, None] = None,
+                 simulatorInstance: Union[any, None] = None
+                 ):
         if simulatorInstance is None:
             self._simulator = lipsToGetfemBridge(physicalDomain,physicalProperties)
             self._simulator.Preprocessing()
@@ -21,33 +58,60 @@ class GetfemSimulator(PhysicalSimulator):
             self._simulator=type(simulatorInstance._simulator)(simulatorInstance._simulator)
 
     def build_model(self):
+        """
+        It builds the physical model.
+        """
         self._simulator.BuildModel()
 
     def run_problem(self):
+        """
+        It solves the physical problem.
+        """
         self._simulator.RunProblem()
 
-    def get_solution(self,field_name):
+    def get_solution(self,field_name: str):        
+        """
+        It retrieves the solution field computed by the simulator associated to a field_name.
+
+        Parameters
+        ----------
+        field_name: str
+            A string representing the field name.
+        """
         return self._simulator.GetSolution(field_name)
 
-    def get_variable_value(self,field_name):
-        return self._simulator.GetVariableValue(field_name)
+    def get_variable_value(self,field_name: str):
+        """
+        It retrieves the field value associated to a field_name.
 
-    def get_solverOrder_positions(self):
-        return self._simulator.GetSolverOrderPosition()
+        Parameters
+        ----------
+        field_name: str
+            A string representing the field name.
+        """
+        return self._simulator.GetVariableValue(field_name)
 
     def get_state(self):
         """
-        TODO
+        It retrieves the physical model internal state.
         """
         return self._simulator.internalInitParams
 
-    def modify_state(self, actor):
+    def modify_state(self, state: dict):
         """
-        TODO
+        It modifies the physical model internal state.
+
+        Parameters
+        ----------
+        state: dict
+            A dict representing the state.
         """
         self._simulator.SetPhyParams(actor)
 
     def __str__(self):
+        """
+        It represents the simulator as a string.
+        """
         return str(self._simulator)
 
 import math
@@ -137,6 +201,6 @@ def check_quasi_static_rolling():
     mySimulator._simulator.ExportSolutionInGmsh(filename="RollingSol.pos")
 
 if __name__ == '__main__':
-    #check_static()
-    #check_quasi_static_rolling()
+    check_static()
+    check_quasi_static_rolling()
     check_static_benchmark()
