@@ -223,7 +223,6 @@ class LeapNet(TensorflowSimulator):
 
     def _transform_tau_given_list(self, tau,with_tf=True):
         """Transform only the tau vector with respect to LeapNet encodings given a list of predefined topological actions
-
                 Parameters
         ----------
         tau : list of raw topology representations (line_status, topo_vect)
