@@ -20,16 +20,20 @@ CONFIG_PATH_AUGMENTED_SIMULATOR_FC="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Gi
 CONFIG_PATH_AUGMENTED_SIMULATOR_UNET="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/configurations/pneumatic/simulators/torch_unet.ini"
 
 def GenerateDataSets(simulator,config,path_out=None):
-    space_params=config.get_option("samplerParams")
-    training_actor=LHSSampler(space_params=space_params)
+    sampler=config.get_option("sampler")
+    samplerInputParams=sampler.get("samplerInputParams")
+    sampler_seeds=sampler.get("seeds")
+    sampler_nbsamples=sampler.get("nbsamples")
+
+    training_actor=LHSSampler(space_params=samplerInputParams)
 
     attr_names=(PFN.displacement,)
 
     pneumaticWheelDataSetTrain=SamplerStaticWheelDataSet("train",attr_names=attr_names,config=config)
     pneumaticWheelDataSetTrain.generate(simulator=simulator,
                                     actor=training_actor,
-                                    nb_samples=21,
-                                    actor_seed=42,
+                                    nb_samples=sampler_nbsamples.get("train"),
+                                    actor_seed=sampler_seeds.get("train"),
                                     path_out=path_out
                                     )
 
@@ -37,16 +41,16 @@ def GenerateDataSets(simulator,config,path_out=None):
     pneumaticWheelDataSetVal=SamplerStaticWheelDataSet("val",attr_names=attr_names,config=config)
     pneumaticWheelDataSetVal.generate(simulator=simulator,
                                     actor=training_actor,
-                                    nb_samples=6,
-                                    actor_seed=42,
+                                    nb_samples=sampler_nbsamples.get("val"),
+                                    actor_seed=sampler_seeds.get("val"),
                                     path_out=path_out
                                     )
 
     pneumaticWheelDataSetTest=SamplerStaticWheelDataSet("test",attr_names=attr_names,config=config)
     pneumaticWheelDataSetTest.generate(simulator=simulator,
                                     actor=training_actor,
-                                    nb_samples=3,
-                                    actor_seed=42,
+                                    nb_samples=sampler_nbsamples.get("test"),
+                                    actor_seed=sampler_seeds.get("test"),
                                     path_out=path_out
                                     )
 
@@ -244,6 +248,6 @@ def GenerateDataBaseBenchmark1():
 
 
 if __name__ == '__main__':
-    #GenerateDataBaseBenchmark1()
+    GenerateDataBaseBenchmark1()
     #Benchmark1FFNN()
-    Benchmark1CNN()
+    #Benchmark1CNN()

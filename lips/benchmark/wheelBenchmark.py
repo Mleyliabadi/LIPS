@@ -31,16 +31,7 @@ class WheelBenchmark(Benchmark):
                  benchmark_name: str="Benchmark1",
                  load_data_set: bool=False,
                  evaluation: Union[TransportEvaluation, None]=None,
-                 log_path: Union[str, None]=None,
-                 train_env_seed: int = 1,
-                 val_env_seed: int = 2,
-                 test_env_seed: int = 3,
-                 test_ood_topo_env_seed: int = 4,
-                 initial_chronics_id: int = 0,
-                 train_actor_seed: int = 5,
-                 val_actor_seed: int = 6,
-                 test_actor_seed: int = 7,
-                 test_ood_topo_actor_seed: int = 8,
+                 log_path: Union[str, None]=None
                  ):
         super().__init__(benchmark_name=benchmark_name,
                          dataset=None,
@@ -72,7 +63,6 @@ class WheelBenchmark(Benchmark):
             additional arguments that will be passed to the augmented simulator
         Todo
         ----
-        TODO: add active flow in config file
 
         Returns
         -------
@@ -129,15 +119,6 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                  load_data_set: bool=False,
                  evaluation: Union[TransportEvaluation, None]=None,
                  log_path: Union[str, None]=None,
-                 train_env_seed: int = 1,
-                 val_env_seed: int = 2,
-                 test_env_seed: int = 3,
-                 test_ood_topo_env_seed: int = 4,
-                 initial_chronics_id: int = 0,
-                 train_actor_seed: int = 5,
-                 val_actor_seed: int = 6,
-                 test_actor_seed: int = 7,
-                 test_ood_topo_actor_seed: int = 8,
                  ):
         super().__init__(benchmark_name=benchmark_name,
                          evaluation=evaluation,
@@ -156,24 +137,13 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
         self.env_name = self.config.get_option("env_name")
         self.val_simulator = None
         self.test_simulator = None
-        self.test_ood_topo_simulator = None
+        #self.test_ood_topo_simulator = None
 
         self.training_actor = None
         self.val_actor = None
         self.test_actor = None
-        self.test_ood_topo_actor = None
+        #self.test_ood_topo_actor = None
 
-        self.train_env_seed = train_env_seed
-        self.val_env_seed = val_env_seed
-        self.test_env_seed = test_env_seed
-        self.test_ood_topo_env_seed = test_ood_topo_env_seed
-
-        self.train_actor_seed = train_actor_seed
-        self.val_actor_seed = val_actor_seed
-        self.test_actor_seed = test_actor_seed
-        self.test_ood_topo_actor_seed = test_ood_topo_actor_seed
-
-        self.initial_chronics_id = initial_chronics_id
         # concatenate all the variables for data generation
         attr_names = self.config.get_option("attr_x")\
                      +self.config.get_option("attr_y")
@@ -413,15 +383,6 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                  load_data_set: bool=False,
                  evaluation: Union[TransportEvaluation, None]=None,
                  log_path: Union[str, None]=None,
-                 train_env_seed: int = 1,
-                 val_env_seed: int = 2,
-                 test_env_seed: int = 3,
-                 test_ood_topo_env_seed: int = 4,
-                 initial_chronics_id: int = 0,
-                 train_actor_seed: int = 5,
-                 val_actor_seed: int = 6,
-                 test_actor_seed: int = 7,
-                 test_ood_topo_actor_seed: int = 8,
                  **kwargs
                  ):
         super().__init__(benchmark_name=benchmark_name,

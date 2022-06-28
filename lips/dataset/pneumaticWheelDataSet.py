@@ -496,7 +496,6 @@ class SamplerStaticWheelDataSet(WheelDataSet):
                  actor,
                  nb_samples: int,
                  path_out: Union[str, None]= None,
-                 simulator_seed: Union[None, int] = None,
                  actor_seed: Union[None, int] = None):
 
         try:
