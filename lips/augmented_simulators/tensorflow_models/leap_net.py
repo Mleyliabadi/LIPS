@@ -235,6 +235,12 @@ class LeapNet(TensorflowSimulator):
         tau
             list of encoded topology representations (line_status, topo_vect_encoded)
         """
+        ##############
+        #WARNING: TO DO
+        # if we find two topology matches at a same substation, the current code attribute one bit for each
+        # But only one should be choosen in the end (we are not in a quantum state, or it does not make sense to combine topologies at a same substation in the encoding here
+        #This can happen when there are several lines disconnected at a substation on which we changed the topology, probably in benchmark 3, but probably not in benchmark 1 and 2
+
         subs_index=self._leap_net_model.subs_index
 
         list_topos=[]
