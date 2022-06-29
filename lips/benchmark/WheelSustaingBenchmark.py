@@ -228,6 +228,9 @@ def Benchmark1FFNN():
 def GenerateDataBaseBenchmark1():
     wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="WeightSustainingWheelBenchmarkRegular")
+
+    print(wheelConfig)
+    exit(0)
     envParams=wheelConfig.get_option("env_params")
     physicalDomain=envParams.get("physicalDomain")
     physicalProperties=envParams.get("physicalProperties")
