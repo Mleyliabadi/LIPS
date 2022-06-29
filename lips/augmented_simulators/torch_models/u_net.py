@@ -1,9 +1,16 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""
+Usage:
+    Torch CNN U-net model
+Licence:
+    copyright (c) 2021-2022, IRT SystemX and RTE (https://www.irt-systemx.fr/)
+    See AUTHORS.txt
+    This Source Code Form is subject to the terms of the Mozilla Public License, version 2.0.
+    If a copy of the Mozilla Public License, version 2.0 was not distributed with this file,
+    you can obtain one at http://mozilla.org/MPL/2.0/.
+    SPDX-License-Identifier: MPL-2.0
+    This file is part of LIPS, LIPS is a python platform for power networks benchmarking
+"""
 
-"""
-Torch CNN U-net model
-"""
 import pathlib
 from typing import Union
 import json
@@ -25,9 +32,20 @@ from torch.utils.data import TensorDataset, DataLoader
 #Credits goes to https://github.com/milesial/Pytorch-UNet
 
 class DoubleConv(nn.Module):
-    """(convolution => [BN] => ReLU) * 2"""
+    """Implement double convolution:
+    (convolution => [BatchNorm2d] => ReLU) * 2
 
-    def __init__(self, in_channels, out_channels, mid_channels=None):
+    Attributes
+    ----------
+    in_channels : int
+        number of input channels for the convolutional
+    out_channels : int
+        number of output channels for the convolutional
+    mid_channels : Union[int, None], optional
+        number of middle channels for the convolutional (after the first convolution)
+
+    """
+    def __init__(self, in_channels:int, out_channels:int, mid_channels:Union[int, None] = None):
         super().__init__()
         if not mid_channels:
             mid_channels = out_channels
@@ -40,31 +58,60 @@ class DoubleConv(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-    def forward(self, x):
+    def forward(self, x:torch.tensor):
+        """forward run
+        
+        Attributes
+        ----------
+        in_channels : torch.tensor
+            input data
+        """
         return self.double_conv(x)
 
 
 class Down(nn.Module):
-    """Downscaling with maxpool then double conv"""
+    """Downscaling with maxpool then double conv
 
-    def __init__(self, in_channels, out_channels):
+    Attributes
+    ----------
+    in_channels : int
+        number of input channels for the convolutional
+    out_channels : int
+        number of output channels for the convolutional
+    """
+    def __init__(self, in_channels:int, out_channels:int):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool2d(2),
             DoubleConv(in_channels, out_channels)
         )
 
-    def forward(self, x):
+    def forward(self, x:torch.tensor):
+        """forward run
+        
+        Attributes
+        ----------
+        in_channels : torch.tensor
+            input data
+        """
         return self.maxpool_conv(x)
 
 
 class Up(nn.Module):
-    """Upscaling then double conv"""
+    """Upscaling then double conv
 
+    Attributes
+    ----------
+    in_channels : int
+        number of input channels for the convolutional
+    out_channels : int
+        number of output channels for the convolutional
+    bilinear : bool, optional
+        if True (default), use the normal convolutions to reduce the number of channels
+    """
     def __init__(self, in_channels, out_channels, bilinear=True):
         super().__init__()
 
-        # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
             self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
@@ -72,7 +119,16 @@ class Up(nn.Module):
             self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)
 
-    def forward(self, x1, x2):
+    def forward(self, x1:torch.tensor, x2:torch.tensor):
+        """forward run
+        
+        Attributes
+        ----------
+        in_channels : torch.tensor
+            input data 1
+        in_channels : torch.tensor
+            input data 2
+        """
         x1 = self.up(x1)
         # input is CHW
         diffY = x2.size()[2] - x1.size()[2]
@@ -88,15 +144,50 @@ class Up(nn.Module):
 
 
 class OutConv(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    """Outer convolution
+
+    Attributes
+    ----------
+    in_channels : int
+        number of input channels for the convolutional
+    out_channels : int
+        number of output channels for the convolutional
+    """
+    def __init__(self, in_channels:int, out_channels:int):
         super(OutConv, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
 
-    def forward(self, x):
+    def forward(self, x:torch.tensor):
+        """forward run
+        
+        Attributes
+        ----------
+        in_channels : torch.tensor
+            input data
+        """
         return self.conv(x)
 
 
 class TorchUnet(nn.Module):
+    """Implementation of Unet using pytorch
+
+    Attributes
+    ----------
+    name : Union[str, None], optional
+        model name
+    scaler : Union[Scaler, None]
+        scaler to be used within model
+    bench_config_path : Union[str, pathlib.Path, None], optional
+        benchmark configuration path
+    bench_config_name : Union[str, None], optional
+        benchmark configuration name
+    sim_config_path : Union[str, None], optional
+        augmented simulator configuration path
+    sim_config_name : Union[str, None], optional
+        augmented simulator configuration name
+    log_path : Union[str, None], optional
+        log path
+    """
     def __init__(self,
                  name: Union[str, None]=None,
                  scaler: Union[Scaler, None]=None,
@@ -145,7 +236,14 @@ class TorchUnet(nn.Module):
         self.up4 = Up(128, 64, self.bilinear)
         self.outc = OutConv(64, self.n_classes)
 
-    def forward(self, x):
+    def forward(self, x:torch.tensor):
+        """forward run
+        
+        Attributes
+        ----------
+        in_channels :torch.tensor
+            input data
+        """
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
@@ -166,16 +264,14 @@ class TorchUnet(nn.Module):
         Parameters
         ----------
         dataset : DataSet
-            _description_
-        scaler : Scaler, optional
-            _description_, by default True
+            dataset
         training : bool, optional
-            _description_, by default False
+            training flag for the type of dataset considered, by default False
 
         Returns
         -------
         DataLoader
-            _description_
+            dataloader
         """
         if training:
             self._infer_size(dataset)
@@ -210,7 +306,21 @@ class TorchUnet(nn.Module):
         data_loader = DataLoader(torch_dataset, batch_size=batch_size, shuffle=self.params["shuffle"])
         return data_loader
 
-    def _post_process(self, data):
+    def _post_process(self, data:torch.tensor):
+        """process the datasets for training and evaluation
+
+        This function transforms all the dataset into something that can be used by the neural network (for example)
+
+        Parameters
+        ----------
+        data :torch.tensor
+            data
+
+        Returns
+        ----------
+        data :torch.tensor
+            data
+        """
         if self.scaler is not None:
             data=data.numpy()
             processed = self.scaler.inverse_transform(data)
@@ -223,26 +333,27 @@ class TorchUnet(nn.Module):
         Parameters
         ----------
         dataset : DataSet
-            _description_
-
-        Returns
-        -------
-        None
-            _description_
+            dataset
         """
         *dim_inputs, self.n_classes = dataset.get_sizes()
         self.n_channels = np.sum(dim_inputs)
 
     def get_metadata(self):
+        """Retrieve metadata
+
+        Here, it retrieve the sizes related to the data
+
+        Returns
+        ----------
+        data :torch.tensor
+            data
+        """
         res_json = {}
         res_json["input_size"] = self.n_channels
         res_json["output_size"] = self.n_classes
         return res_json
 
     def _save_metadata(self, path: str):
-        #super()._save_metadata(path)
-        #if self.scaler is not None:
-        #    self.scaler.save(path)
         res_json = {}
         res_json["input_size"] = self.n_channels
         res_json["output_size"] = self.n_classes
@@ -252,9 +363,6 @@ class TorchUnet(nn.Module):
     def _load_metadata(self, path: str):
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
-        #super()._load_metadata(path)
-        #if self.scaler is not None:
-        #    self.scaler.load(path)
         with open((path / "metadata.json"), "r", encoding="utf-8") as f:
             res_json = json.load(fp=f)
         self.input_size = res_json["input_size"]
