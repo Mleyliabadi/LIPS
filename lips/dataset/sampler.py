@@ -18,20 +18,71 @@ from typing import Union
 import os
 
 class Sampler(metaclass=abc.ABCMeta):
+    """Base class for Sampler management
+    This class represent a sampler, used to generate samples within a space parameters
+    It merely generates the samples but it is the responsability of the derived classes to provide the actual sampling method.
+
+    This is the base class of all Sampler in LIPS repository
+
+    Parameters
+    ----------
+    name: dict
+        the parameter space
+    """
     def __init__(self,space_params):
         self.space_params=space_params
         self.sampling_output=[]
-        self.sampling_name=""
+        self.sampling_type=""
     
-    def generate_samples(self,nb_samples,sampler_seed=None):
+    def generate_samples(self,nb_samples:int,sampler_seed:Union[None, int]=None):
+        """Generate a sampling
+        This function generate the samples.
+
+        Parameters
+        ----------
+        nb_samples: int
+            Number of samples wanted
+        sampler_seed: Union[int, None]
+            Seed for sampler for reproductibility
+        """
         self.sampling_output=self._define_sampling_method(nb_samples=nb_samples,sampler_seed=sampler_seed)
         return self.sampling_output
 
     @abc.abstractmethod
-    def _define_sampling_method(self,nb_samples,sampler_seed=None):
+    def _define_sampling_method(self,nb_samples:int,sampler_seed:Union[None, int]=None):
+        """Define the sampling method
+        This function is the actual implementation of the sampler considered. It must be redifened by the derived classes.
+
+        Parameters
+        ----------
+        nb_samples: int
+            Number of samples wanted
+        sampler_seed: Union[int, None], optional
+            Seed for sampler for reproductibility, by default None
+        """
         pass
 
-    def get_attributes_as_data(self,samples=None):
+    def get_attributes_as_data(self,samples:Union[None, list]=None)-> dict:
+        """Get parameter space discretization
+
+        This functions retrieves the parameter space discretization arising from the sampler
+
+        Parameters
+        ----------
+        samples : Union[None, list], optional
+            samples list after sampling, by default None
+
+        Returns
+        -------
+        dict
+            samples of data
+
+        Raises
+        ------
+        RuntimeError
+            Check sampling parameters consistency (same parameter names for all samples)
+
+        """
         if samples is None:
             samples=self.sampling_output
 
@@ -42,28 +93,64 @@ class Sampler(metaclass=abc.ABCMeta):
         value_by_input_attrib = {attribName: np.array([sample[attribName] for sample in samples]) for attribName in samples[0]}
         return value_by_input_attrib
 
-    def save(self,path_out,samples=None):
+    def save(self,path_out:str,samples:Union[None, list]=None):
+        """Save samples in file
+
+        This functions saves the samples in a file
+
+        Parameters
+        ----------
+        path_out : str
+            path for saving samples
+        samples : Union[None, list], optional
+            samples list after sampling, by default None
+
+        """
         value_by_input_attrib = self.get_attributes_as_data(samples=samples)
         for attrib_name,data in value_by_input_attrib.items():
             np.savez_compressed(f"{os.path.join(path_out, attrib_name)}.npz", data=data)
 
     def __str__(self): 
-        sInfo="Type of sampling: "+self.sampling_name+"\n"
+        """
+        It represents the sampler as a string.
+        """
+        sInfo="Type of sampling: "+self.sampling_type+"\n"
         sInfo+="Parameters\n"
         for paramName,paramVal in self.space_params.items():
             sInfo+="\t"+str(paramName)+": "+str(paramVal)+"\n"
         return sInfo 
 
     def __len__(self):
+        """
+        It provides the lenght of a sampler.
+        """
         return len(self.sampling_output)
 
 
 class LHSSampler(Sampler):
+    """Sampler derived class
+    This class represents a Latin Hypercube Sampler (LHS). It derived from the Sampler base class
+
+    Parameters
+    ----------
+    name: dict
+        the parameter space (mapping between parameter names and interval value for each parameter)
+    """
     def __init__(self, space_params):
         super(LHSSampler,self).__init__(space_params=space_params) 
-        self.sampling_name="LHSSampler"
+        self.sampling_type="LHSSampler"
 
     def _define_sampling_method(self,nb_samples,sampler_seed=None):
+        """Define the LHS method
+        This function is the actual implementation of the LHS method.
+
+        Parameters
+        ----------
+        nb_samples: int
+            Number of samples wanted
+        sampler_seed: Union[int, None], optional
+            Seed for sampler for reproductibility, by default None
+        """
         space_params=self.space_params
         nfactor = len(space_params)
         self.vals =doe.lhs(nfactor, samples=nb_samples, random_state=sampler_seed, criterion="maximin")
