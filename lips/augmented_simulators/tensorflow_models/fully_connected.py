@@ -19,6 +19,10 @@ from ...dataset import DataSet
 from ...dataset.scaler import Scaler
 from ...utils import NpEncoder
 
+from leap_net.proxy import ProxyLeapNet
+from leap_net import ResNetLayer
+
+
 class TfFullyConnected(TensorflowSimulator):
     """Fully Connected architecture
 
@@ -44,14 +48,15 @@ class TfFullyConnected(TensorflowSimulator):
     RuntimeError
         _description_
     """
+
     def __init__(self,
-                 name: Union[str, None]=None,
-                 scaler: Union[Scaler, None]=None,
-                 bench_config_path: Union[str, pathlib.Path, None]=None,
-                 bench_config_name: Union[str, None]=None,
-                 sim_config_path: Union[str, None]=None,
-                 sim_config_name: Union[str, None]=None,
-                 log_path: Union[None, str]=None,
+                 name: Union[str, None] = None,
+                 scaler: Union[Scaler, None] = None,
+                 bench_config_path: Union[str, pathlib.Path, None] = None,
+                 bench_config_name: Union[str, None] = None,
+                 sim_config_path: Union[str, None] = None,
+                 sim_config_name: Union[str, None] = None,
+                 log_path: Union[None, str] = None,
                  **kwargs):
         super().__init__(name=name, log_path=log_path, **kwargs)
         # Benchmark configurations
@@ -68,16 +73,18 @@ class TfFullyConnected(TensorflowSimulator):
         # Logger
         self.log_path = log_path
         self.logger = CustomLogger(__class__.__name__, log_path).logger
-        # Define layer to be used for the model
-        self.layers = {"linear": keras.layers.Dense}
-        self.layer = self.layers[self.sim_config.get_option("layer")]
         # model parameters
         self.params = self.sim_config.get_options_dict()
         self.params.update(kwargs)
+        # Define layer to be used for the model
+        self.layers = {"linear": keras.layers.Dense, "resnet": ResNetLayer}
+        self.layer = self.layers[self.params["layer"]]
+
         # optimizer
-        if "optimizer" in kwargs:
-            if not isinstance(kwargs["optimizer"], keras.optimizers.Optimizer):
-                raise RuntimeError("If an optimizer is provided, it should be a type tensorflow.keras.optimizers")
+        if "optimizer" in kwargs and "name" in kwargs["optimizer"]:
+            # TODO : isinstance not working properly on keras, isinstance(keras.optimizers.Optimizer, keras.optimizers.Adam) returns False
+            # if not isinstance(kwargs["optimizer"], keras.optimizers.Optimizer):
+            #   raise RuntimeError("If an optimizer is provided, it should be a type tensorflow.keras.optimizers")
             self._optimizer = kwargs["optimizer"](self.params["optimizer"]["params"])
         else:
             self._optimizer = keras.optimizers.Adam(learning_rate=self.params["optimizer"]["params"]["lr"])
@@ -99,6 +106,10 @@ class TfFullyConnected(TensorflowSimulator):
         input_ = keras.layers.Input(shape=(self.input_size,), name="input")
         x = input_
         x = keras.layers.Dropout(rate=self.params["input_dropout"], name="input_dropout")(x)
+
+        if "scale_input_layer" in self.params and self.params["scale_input_layer"]:
+            x = keras.layers.Dense(self.params["layers"][0], name="scaling_input_ResNet")(x)
+
         for layer_id, layer_size in enumerate(self.params["layers"]):
             x = self.layer(layer_size, name=f"layer_{layer_id}")(x)
             x = keras.layers.Activation(self.params["activation"], name=f"activation_{layer_id}")(x)
@@ -109,7 +120,7 @@ class TfFullyConnected(TensorflowSimulator):
                                   name=f"{self.name}_model")
         return self._model
 
-    def process_dataset(self, dataset: DataSet, training: bool=False) -> tuple:
+    def process_dataset(self, dataset: DataSet, training: bool = False) -> tuple:
         """process the datasets for training and evaluation
 
         This function transforms all the dataset into something that can be used by the neural network (for example)
@@ -132,17 +143,118 @@ class TfFullyConnected(TensorflowSimulator):
         tuple
             the normalized dataset with features and labels
         """
+
+        # extract inputs, line_status, outputs without concatenation
+        (inputs, extract_tau), outputs = dataset.extract_data(concat=False)
+        line_status = extract_tau[0]
+
+        # extract tau using LeapNetProxy function
+        extract_tau = self._extract_tau(dataset)
+
+        # add tau and line_status to inputs
+        inputs.extend([extract_tau, line_status])
+
+        # concatenate input features
+        inputs = np.concatenate([el.astype(np.float32) for el in inputs], axis=1)
+
+        # concatenate outputs labels
+        outputs = np.concatenate([el.astype(np.float32) for el in outputs], axis=1)
+
         if training:
-            self._infer_size(dataset)
-            inputs, outputs = dataset.extract_data(concat=True)
+            # set input and output sizes
+            self.input_size = inputs.shape[1]
+            self.output_size = outputs.shape[1]
+            #TODO : exclude scaling line_status and tau features
             if self.scaler is not None:
                 inputs, outputs = self.scaler.fit_transform(inputs, outputs)
         else:
-            inputs, outputs = dataset.extract_data(concat=True)
             if self.scaler is not None:
                 inputs, outputs = self.scaler.transform(inputs, outputs)
 
         return inputs, outputs
+
+    #TODO : the process of extracting and transforming tau is the same for the leapNet model, it will be better
+    # to migrate them to the parent class
+    def _extract_tau(self, dataset: DataSet):
+        """ Extract and transform tau according to the processing method defined by the argument `topo_vect_to_tau`
+
+        This function reuses ProxyLeapNet methods to process the tau vector.
+        See https://github.com/BDonnot/leap_net/blob/master/leap_net/proxy/proxyLeapNet.py for more details.
+
+
+            From the LeapNet documentation :
+
+                There are multiple ways to process the `tau` vector from the topology of the grid. Some of these
+                different methods have been coded in the LeapNetProxy and are controlled by the `topo_vect_to_tau`
+                argument:
+
+                1) `topo_vect_to_tau="raw"`: the most straightforward encoding. It transforms the `obs.topo_vect`
+                 directly into a `tau` vector of the same dimension with the convention: if obs.topo_vect[i] == 2
+                 for a given `i` then `tau[i] = 1` else `tau[i] = 0`. More details are given in
+                 the :func:`ProxyLeapNet._raw_topo_vect`, with usage examples on how to create it.
+                2) `topo_vect_to_tau="all"`: it encodes the global topology of the grid by a one hot encoding of the
+                 "local topology" of each substation. It first computes all the possible "local topologies" for
+                 all the substations of the grid and then assign a number (unique ID) for each of them. The resulting
+                 `tau` vector is then the concatenation of the "one hot encoded" ID of the current "local topology"
+                 of each substation. More information is given in :func:`ProxyLeapNet._all_topo_encode`
+                 with usage examples on how to create it.
+                3) `topo_vect_to_tau="given_list"`: it encodes the topology into a `tau` vector following the same
+                 convention as method 2) (`topo_vect_to_tau="all"`) with the difference that it only considers
+                 a given list of possible topologies instead of all the topologies of all the substation of the grid.
+                 This list should be provided as an input in the `kwargs_tau` argument. If a topology not given
+                 is encounter, it is mapped to the reference topology.
+                4) `topo_vect_to_tau="online_list"`: it encodes the topology into a `tau` vector following the same
+                 convention as method 2) (`topo_vect_to_tau="all"`) and 3) (`topo_vect_to_tau="given_list"`) but does
+                 not require to specify any list of topologies. Instead, each time a new "local topology" is
+                 encountered during training, it will be assigned to a new ID. When encountered again, this new
+                 ID will be re used. It can store a maximum of different topologies given as `kwargs_tau` argument.
+                 If too much topologies have been encountered, the new ones will be encoded as the reference topology.
+        Returns
+        -------
+
+        """
+
+        # LeapNetProxy initialization
+        leap_net_model = ProxyLeapNet(
+            attr_x=self.bench_config.get_option("attr_x"),
+            attr_y=self.bench_config.get_option("attr_y"),
+            attr_tau=self.bench_config.get_option("attr_tau"),
+            topo_vect_to_tau=self.params["topo_vect_to_tau"] if "topo_vect_to_tau" in self.params else "raw",
+            kwargs_tau=self.params["kwargs_tau"] if "kwargs_tau" in self.params else None,
+        )
+        # transform a numpy dataset into observations
+        obss = self._make_fake_obs(dataset)
+
+        leap_net_model.init(obss)
+        extract_tau = [leap_net_model.topo_vect_handler(obs) for obs in obss]
+
+        return np.array(extract_tau)
+
+    def _make_fake_obs(self, dataset: DataSet):
+        """
+        the underlying _leap_net_model requires some 'class' structure to work properly. This convert the
+        numpy dataset into these structures.
+
+        Definitely not the most efficient way to process a numpy array...
+        """
+        all_data = dataset.data
+
+        class FakeObs(object):
+            pass
+
+        if "topo_vect" in all_data:
+            setattr(FakeObs, "dim_topo", all_data["topo_vect"].shape[1])
+
+        setattr(FakeObs, "n_sub", dataset.env_data["n_sub"])
+        setattr(FakeObs, "sub_info", np.array(dataset.env_data["sub_info"]))
+
+        nb_row = all_data[next(iter(all_data.keys()))].shape[0]
+        obss = [FakeObs() for k in range(nb_row)]
+        for attr_nm in all_data.keys():
+            arr_ = all_data[attr_nm]
+            for ind in range(nb_row):
+                setattr(obss[ind], attr_nm, arr_[ind, :])
+        return obss
 
     def _infer_size(self, dataset: DataSet):
         """Infer the size of the model

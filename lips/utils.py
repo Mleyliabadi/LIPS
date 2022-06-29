@@ -22,6 +22,7 @@ class NpEncoder(json.JSONEncoder):
             return float(obj)
         if isinstance(obj, numpy.ndarray):
             return obj.tolist()
+        print(obj)
         return super(NpEncoder, self).default(obj)
 
 
