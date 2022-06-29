@@ -12,6 +12,7 @@ Licence:
 """
 
 from typing import Union
+import numpy as np
 
 from lips.physical_simulator.physicalSimulator import PhysicalSimulator
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import SimulatorGeneration
@@ -69,7 +70,7 @@ class GetfemSimulator(PhysicalSimulator):
         """
         self._simulator.RunProblem()
 
-    def get_solution(self,field_name: str):        
+    def get_solution(self,field_name: str)->np.ndarray:        
         """
         It retrieves the solution field computed by the simulator associated to a field_name.
 
@@ -77,10 +78,15 @@ class GetfemSimulator(PhysicalSimulator):
         ----------
         field_name: str
             A string representing the field name.
+
+        Returns
+        -------
+        np.ndarray
+            solution associated to the field name
         """
         return self._simulator.GetSolution(field_name)
 
-    def get_variable_value(self,field_name: str):
+    def get_variable_value(self,field_name: str)->np.ndarray:
         """
         It retrieves the field value associated to a field_name.
 
@@ -88,12 +94,33 @@ class GetfemSimulator(PhysicalSimulator):
         ----------
         field_name: str
             A string representing the field name.
+
+        Returns
+        -------
+        np.ndarray
+            variable associated to the field name
         """
         return self._simulator.GetVariableValue(field_name)
 
-    def get_state(self):
+    def get_solverOrder_positions(self)->np.ndarray:
+        """
+        It retrieves the unique nodes coordinates in the solver ordering logic.
+
+        Returns
+        -------
+        np.ndarray
+            nodes coordinates in the solver ordering logic
+        """
+        return self._simulator.GetSolverOrderPosition()
+
+    def get_state(self)->dict:
         """
         It retrieves the physical model internal state.
+
+        Returns
+        -------
+        dict
+            simulator current state (physical configuration)
         """
         return self._simulator.internalInitParams
 
@@ -106,7 +133,7 @@ class GetfemSimulator(PhysicalSimulator):
         state: dict
             A dict representing the state.
         """
-        self._simulator.SetPhyParams(actor)
+        self._simulator.SetPhyParams(state)
 
     def __str__(self):
         """

@@ -68,17 +68,8 @@ def LoadDataSets(path_in,attr_names,attr_x,attr_y):
 def GenerateInterpolatedDataSetsOnGrid(simulator,datasets,grid_support,dofnum_by_field,path_out):
     dataset_by_type=dict()
     for name,dataset in datasets.items():
-        myTransformer=DataSetInterpolatorOnGrid(name=name,simulator=simulator,
-                                                dataset=dataset,
-                                                grid_support=grid_support)
-        myTransformer.generate(dofnum_by_field=dofnum_by_field,path_out=path_out)
-        dataset_by_type[dataset.name]=myTransformer
-    return dataset_by_type
-
-def GenerateInterpolatedDataSetsOnMesh(simulator,datasets,path_out):
-    dataset_by_type=dict()
-    for dataset in datasets:
-        myTransformer=DataSetInterpolatorOnMesh(name=dataset.name,simulator=simulator,
+        myTransformer=DataSetInterpolatorOnGrid(name=name,
+                                                simulator=simulator,
                                                 dataset=dataset,
                                                 grid_support=grid_support)
         myTransformer.generate(dofnum_by_field=dofnum_by_field,path_out=path_out)

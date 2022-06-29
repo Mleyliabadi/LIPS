@@ -72,7 +72,7 @@ class PneumaticEvaluation(Evaluation):
 
         Returns
         -------
-        PowerGridEvaluation
+        PneumaticEvaluation
         """
         return cls(config=benchmark.config, log_path=benchmark.log_path)
 
