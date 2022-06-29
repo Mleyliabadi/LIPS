@@ -156,9 +156,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_bk_act_class</span> <span class="o">=</span> <span class="n">_BackendAction</span><span class="o">.</span><span class="n">init_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_grid_simulator</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_act_class</span> <span class="o">=</span> <span class="n">CompleteAction</span><span class="o">.</span><span class="n">init_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_grid_simulator</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_predict_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp_time</span> <span class="o">=</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="DCApproximationAS.evaluate"><a class="viewcode-back" href="../../../lips.physical_simulator.html#lips.physical_simulator.dcApproximationAS.DCApproximationAS.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">PowerGridDataSet</span><span class="p">):</span>
+<div class="viewcode-block" id="DCApproximationAS.compute"><a class="viewcode-back" href="../../../lips.physical_simulator.html#lips.physical_simulator.dcApproximationAS.DCApproximationAS.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">PowerGridDataSet</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        evaluate the model on the whole dataset. It returns a dictionnary with the keys in self._attr_y</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -168,7 +168,7 @@
         <span class="n">nb_sample</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="p">{</span><span class="n">el</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nb_sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attr_size</span><span class="p">(</span><span class="n">el</span><span class="p">)))</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr_y</span><span class="p">}</span>
         <span class="c1">#res[self._attr_fix_gen_p] = np.zeros((nb_sample, self._get_attr_size(&quot;prod_p&quot;)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_predict_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp_time</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nb_sample</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;evaluate dc&quot;</span><span class="p">):</span>
             <span class="c1"># extract the current data</span>
             <span class="n">data_this</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ind</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span>
@@ -241,7 +241,7 @@
         <span class="c1"># start the simulator</span>
         <span class="n">_beg</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_raw_grid_simulator</span><span class="o">.</span><span class="n">runpf</span><span class="p">(</span><span class="n">is_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_predict_time</span> <span class="o">+=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">_beg</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp_time</span> <span class="o">+=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">_beg</span></div>
 
 <div class="viewcode-block" id="DCApproximationAS.save"><a class="viewcode-back" href="../../../lips.physical_simulator.html#lips.physical_simulator.dcApproximationAS.DCApproximationAS.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_out</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
