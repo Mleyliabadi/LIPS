@@ -345,8 +345,8 @@ class TorchUnet(nn.Module):
 
         Returns
         ----------
-        data :torch.tensor
-            data
+        metadata :dict
+            specific data related to the model architecture
         """
         res_json = {}
         res_json["input_size"] = self.n_channels
@@ -354,6 +354,15 @@ class TorchUnet(nn.Module):
         return res_json
 
     def _save_metadata(self, path: str):
+        """Save metadata
+
+        Here, it saves the sizes related to the data
+
+        Parameters
+        ----------
+        path : str
+            path where the metadata are saved
+        """
         res_json = {}
         res_json["input_size"] = self.n_channels
         res_json["output_size"] = self.n_classes
@@ -361,6 +370,15 @@ class TorchUnet(nn.Module):
             json.dump(obj=res_json, fp=f, indent=4, sort_keys=True, cls=NpEncoder)
 
     def _load_metadata(self, path: str):
+        """Load metadata
+
+        Here, it loads and initialize the sizes related to the data
+
+        Parameters
+        ----------
+        path : str
+            path to load the metadata from
+        """
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
         with open((path / "metadata.json"), "r", encoding="utf-8") as f:
