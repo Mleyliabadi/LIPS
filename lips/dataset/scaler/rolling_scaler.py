@@ -12,6 +12,8 @@ from lips.utils import NpEncoder
 #from . import Scaler
 
 class RollingWheelScaler():
+    """Pneumatic specific scaler
+    """
     def __init__(self,wheel_velocity=0.0):
         self.wheel_velocity = wheel_velocity
 

@@ -1,4 +1,6 @@
 """
+Usage:
+    Implementation of pneumatic benchmarks
 Licence:
     Copyright (c) 2021, IRT SystemX (https://www.irt-systemx.fr/en/)
     See AUTHORS.txt
@@ -18,17 +20,41 @@ from typing import Union
 import numpy as np
 
 from lips.benchmark import Benchmark
-
 from lips.evaluation.pneumatic_evaluation import PneumaticEvaluation
 from lips.physical_simulator.getfemSimulator import PhysicalSimulator,GetfemSimulator
 from lips.augmented_simulators.augmented_simulator import AugmentedSimulator
 from lips.dataset.pneumaticWheelDataSet import SamplerStaticWheelDataSet,QuasiStaticWheelDataSet
 
 class WheelBenchmark(Benchmark):
+    """Pneumatic Benchmark class
+
+    This class allows to benchmark a pneumatic scenario which are defined in a config file.
+
+    Parameters
+    ----------
+    benchmark_path : Union[str, None], optional
+        path to the benchmark, it should be indicated
+        if not indicated, the data remains only in the memory
+    config_path : Union[str, None], optional
+        path to the configuration file. If config_path is None, the default config file
+        present in config module will be used by using the benchmark_name as the section, by default None
+    benchmark_name : str, optional
+        the benchmark name which is used in turn as the config section, by default "Benchmark0"
+    load_data_set : bool, optional
+        whether to load the already generated datasets, by default False
+    evaluation : Union[PneumaticEvaluation, None], optional
+        a PneumaticEvaluation instance. If not indicated, the benchmark creates its
+        own evaluation instance using appropriate config, by default None
+    log_path : Union[str, None], optional
+        path to the logs, by default None
+
+    This class is used as the base class for pneumatic usecases and each pneumatic problem
+    can extend this class.
+    """
     def __init__(self,
                  benchmark_path: str,
                  config_path: Union[str, None]=None,
-                 benchmark_name: str="Benchmark1",
+                 benchmark_name: str="Benchmark0",
                  load_data_set: bool=False,
                  evaluation: Union[PneumaticEvaluation, None]=None,
                  log_path: Union[str, None]=None
@@ -112,6 +138,31 @@ class WheelBenchmark(Benchmark):
             self.training_simulator = GetfemSimulator(**scenario_params)
 
 class WeightSustainingWheelBenchmark(WheelBenchmark):
+    """WeightSustainingWheelBenchmark class
+
+    This class allows to benchmark a pneumatic WeightSustaining Wheel problem whose features are 
+    defined in a config file.
+
+    Parameters
+    ----------
+    benchmark_path : Union[str, None], optional
+        path to the benchmark, it should be indicated
+        if not indicated, the data remains only in the memory
+    config_path : Union[str, None], optional
+        path to the configuration file. If config_path is None, the default config file
+        present in config module will be used by using the benchmark_name as the section, by default None
+    benchmark_name : str, optional
+        the benchmark name which is used in turn as the config section, by default "Benchmark1"
+    load_data_set : bool, optional
+        whether to load the already generated datasets, by default False
+    evaluation : Union[PneumaticEvaluation, None], optional
+        a PneumaticEvaluation instance. If not indicated, the benchmark creates its
+        own evaluation instance using appropriate config, by default None
+    log_path : Union[str, None], optional
+        path to the logs, by default None
+
+    This class derived from WheelBenchmark
+    """
     def __init__(self,
                  benchmark_path: str,
                  config_path: Union[str, None]=None,
@@ -128,12 +179,10 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                         )
 
         self.is_loaded=False
-        # TODO : it should be reset if the config file is modified on the fly
         if evaluation is None:
             myEval=PneumaticEvaluation(config_path=config_path,scenario=benchmark_name,log_path=log_path)
             self.evaluation = myEval.from_benchmark(benchmark=self)
 
-        # print(self.config.get_options_dict())
         self.env_name = self.config.get_option("env_name")
         self.val_simulator = None
         self.test_simulator = None
@@ -228,7 +277,33 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                            augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
                            save_path: Union[str, None]=None,
                            **kwargs) -> dict:
+        """Compute prediction on one or multiple test datasets
+        This function will predict a solution using simulator (physical or augmented)
+        on multiple datasets.
 
+        Parameters
+        ----------
+        dataset : str, optional
+            dataset on which the evaluation should be performed, by default "all"
+        augmented_simulator : Union[PhysicalSimulator, AugmentedSimulator, None], optional
+            An instance of the class augmented simulator, by default None
+        save_path : Union[str, None], optional
+            the path that the evaluation results should be saved, by default None
+        **kwargs: ``dict``
+            additional arguments that will be passed to the augmented simulator
+        ----
+
+        Returns
+        -------
+        dict
+            the results dictionary
+
+        Raises
+        ------
+        RuntimeError
+            Unknown dataset selected
+
+        """
         li_dataset = []
         if dataset == "all":
             li_dataset = [self.val_dataset, self._test_dataset, self._test_ood_topo_dataset]
@@ -256,11 +331,32 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
         return res
 
     def _aux_predict_on_single_dataset(self,
-                                        dataset: SamplerStaticWheelDataSet,
-                                        augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
-                                        save_path: Union[str, None]=None,
-                                        **kwargs) -> dict:
+                                       dataset: SamplerStaticWheelDataSet,
+                                       augmented_simulator: Union[PhysicalSimulator, AugmentedSimulator, None] = None,
+                                       save_path: Union[str, None]=None,
+                                       **kwargs) -> dict:
+        """Compute prediction on one dataset
+        This function will predict a solution using simulator (physical or augmented)
+        on one datasets.
 
+        Parameters
+        ----------
+        dataset : str, optional
+            dataset on which the evaluation should be performed, by default "all"
+        augmented_simulator : Union[PhysicalSimulator, AugmentedSimulator, None], optional
+            An instance of the class augmented simulator, by default None
+        save_path : Union[str, None], optional
+            the path that the evaluation results should be saved, by default None
+        **kwargs: ``dict``
+            additional arguments that will be passed to the augmented simulator
+        ----
+
+        Returns
+        -------
+        predictions: dict
+            the prediction dictionary
+
+        """
         self.logger.info("Benchmark %s, evaluation using %s on %s dataset", self.benchmark_name,
                                                                             augmented_simulator.name,
                                                                             dataset.name
@@ -277,7 +373,30 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                                             dataset: str = "all",
                                             save_path: Union[str, None]=None,
                                             **kwargs) -> dict:
+        """Evaluate simulator from predictions
+        This function compare a prediction to an observation predict a solution using simulator (physical or augmented)
+        on one or multiple datasets.
 
+        Parameters
+        ----------
+        predictions : dict
+            predictions by a simulator
+        observations : dict
+            actual reference observation
+        dataset : str, optional
+            dataset on which the evaluation should be performed, by default "all"
+        save_path : Union[str, None], optional
+            the path that the evaluation results should be saved, by default None
+        **kwargs: ``dict``
+            additional arguments that will be passed to the augmented simulator
+        ----
+
+        Returns
+        -------
+        res: dict
+            the evaluation dictionary
+
+        """
         li_dataset = []
         if dataset == "all":
             li_dataset = [self.val_dataset, self._test_dataset, self._test_ood_topo_dataset]
@@ -306,11 +425,33 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
         return res
 
     def _aux_evaluate_on_single_dataset_from_prediction(self,
-                                        dataset: SamplerStaticWheelDataSet,
-                                        predictions: dict,
-                                        observations: dict,
-                                        save_path: Union[str, None]=None,
-                                        **kwargs) -> dict:
+                                                        dataset: SamplerStaticWheelDataSet,
+                                                        predictions: dict,
+                                                        observations: dict,
+                                                        save_path: Union[str, None]=None,
+                                                        **kwargs) -> dict:
+        """Evaluate single dataset from prediction
+        This function evaluate a prediction using various criteria on one or multiple datasets.
+
+        Parameters
+        ----------
+        dataset : SamplerStaticWheelDataSet
+            dataset on which the evaluation should be performed
+        predictions : dict
+            predictions by a simulator
+        observations : dict
+            actual reference observation
+        save_path : Union[str, None], optional
+            the path that the evaluation results should be saved, by default None
+        **kwargs: ``dict``
+            additional arguments that will be passed to the augmented simulator
+        ----
+
+        Returns
+        -------
+        res: dict
+            the evaluation dictionary
+        """
         self.predictions[dataset.name] = predictions
         self.observations[dataset.name] = observations
         self.dataset = dataset
@@ -328,7 +469,7 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
                                         **kwargs) -> dict:
         """Evaluate a single dataset
         This function will evalute a simulator (physical or augmented) using various criteria predefined in evaluator object
-        on a ``single test dataset``. It can be overloaded or called to evaluate the performance on multiple datasets
+        on a ``single test dataset``. It can be called to evaluate the performance on multiple datasets
 
         Parameters
         ------
@@ -343,7 +484,7 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
 
         Returns
         -------
-        dict
+        res: dict
             the results dictionary
         """
         self.logger.info("Benchmark %s, evaluation using %s on %s dataset", self.benchmark_name,
@@ -376,10 +517,35 @@ class WeightSustainingWheelBenchmark(WheelBenchmark):
 
 
 class DispRollingWheelBenchmark(WheelBenchmark):
+    """WeightSustainingWheelBenchmark class
+
+    This class allows to benchmark a pneumatic WeightSustaining Wheel problem whose features are 
+    defined in a config file.
+
+    Parameters
+    ----------
+    benchmark_path : Union[str, None], optional
+        path to the benchmark, it should be indicated
+        if not indicated, the data remains only in the memory
+    config_path : Union[str, None], optional
+        path to the configuration file. If config_path is None, the default config file
+        present in config module will be used by using the benchmark_name as the section, by default None
+    benchmark_name : str, optional
+        the benchmark name which is used in turn as the config section, by default "Benchmark2"
+    load_data_set : bool, optional
+        whether to load the already generated datasets, by default False
+    evaluation : Union[PneumaticEvaluation, None], optional
+        a PneumaticEvaluation instance. If not indicated, the benchmark creates its
+        own evaluation instance using appropriate config, by default None
+    log_path : Union[str, None], optional
+        path to the logs, by default None
+
+    This class derived from WheelBenchmark
+    """
     def __init__(self,
                  benchmark_path: str,
                  config_path: Union[str, None]=None,
-                 benchmark_name: str="Benchmark1",
+                 benchmark_name: str="Benchmark2",
                  load_data_set: bool=False,
                  evaluation: Union[PneumaticEvaluation, None]=None,
                  log_path: Union[str, None]=None,
@@ -446,6 +612,9 @@ class DispRollingWheelBenchmark(WheelBenchmark):
         self.is_loaded = True
 
     def split_train_test_valid(self):
+        """
+        split base dataset in train/test/validation datasets
+        """
         split_ratio=self.config.get_option("split_ratio")
         train_ratio = split_ratio.get("train_ratio")
         test_ratio= split_ratio.get("test_ratio")
@@ -507,7 +676,7 @@ class DispRollingWheelBenchmark(WheelBenchmark):
                                         **kwargs) -> dict:
         """Evaluate a single dataset
         This function will evalute a simulator (physical or augmented) using various criteria predefined in evaluator object
-        on a ``single test dataset``. It can be overloaded or called to evaluate the performance on multiple datasets
+        on a ``single test dataset``. It can be called to evaluate the performance on multiple datasets
 
         Parameters
         ------
