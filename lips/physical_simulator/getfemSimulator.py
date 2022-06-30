@@ -17,14 +17,14 @@ import numpy as np
 from lips.physical_simulator.physicalSimulator import PhysicalSimulator
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import SimulatorGeneration
 
-def lipsToGetfemBridge(physical_domain:dict,physicalProperties:dict):
+def lips_to_getfem_bridge(physical_domain:dict,physical_properties:dict):
     """Use to adapt Getfem currently used API with lips PhysicalSimulator API.
 
     Parameters
     ----------
     physical_domain : dict
         physical domain geometric-related parameters
-    physicalProperties : dict
+    physical_properties : dict
         physical configuration properties parameters
 
     Returns
@@ -32,7 +32,7 @@ def lipsToGetfemBridge(physical_domain:dict,physicalProperties:dict):
     simulator
         A getfem simulator instance endowed with physical caracteristics
     """
-    simulator=SimulatorGeneration(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    simulator=SimulatorGeneration(physical_domain=physical_domain,physical_properties=physical_properties)
     return simulator
 
 class GetfemSimulator(PhysicalSimulator):
@@ -42,21 +42,21 @@ class GetfemSimulator(PhysicalSimulator):
     ----------
     physical_domain : Union[dict, None], optional
         physical domain geometric-related parameters
-    physicalProperties :  Union[dict, None], optional
+    physical_properties :  Union[dict, None], optional
         physical configuration properties parameters
-    simulatorInstance : Union[dict, None], optional
+    simulator_instance : Union[dict, None], optional
         Getfem simulator instance
     """
     def __init__(self,
                  physical_domain: Union[dict, None] = None,
-                 physicalProperties: Union[dict, None] = None,
-                 simulatorInstance: Union[any, None] = None
+                 physical_properties: Union[dict, None] = None,
+                 simulator_instance: Union[any, None] = None
                  ):
-        if simulatorInstance is None:
-            self._simulator = lipsToGetfemBridge(physical_domain,physicalProperties)
+        if simulator_instance is None:
+            self._simulator = lips_to_getfem_bridge(physical_domain,physical_properties)
             self._simulator.Preprocessing()
         else:
-            self._simulator=type(simulatorInstance._simulator)(simulatorInstance._simulator)
+            self._simulator=type(simulator_instance._simulator)(simulator_instance._simulator)
 
     def build_model(self):
         """
@@ -153,8 +153,8 @@ def check_static_benchmark():
     }
 
 
-    physicalProperties={
-        "ProblemType":"StaticMechanicalStandard",
+    physical_properties={
+        "problem_type":"StaticMechanicalStandard",
         "materials":[["ALL", {"law":"LinearElasticity","young":5.98e6,"poisson":0.495} ]],#[["ALL", {"law":"IncompressibleMooneyRivlin", "MooneyRivlinC1": 1, "MooneyRivlinC2":1} ]],
         #"neumann":[["HOLE_BOUND",{"type" : "StandardNeumann", "fx":0.0, "fy":-1e2}] ],
         "neumann":[["HOLE_BOUND", {"type": "RimRigidityNeumann", "Force": 1.0e7}]],
@@ -163,8 +163,8 @@ def check_static_benchmark():
     }
 
 
-    # physicalProperties={
-    #     "ProblemType":"StaticMechanicalStandard",
+    # physical_properties={
+    #     "problem_type":"StaticMechanicalStandard",
     #     "materials":[["ALL", {"law":"SaintVenantKirchhoff","young":5.98e6,"poisson":0.495} ]],
     #     "incompressibility":True,
     #     "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0}] ],
@@ -173,7 +173,7 @@ def check_static_benchmark():
     #     "dirichlet":[["HOLE_BOUND",{"type" : "scalar", "Disp_Amplitude":3, "Disp_Angle":-math.pi/2}] ],
     #     "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.0}] ]
     # }
-    mySimulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    mySimulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
     mySimulator.build_model()
     mySimulator.run_problem()
     mySimulator._simulator.ExportSolutionInGmsh(filename="StaticBenchmark.pos")
@@ -187,15 +187,15 @@ def check_static():
         "meshSize":1
     }
 
-    physicalProperties={
-        "ProblemType":"StaticMechanicalStandard",
+    physical_properties={
+        "problem_type":"StaticMechanicalStandard",
         "materials":[["ALL", {"law":"LinearElasticity","young":21E6,"poisson":0.3} ]],
         "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0}] ],
         "dirichlet":[["HOLE_BOUND",{"type" : "scalar", "Disp_Amplitude":6, "Disp_Angle":-math.pi/2}] ],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":2.0,"fricCoeff":0.9}] ]
     }
 
-    mySimulator = GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    mySimulator = GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
     mySimulator.build_model()
     mySimulator.run_problem()
 
@@ -212,8 +212,8 @@ def check_quasi_static_rolling():
     }
 
     dt = 10e-4
-    physicalProperties={
-        "ProblemType":"QuasiStaticMechanicalRolling",
+    physical_properties={
+        "problem_type":"QuasiStaticMechanicalRolling",
         "materials":[["ALL", {"law": "IncompressibleMooneyRivlin", "MooneyRivlinC1": 1, "MooneyRivlinC2": 1} ]],
         "incompressibility":True,
         "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0.0}] ],
@@ -221,7 +221,7 @@ def check_quasi_static_rolling():
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.6}] ],
         "transientParams":{"time": 5*dt, "timeStep": dt}
     }
-    mySimulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    mySimulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
     mySimulator.build_model()
     print(mySimulator)
     mySimulator.run_problem()

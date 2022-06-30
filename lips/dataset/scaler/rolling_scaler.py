@@ -68,12 +68,12 @@ if __name__ =="__main__":
     origin_x,origin_y=(0.,0.)
     lenght_x,lenght_y=(10.,10.)
     nb_line,nb_column=(5,5)
-    coordX,coordY=np.meshgrid(np.arange(origin_x,origin_x+lenght_x,lenght_x/nb_line),np.arange(origin_y,origin_y+lenght_y,lenght_y/nb_column))
-    coordX,coordY=coordX.flatten(),coordY.flatten()
+    coord_x,coord_y=np.meshgrid(np.arange(origin_x,origin_x+lenght_x,lenght_x/nb_line),np.arange(origin_y,origin_y+lenght_y,lenght_y/nb_column))
+    coord_x,coord_y=coord_x.flatten(),coord_y.flatten()
 
-    block_coords=np.empty((coordX.shape[0]+coordY.shape[0],))
-    block_coords[0::2]=coordX
-    block_coords[1::2]=coordY
+    block_coords=np.empty((coord_x.shape[0]+coord_y.shape[0],))
+    block_coords[0::2]=coord_x
+    block_coords[1::2]=coord_y
 
     timestep=0.1
     wheel_velocity=1.0

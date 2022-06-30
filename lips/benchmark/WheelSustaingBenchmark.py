@@ -21,48 +21,48 @@ CONFIG_PATH_AUGMENTED_SIMULATOR_UNET="/home/ddanan/HSAProject/LIPSPlatform/LIPS_
 
 def GenerateDataSets(simulator,config,path_out=None):
     sampler=config.get_option("sampler")
-    samplerInputParams=sampler.get("samplerInputParams")
+    sampler_input_params=sampler.get("sampler_input_params")
     sampler_seeds=sampler.get("seeds")
-    sampler_nbsamples=sampler.get("nbsamples")
+    sampler_nb_samples=sampler.get("nb_samples")
 
-    training_actor=LHSSampler(space_params=samplerInputParams)
+    training_actor=LHSSampler(space_params=sampler_input_params)
 
     attr_names=(PFN.displacement,)
 
-    pneumaticWheelDataSetTrain=SamplerStaticWheelDataSet("train",attr_names=attr_names,config=config)
-    pneumaticWheelDataSetTrain.generate(simulator=simulator,
+    pneumatic_wheel_dataset_train=SamplerStaticWheelDataSet("train",attr_names=attr_names,config=config)
+    pneumatic_wheel_dataset_train.generate(simulator=simulator,
                                     actor=training_actor,
-                                    nb_samples=sampler_nbsamples.get("train"),
+                                    nb_samples=sampler_nb_samples.get("train"),
                                     actor_seed=sampler_seeds.get("train"),
                                     path_out=path_out
                                     )
 
 
-    pneumaticWheelDataSetVal=SamplerStaticWheelDataSet("val",attr_names=attr_names,config=config)
-    pneumaticWheelDataSetVal.generate(simulator=simulator,
+    pneumatic_wheel_dataset_val=SamplerStaticWheelDataSet("val",attr_names=attr_names,config=config)
+    pneumatic_wheel_dataset_val.generate(simulator=simulator,
                                     actor=training_actor,
-                                    nb_samples=sampler_nbsamples.get("val"),
+                                    nb_samples=sampler_nb_samples.get("val"),
                                     actor_seed=sampler_seeds.get("val"),
                                     path_out=path_out
                                     )
 
-    pneumaticWheelDataSetTest=SamplerStaticWheelDataSet("test",attr_names=attr_names,config=config)
-    pneumaticWheelDataSetTest.generate(simulator=simulator,
+    pneumatic_wheel_dataset_test=SamplerStaticWheelDataSet("test",attr_names=attr_names,config=config)
+    pneumatic_wheel_dataset_test.generate(simulator=simulator,
                                     actor=training_actor,
-                                    nb_samples=sampler_nbsamples.get("test"),
+                                    nb_samples=sampler_nb_samples.get("test"),
                                     actor_seed=sampler_seeds.get("test"),
                                     path_out=path_out
                                     )
 
-    return pneumaticWheelDataSetTrain,pneumaticWheelDataSetVal,pneumaticWheelDataSetTest
+    return pneumatic_wheel_dataset_train,pneumatic_wheel_dataset_val,pneumatic_wheel_dataset_test
 
 def LoadDataSets(path_in,attr_names,attr_x,attr_y):
-    pneumaticWheelDataSet=dict()
+    pneumatic_wheel_dataset=dict()
     for dataset_types in ["train","val","test"]:
-        pneumaticWheelDataSet[dataset_types]=SamplerStaticWheelDataSet(dataset_types,attr_names=attr_names,attr_x=attr_x,attr_y=attr_y)
-        pneumaticWheelDataSet[dataset_types].load(path=path_in)
+        pneumatic_wheel_dataset[dataset_types]=SamplerStaticWheelDataSet(dataset_types,attr_names=attr_names,attr_x=attr_x,attr_y=attr_y)
+        pneumatic_wheel_dataset[dataset_types].load(path=path_in)
 
-    return pneumaticWheelDataSet
+    return pneumatic_wheel_dataset
 
 
 def GenerateInterpolatedDataSetsOnGrid(simulator,datasets,grid_support,dofnum_by_field,path_out):
@@ -82,53 +82,52 @@ def ComputeMeshInterpolatedPrediction(name,dataset_grid,prediction_on_grid,field
     prediction[field_name] = prediction.pop(interpolated_field_name)
     simulator=dataset_grid[name].simulator
     
-    interpolatedDatasetGrid=DataSetInterpolatorOnGrid(name=name,
+    interpolated_dataset_grid=DataSetInterpolatorOnGrid(name=name,
                                                       simulator=simulator,
                                                       dataset=dataset_grid[name],
                                                       grid_support=dataset_grid[name].grid_support)
 
-    interpolatedDatasetGrid.load_from_data(grid_support_points=dataset_grid[name].grid_support_points,
+    interpolated_dataset_grid.load_from_data(grid_support_points=dataset_grid[name].grid_support_points,
                                            interpolated_dataset=prediction,
                                            distributed_inputs_on_grid=dataset_grid[name].distributed_inputs_on_grid)
 
-    interpolatedDatasOnMesh=DataSetInterpolatorOnMesh(name=name,
+    interpolated_datas_on_mesh=DataSetInterpolatorOnMesh(name=name,
                                                       simulator=simulator,
-                                                      dataset=interpolatedDatasetGrid)
-    interpolatedDatasOnMesh.generate(field_names=[field_name])
-    prediction_on_mesh={name: interpolatedDatasOnMesh.interpolated_dataset}
+                                                      dataset=interpolated_dataset_grid)
+    interpolated_datas_on_mesh.generate(field_names=[field_name])
+    prediction_on_mesh={name: interpolated_datas_on_mesh.interpolated_dataset}
     return prediction_on_mesh
 
-def Benchmark1CNN():
-    wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
+def Benchmark1CNN(data_path):
+    wheel_config=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="WeightSustainingWheelBenchmarkInterpolated")
-    envParams=wheelConfig.get_option("env_params")
-    physical_domain=envParams.get("physical_domain")
-    physicalProperties=envParams.get("physicalProperties")
-    simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    env_params=wheel_config.get_option("env_params")
+    physical_domain=env_params.get("physical_domain")
+    physical_properties=env_params.get("physical_properties")
+    simulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
 
-    attr_x= wheelConfig.get_option("attr_x")
+    attr_x= wheel_config.get_option("attr_x")
     attr_y= ("disp",)
     attr_names=attr_x+attr_y
 
 
-    pneumaticWheelDataSets=LoadDataSets(path_in="WeightSustainingWheelBenchmarkRegular",
+    pneumatic_wheel_datasets=LoadDataSets(path_in="WeightSustainingWheelBenchmarkRegular",
                                         attr_names=attr_names,
                                         attr_x=attr_x,
                                         attr_y=attr_y)
 
-    interpolation_info=wheelConfig.get_option("interpolation_info")
+    interpolation_info=wheel_config.get_option("interpolation_info")
     grid_support=interpolation_info.get("grid_support")
     dofnum_by_field=interpolation_info.get("dofnum_by_field")
-    datasetOnGrid_by_type=GenerateInterpolatedDataSetsOnGrid(simulator=simulator,
-                                                             datasets=pneumaticWheelDataSets,
+    dataset_on_grid_by_type=GenerateInterpolatedDataSetsOnGrid(simulator=simulator,
+                                                             datasets=pneumatic_wheel_datasets,
                                                              grid_support=grid_support,
                                                              dofnum_by_field=dofnum_by_field,
                                                              path_out="WeightSustainingWheelBenchmarkInterpolated")
 
     LOG_PATH="WeightSustainingCNN.log"
-    DATA_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/getting_started/TestBenchmarkWheel"
-    benchmarkCNN = WeightSustainingWheelBenchmark(benchmark_name="WeightSustainingWheelBenchmarkInterpolated",
-                                benchmark_path=DATA_PATH,
+    benchmark_cnn = WeightSustainingWheelBenchmark(benchmark_name="WeightSustainingWheelBenchmarkInterpolated",
+                                benchmark_path=data_path,
                                 load_data_set=True,
                                 log_path=LOG_PATH,
                                 config_path=CONFIG_PATH_BENCHMARK
@@ -148,12 +147,12 @@ def Benchmark1CNN():
                               section_name="DEFAULT")
     torch_sim_params=torch_sim_config.get_options_dict()
 
-    torch_sim.train(train_dataset=benchmarkCNN.train_dataset,
-                    val_dataset=benchmarkCNN.val_dataset,
+    torch_sim.train(train_dataset=benchmark_cnn.train_dataset,
+                    val_dataset=benchmark_cnn.val_dataset,
                     save_path=SAVE_PATH,
                     **torch_sim_params)
 
-    predictor_val = benchmarkCNN.evaluate_predictor(augmented_simulator=torch_sim,
+    predictor_val = benchmark_cnn.evaluate_predictor(augmented_simulator=torch_sim,
                                                   eval_batch_size=128,
                                                   dataset="val",
                                                   shuffle=False,
@@ -163,12 +162,12 @@ def Benchmark1CNN():
     
 
     predictor_val_on_mesh=ComputeMeshInterpolatedPrediction(name="val",
-                                                            dataset_grid=datasetOnGrid_by_type,
+                                                            dataset_grid=dataset_on_grid_by_type,
                                                             prediction_on_grid=predictor_val,
                                                             field_name=PFN.displacement)
-    observation_val_on_mesh={"val":pneumaticWheelDataSets["val"].data}
+    observation_val_on_mesh={"val":pneumatic_wheel_datasets["val"].data}
 
-    torch_sim_metrics_val = benchmarkCNN.evaluate_simulator_from_predictions(predictions=predictor_val_on_mesh,
+    torch_sim_metrics_val = benchmark_cnn.evaluate_simulator_from_predictions(predictions=predictor_val_on_mesh,
                                                                              observations=observation_val_on_mesh,
                                                                              eval_batch_size=128,
                                                                              dataset="val",
@@ -176,13 +175,13 @@ def Benchmark1CNN():
                                                                              save_path=None,
                                                                              save_predictions=False
                                                                             )
+    print(torch_sim_metrics_val)
 
-def Benchmark1FFNN():
-    DATA_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/getting_started/TestBenchmarkWheel"
+def Benchmark1FFNN(data_path):
     LOG_PATH="WeightSustainingFFNN.log"
 
-    benchmarkFFNN = WeightSustainingWheelBenchmark(benchmark_name="WeightSustainingWheelBenchmarkRegular",
-                                benchmark_path=DATA_PATH,
+    benchmark_ffnn = WeightSustainingWheelBenchmark(benchmark_name="WeightSustainingWheelBenchmarkRegular",
+                                benchmark_path=data_path,
                                 load_data_set=True,
                                 log_path=LOG_PATH,
                                 config_path=CONFIG_PATH_BENCHMARK
@@ -202,13 +201,13 @@ def Benchmark1FFNN():
     torch_sim_params=torch_sim_config.get_options_dict()
 
     print("Training model")
-    torch_sim.train(train_dataset=benchmarkFFNN.train_dataset,
-                    val_dataset=benchmarkFFNN.val_dataset,
+    torch_sim.train(train_dataset=benchmark_ffnn.train_dataset,
+                    val_dataset=benchmark_ffnn.val_dataset,
                     save_path=SAVE_PATH,
                     **torch_sim_params)
 
     print("Evaluation on val dataset")
-    torch_sim_metrics_val = benchmarkFFNN.evaluate_simulator(augmented_simulator=torch_sim,
+    torch_sim_metrics_val = benchmark_ffnn.evaluate_simulator(augmented_simulator=torch_sim,
                                                   eval_batch_size=128,
                                                   dataset="val",
                                                   shuffle=False,
@@ -217,31 +216,33 @@ def Benchmark1FFNN():
                                                  )
 
     print("Evaluation on test dataset")
-    torch_sim_metrics_test = benchmarkFFNN.evaluate_simulator(augmented_simulator=torch_sim,
+    torch_sim_metrics_test = benchmark_ffnn.evaluate_simulator(augmented_simulator=torch_sim,
                                                   eval_batch_size=128,
                                                   dataset="test",
                                                   shuffle=False,
                                                   save_path=None,
                                                   save_predictions=False
                                                  )
+    print(torch_sim_metrics_val)
 
 def GenerateDataBaseBenchmark1():
-    wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
+    wheel_config=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="WeightSustainingWheelBenchmarkRegular")
 
-    print(wheelConfig)
-    exit(0)
-    envParams=wheelConfig.get_option("env_params")
-    physical_domain=envParams.get("physical_domain")
-    physicalProperties=envParams.get("physicalProperties")
-    simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    print(wheel_config)
 
-    pneumaticWheelDataSetTrain,pneumaticWheelDataSetVal,pneumaticWheelDataSetTest=GenerateDataSets(simulator=simulator,
-                                                                                                   config=wheelConfig,
+    env_params=wheel_config.get_option("env_params")
+    physical_domain=env_params.get("physical_domain")
+    physical_properties=env_params.get("physical_properties")
+    simulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
+
+    pneumatic_wheel_dataset_train,pneumatic_wheel_dataset_val,pneumatic_wheel_dataset_test=GenerateDataSets(simulator=simulator,
+                                                                                                   config=wheel_config,
                                                                                                    path_out="WeightSustainingWheelBenchmarkRegular")
 
 
 if __name__ == '__main__':
-    GenerateDataBaseBenchmark1()
-    #Benchmark1FFNN()
-    #Benchmark1CNN()
+    #GenerateDataBaseBenchmark1()
+    DATA_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/lips/benchmark"
+    #Benchmark1FFNN(data_path=DATA_PATH)
+    Benchmark1CNN(data_path=DATA_PATH)

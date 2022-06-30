@@ -12,9 +12,9 @@ def GetfemInterpolationOnSupport(simulator,field,gridSupport):
     physical_problem=simulator._simulator
     return FEMInterpolationOnSupport(phyProblem=physical_problem,originalField=field,targetSupport=gridSupport)
 
-def InterpolationOnCloudPoints(fieldSupport,fieldValue,phyProblem):
+def InterpolationOnCloudPoints(field_support,fieldValue,phyProblem):
     targetSupport=phyProblem.get_solverOrder_positions()
-    return InterpolateSolOnNodes(fieldSupport=fieldSupport,fieldValue=fieldValue,targetSupport=targetSupport)
+    return InterpolateSolOnNodes(fieldSupport=field_support,fieldValue=fieldValue,targetSupport=targetSupport)
 
 def MeshGeneration(physical_domain):
     if physical_domain["Mesher"]=="Getfem":
@@ -46,10 +46,10 @@ def MeshGeneration(physical_domain):
     else:
         raise Exception("Mesher "+str(physical_domain["Mesher"])+" not supported")
 
-def SimulatorGeneration(physical_domain,physicalProperties):
-    problemType=physicalProperties["ProblemType"]
+def SimulatorGeneration(physical_domain,physical_properties):
+    problemType=physical_properties["problem_type"]
 
-    classNameByProblemType = {
+    classNameByproblem_type = {
                                "StaticMechanicalStandard":"GetfemMecaProblem",
                                "StaticMechanicalRolling":"GetfemRollingWheelProblem",
                                "QuasiStaticMechanicalStandard":"QuasiStaticMecanicalProblem",
@@ -57,38 +57,38 @@ def SimulatorGeneration(physical_domain,physicalProperties):
                                }
 
     try:
-        simulator = globals()[classNameByProblemType[problemType]]()
+        simulator = globals()[classNameByproblem_type[problemType]]()
     except KeyError:
         raise(Exception("Unable to treat this kind of problem !"))
 
     simulator.mesh=MeshGeneration(physical_domain)
     simulator.refNumByRegion=physical_domain["refNumByRegion"]
 
-    filterPhysicalProperties={k: v for k, v in physicalProperties.items() if k!="ProblemType"}
+    filterPhysicalProperties={k: v for k, v in physical_properties.items() if k!="problem_type"}
     for physicalProperty,physicalValue in filterPhysicalProperties.items():
         attribute=setattr(simulator,physicalProperty,physicalValue)
 
     return simulator
 
-def PhysicalCriteriaComputation(criteriaType,simulator,field,criteriaParams=None):
+def PhysicalCriteriaComputation(criteria_type,simulator,field,criteria_params=None):
 
     classNameByCriteriaType = {
-                               "DeformedVolume":"DeformedVolume",
-                               "NormalContactForces":"UnilateralContactPressure",
-                               "FrictionContactForces":"FrictionalContactPressure",
-                               "StrainEnergy":"TotalElasticEnergy",
-                               "MaxStress":"MaxVonMises",
-                               "MaxDeflection":"MaxDisp",
+                               "deformed_volume":"DeformedVolume",
+                               "normal_contact_forces":"UnilateralContactPressure",
+                               "friction_contact_forces":"FrictionalContactPressure",
+                               "strain_energy":"TotalElasticEnergy",
+                               "max_stress":"MaxVonMises",
+                               "max_deflection":"MaxDisp",
                                }
 
     physical_problem=simulator._simulator
     try:
-        criteria = globals()[classNameByCriteriaType[criteriaType]](problem=physical_problem)
+        criteria = globals()[classNameByCriteriaType[criteria_type]](problem=physical_problem)
     except KeyError:
         raise(Exception("Unable to treat this kind of problem !"))
 
     criteria.SetExternalSolutions(field)
-    if criteriaParams is not None:
-        return criteria.ComputeValue(**criteriaParams)
+    if criteria_params is not None:
+        return criteria.ComputeValue(**criteria_params)
     return criteria.ComputeValue()
 

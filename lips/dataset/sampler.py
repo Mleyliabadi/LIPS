@@ -114,11 +114,11 @@ class Sampler(metaclass=abc.ABCMeta):
         """
         It represents the sampler as a string.
         """
-        sInfo="Type of sampling: "+self.sampling_type+"\n"
-        sInfo+="Parameters\n"
-        for paramName,paramVal in self.space_params.items():
-            sInfo+="\t"+str(paramName)+": "+str(paramVal)+"\n"
-        return sInfo 
+        s_info="Type of sampling: "+self.sampling_type+"\n"
+        s_info+="Parameters\n"
+        for param_name,paramVal in self.space_params.items():
+            s_info+="\t"+str(param_name)+": "+str(paramVal)+"\n"
+        return s_info 
 
     def __len__(self):
         """
@@ -156,11 +156,11 @@ class LHSSampler(Sampler):
         self.vals =doe.lhs(nfactor, samples=nb_samples, random_state=sampler_seed, criterion="maximin")
         
         vals=np.transpose(self.vals)
-        paramsVectByName = {}
-        for i,paramName in enumerate(space_params.keys()):
-            minVal,maxVal=space_params[paramName]
-            paramsVectByName[paramName] = minVal + vals[i]*(maxVal - minVal)
-        return list(map(dict, zip(*[[(k, v) for v in value] for k, value in paramsVectByName.items()])))
+        params_vect_by_name = {}
+        for i,param_name in enumerate(space_params.keys()):
+            min_val,max_val=space_params[param_name]
+            params_vect_by_name[param_name] = min_val + vals[i]*(max_val - min_val)
+        return list(map(dict, zip(*[[(k, v) for v in value] for k, value in params_vect_by_name.items()])))
 
 if __name__ =="__main__":
     params={"params1":(21E6,22E6),"params2":(0.2,0.3)}

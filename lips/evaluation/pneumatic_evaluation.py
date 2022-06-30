@@ -128,48 +128,48 @@ class PneumaticEvaluation(Evaluation):
         """
         Verify Pneumatic Machine Learning metrics
         """
-        metricVal_by_name = self.metrics[self.MACHINE_LEARNING]
+        metric_val_by_name = self.metrics[self.MACHINE_LEARNING]
         for metric_name in self.eval_dict[self.MACHINE_LEARNING]:
             metric_fun = self.criteria.get(metric_name)
-            metricVal_by_name[metric_name] = {}
+            metric_val_by_name[metric_name] = {}
             for nm_, pred_ in self.predictions.items():
                 true_ = self.observations[nm_]
                 tmp = metric_fun(true_, pred_)
                 if isinstance(tmp, Iterable):
-                    metricVal_by_name[metric_name][nm_] = [float(el) for el in tmp]
+                    metric_val_by_name[metric_name][nm_] = [float(el) for el in tmp]
                     self.logger.info("%s for %s: %s", metric_name, nm_, tmp)
                 else:
-                    metricVal_by_name[metric_name][nm_] = float(tmp)
+                    metric_val_by_name[metric_name][nm_] = float(tmp)
                     self.logger.info("%s for %s: %.2E", metric_name, nm_, tmp)
 
     def evaluate_physics(self):
         """
         function that evaluates physical criteria on given observations and may rely on the physical solver
         """
-        metricVal_by_name = self.metrics[self.PHYSICS_COMPLIANCES]
+        metric_val_by_name = self.metrics[self.PHYSICS_COMPLIANCES]
         attr_x=self.config.get_option("attr_x")
         obs_inputs={key: self.observations[key] for key in attr_x}
-        inputsSeparated = [dict(zip(obs_inputs,t)) for t in zip(*obs_inputs.values())]
+        inputs_separated = [dict(zip(obs_inputs,t)) for t in zip(*obs_inputs.values())]
 
         attr_y=self.config.get_option("attr_y_eval")
         obs_outputs={key: self.observations[key] for key in attr_y}
-        outputSeparated = [dict(zip(obs_outputs,t)) for t in zip(*obs_outputs.values())]
+        output_separated = [dict(zip(obs_outputs,t)) for t in zip(*obs_outputs.values())]
         
-        predictionSeparated = [dict(zip(self.predictions,t)) for t in zip(*self.predictions.values())]
+        prediction_separated = [dict(zip(self.predictions,t)) for t in zip(*self.predictions.values())]
 
-        metricVal_by_name = {metric_name:[] for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]}
-        for obs_input,obs_output,predict_out in zip(inputsSeparated,outputSeparated,predictionSeparated):
-            simulator=type(self.simulator)(simulatorInstance=self.simulator)
-            simulator.modify_state(actor=obs_input)
+        metric_val_by_name = {metric_name:[] for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]}
+        for obs_input,obs_output,predict_out in zip(inputs_separated,output_separated,prediction_separated):
+            simulator=type(self.simulator)(simulator_instance=self.simulator)
+            simulator.modify_state(state=obs_input)
             simulator.build_model()
 
             for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]:
                 if self.eval_crit_args and self.eval_crit_args[metric_name]:
-                    criteriaParams=self.eval_crit_args[metric_name]
+                    criteria_params=self.eval_crit_args[metric_name]
                 else:
-                    criteriaParams=None
-                obs_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=obs_output,criteriaParams=criteriaParams)
-                pred_crit = PhysicalCriteriaComputation(criteriaType=metric_name,simulator=simulator,field=predict_out,criteriaParams=criteriaParams)
+                    criteria_params=None
+                obs_crit = PhysicalCriteriaComputation(criteria_type=metric_name,simulator=simulator,field=obs_output,criteria_params=criteria_params)
+                pred_crit = PhysicalCriteriaComputation(criteria_type=metric_name,simulator=simulator,field=predict_out,criteria_params=criteria_params)
 
                 delta_absolute=np.array(obs_crit)-np.array(pred_crit) 
                 delta_relative=delta_absolute/np.array(obs_crit)  
@@ -177,10 +177,10 @@ class PneumaticEvaluation(Evaluation):
                     "absolute":delta_absolute,
                     "relative":delta_relative
                 } 
-                metricVal_by_name[metric_name].append(delta)
+                metric_val_by_name[metric_name].append(delta)
 
         for metric_name in self.eval_dict[self.PHYSICS_COMPLIANCES]:
-            deltas=metricVal_by_name[metric_name]
+            deltas=metric_val_by_name[metric_name]
             deltas_united = {error_type: np.array([single_comparison[error_type] for single_comparison in deltas]) for error_type in deltas[0]}
 
             mean_relative_error=np.mean(deltas_united["relative"],axis=0)

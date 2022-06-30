@@ -27,7 +27,7 @@ from lips.config.configmanager import ConfigManager
 from lips.physical_simulator.getfemSimulator import GetfemSimulator
 from lips.dataset.sampler import LHSSampler
 
-def Domain2DGridGenerator(origin:tuple, lenghts:tuple, sizes:tuple) -> np.ndarray:
+def domain_2D_grid_generator(origin:tuple, lenghts:tuple, sizes:tuple) -> np.ndarray:
     """Generate 2D grid nodes
 
         Parameters
@@ -47,8 +47,8 @@ def Domain2DGridGenerator(origin:tuple, lenghts:tuple, sizes:tuple) -> np.ndarra
     origin_x,origin_y=origin
     lenght_x,lenght_y=lenghts
     nb_line,nb_column=sizes
-    coordX,coordY=np.meshgrid(np.arange(origin_x,origin_x+lenght_x,lenght_x/nb_line),np.arange(origin_y,origin_y+lenght_y,lenght_y/nb_column))
-    grid_support_points = np.vstack(list(zip(coordX.ravel(), coordY.ravel()))).transpose()
+    coord_x,coord_y=np.meshgrid(np.arange(origin_x,origin_x+lenght_x,lenght_x/nb_line),np.arange(origin_y,origin_y+lenght_y,lenght_y/nb_column))
+    grid_support_points = np.vstack(list(zip(coord_x.ravel(), coord_y.ravel()))).transpose()
     return grid_support_points
 
 class DataSetInterpolatorOnGrid():
@@ -112,12 +112,12 @@ class DataSetInterpolatorOnGrid():
         self._init_interpolation_fields(dofnum_by_field)
 
         grid_shape=self.grid_support["sizes"]
-        self.grid_support_points=Domain2DGridGenerator(origin=self.grid_support["origin"],
+        self.grid_support_points=domain_2D_grid_generator(origin=self.grid_support["origin"],
                                                        lenghts=self.grid_support["lenghts"],
                                                        sizes=grid_shape)
 
-        for dataIndex in range(len(self.dataset)):
-            data_solver_obs=self.dataset.get_data(dataIndex)
+        for data_index in range(len(self.dataset)):
+            data_solver_obs=self.dataset.get_data(data_index)
             for field_name,dofnum in dofnum_by_field.items():
                 single_field=np.zeros((dofnum,grid_shape[0],grid_shape[1]))
                 original_field=data_solver_obs[field_name]
@@ -125,7 +125,7 @@ class DataSetInterpolatorOnGrid():
                 for dof_index in range(dofnum):
                     intermediate_field=interpolated_field[dof_index::dofnum]
                     single_field[dof_index]=intermediate_field.reshape((grid_shape[0],grid_shape[1]))
-                self.interpolated_dataset[field_name][dataIndex]=single_field
+                self.interpolated_dataset[field_name][data_index]=single_field
 
 
     def distribute_data_on_grid(self):
@@ -292,22 +292,22 @@ class DataSetInterpolatorOnMesh():
         """  
         self._init_projection_fields(field_names)
 
-        for dataIndex in range(self.dataset.interpolated_dataset[field_names[0]].shape[0]):
+        for data_index in range(self.dataset.interpolated_dataset[field_names[0]].shape[0]):
             for field_name in field_names:
-                grid_field=self.dataset.interpolated_dataset[field_name][dataIndex]
+                grid_field=self.dataset.interpolated_dataset[field_name][data_index]
                 grid_field=np.transpose(grid_field.reshape(grid_field.shape[0],-1))
-                fieldSupport=np.transpose(self.dataset.grid_support_points)
+                field_support=np.transpose(self.dataset.grid_support_points)
 
                 #Clean true zeros
-                exteriorPointsRows = np.where(grid_field[:,0] == 0.0) and np.where(grid_field[:,1] == 0.0)
-                interpolatedInteriorSol = np.delete(grid_field, exteriorPointsRows, axis=0)
-                interpolatedInteriorCoords=np.delete(fieldSupport, exteriorPointsRows, axis=0)
+                exterior_points_rows = np.where(grid_field[:,0] == 0.0) and np.where(grid_field[:,1] == 0.0)
+                interpolated_interior_sol = np.delete(grid_field, exterior_points_rows, axis=0)
+                interpolated_interior_coords=np.delete(field_support, exterior_points_rows, axis=0)
                 
-                interpolated_field=InterpolationOnCloudPoints(fieldSupport=interpolatedInteriorCoords,fieldValue=interpolatedInteriorSol,phyProblem=self.simulator)
+                interpolated_field=InterpolationOnCloudPoints(field_support=interpolated_interior_coords,fieldValue=interpolated_interior_sol,phyProblem=self.simulator)
                 interleave_interpolated_field=np.empty((interpolated_field.shape[0]*interpolated_field.shape[1],))
                 for dof in range(interpolated_field.shape[1]):
                     interleave_interpolated_field[dof::interpolated_field.shape[1]]=interpolated_field[:,dof]
-                self.interpolated_dataset[field_name][dataIndex]=interleave_interpolated_field
+                self.interpolated_dataset[field_name][data_index]=interleave_interpolated_field
 
     def accumulate_data_from_grid(self):
         """Accumulate data on the grid
@@ -784,7 +784,7 @@ class SamplerStaticWheelDataSet(WheelDataSet):
         self._init_store_data(simulator=simulator,nb_samples=nb_samples)
 
         for current_size,sample in enumerate(tqdm(self._inputs, desc=self.name)):
-            simulator=type(simulator)(simulatorInstance=simulator)
+            simulator=type(simulator)(simulator_instance=simulator)
             simulator.modify_state(state=sample)
             simulator.build_model()
             solverState=simulator.run_problem()
@@ -831,14 +831,14 @@ def check_static_samples_generation():
         "meshSize":1
     }
 
-    physicalProperties={
-        "ProblemType":"StaticMechanicalStandard",
+    physical_properties={
+        "problem_type":"StaticMechanicalStandard",
         "materials":[["ALL", {"law":"LinearElasticity","young":21E6,"poisson":0.3} ]],
         "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0}] ],
         "dirichlet":[["HOLE_BOUND",{"type" : "scalar", "Disp_Amplitude":6, "Disp_Angle":-math.pi/2}] ],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":2.0,"fricCoeff":0.9}] ]
     }
-    training_simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    training_simulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
 
     trainingInput={
               "young":(75.0,85.0),
@@ -878,8 +878,8 @@ def check_quasi_static_generation():
     }
 
     dt = 10e-4
-    physicalProperties={
-        "ProblemType":"QuasiStaticMechanicalRolling",
+    physical_properties={
+        "problem_type":"QuasiStaticMechanicalRolling",
         "materials":[["ALL", {"law": "IncompressibleMooneyRivlin", "MooneyRivlinC1": 1, "MooneyRivlinC2": 1} ]],
         "sources":[["ALL",{"type" : "Uniform","source_x":0.0,"source_y":0.0}] ],
         "rolling":["HOLE_BOUND",{"type" : "DIS_Rolling", "theta_Rolling":150., 'd': 1.}],
@@ -887,7 +887,7 @@ def check_quasi_static_generation():
         "transientParams":{"time": 3*dt, "timeStep": dt}
     }
 
-    training_simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    training_simulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
     attr_names=(PFN.displacement,PFN.contactMultiplier)
 
     quasiStaticWheelDataSet=QuasiStaticWheelDataSet("train",attr_names=attr_names,attr_x = ("timeSteps",),attr_y = ("disp","contactMult"))
@@ -903,13 +903,13 @@ def check_interpolation_back_and_forth():
         "meshSize":1
     }
 
-    physicalProperties={
-        "ProblemType":"StaticMechanicalStandard",
+    physical_properties={
+        "problem_type":"StaticMechanicalStandard",
         "materials":[["ALL", {"law":"LinearElasticity","young":5.98e6,"poisson":0.495} ]],
         "neumann":[["HOLE_BOUND", {"type": "RimRigidityNeumann", "Force": 1.0e7}]],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.0}] ]
     }
-    simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    simulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
 
     trainingInput={
               "Force":(1.0e4,1.0e7),
@@ -918,9 +918,9 @@ def check_interpolation_back_and_forth():
     training_actor=LHSSampler(space_params=trainingInput)
 
     attr_names=(PFN.displacement,PFN.contactMultiplier)
-    pneumaticWheelDataSetTrain=SamplerStaticWheelDataSet("train",attr_names=attr_names,attr_x= ("Force",),attr_y= ("disp",))
+    pneumatic_wheel_dataset_train=SamplerStaticWheelDataSet("train",attr_names=attr_names,attr_x= ("Force",),attr_y= ("disp",))
     path_out="WheelRegular"
-    pneumaticWheelDataSetTrain.generate(simulator=simulator,
+    pneumatic_wheel_dataset_train.generate(simulator=simulator,
                                     actor=training_actor,
                                     nb_samples=3,
                                     actor_seed=42,
@@ -936,33 +936,33 @@ def check_interpolation_back_and_forth():
     for charac_id,charac_size in enumerate(charac_sizes):
         print("Interpolation for charac_size=",charac_size)
         grid_support={"origin":(-16.0,0.0),"lenghts":(32.0,32.0),"sizes":(charac_size,charac_size)}
-        interpolatedDatasetGrid=DataSetInterpolatorOnGrid(name="train",simulator=simulator,
+        interpolated_dataset_grid=DataSetInterpolatorOnGrid(name="train",simulator=simulator,
                                                     dataset=regular_dataset_reloaded,
                                                     grid_support=grid_support)
         dofnum_by_field={PFN.displacement:2}
         path_out="WheelInterpolated"
-        interpolatedDatasetGrid.generate(dofnum_by_field=dofnum_by_field,path_out=path_out)
+        interpolated_dataset_grid.generate(dofnum_by_field=dofnum_by_field,path_out=path_out)
 
-        interpolatedDatasetGrid_reloaded=DataSetInterpolatorOnGrid(name="train",simulator=simulator,
+        interpolated_dataset_grid_reloaded=DataSetInterpolatorOnGrid(name="train",simulator=simulator,
                                                     dataset=regular_dataset_reloaded,
                                                     grid_support=grid_support)
-        interpolatedDatasetGrid_reloaded.load(path=path_out)
+        interpolated_dataset_grid_reloaded.load(path=path_out)
 
-        interpolatedDatasetMesh=DataSetInterpolatorOnMesh(name="train",simulator=simulator,
-                                                    dataset=interpolatedDatasetGrid_reloaded)
+        interpolated_dataset_mesh=DataSetInterpolatorOnMesh(name="train",simulator=simulator,
+                                                    dataset=interpolated_dataset_grid_reloaded)
         path_out="WheelInterpolatedOnMesh"
-        interpolatedDatasetMesh.generate(field_names=[PFN.displacement],path_out=path_out)
+        interpolated_dataset_mesh.generate(field_names=[PFN.displacement],path_out=path_out)
 
-        interpolatedDatasetMesh_reloaded=DataSetInterpolatorOnMesh(name="train",simulator=simulator,
-                                                    dataset=interpolatedDatasetGrid_reloaded)
-        interpolatedDatasetMesh_reloaded.load(path=path_out)
+        interpolated_dataset_mesh_reloaded=DataSetInterpolatorOnMesh(name="train",simulator=simulator,
+                                                    dataset=interpolated_dataset_grid_reloaded)
+        interpolated_dataset_mesh_reloaded.load(path=path_out)
 
         original_input=np.squeeze(regular_dataset_reloaded.data["Force"])
-        reinterpolated_input=interpolatedDatasetMesh_reloaded.accumulated_data_from_grid["Force"]
+        reinterpolated_input=interpolated_dataset_mesh_reloaded.accumulated_data_from_grid["Force"]
         np.testing.assert_allclose(original_input,reinterpolated_input)
 
         original_data=regular_dataset_reloaded.data["disp"]
-        reinterpolated_data=interpolatedDatasetMesh_reloaded.interpolated_dataset["disp"]
+        reinterpolated_data=interpolated_dataset_mesh_reloaded.interpolated_dataset["disp"]
         abs_error[charac_id]=np.linalg.norm(original_data-reinterpolated_data)
 
     #Check error is decreasing

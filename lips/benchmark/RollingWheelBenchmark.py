@@ -15,26 +15,25 @@ import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
 CONFIG_PATH_BENCHMARK="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/configurations/pneumatic/benchmarks/confWheel.ini"
 CONFIG_PATH_AUGMENTED_SIMULATOR_FC="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/configurations/pneumatic/simulators/torch_fc.ini"
 
-def Benchmark2FFNNDisp():
-    DATA_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/getting_started/TestBenchmarkWheel"
+def Benchmark2FFNNDisp(data_path):
     LOG_PATH="RollingFFNNDisplacement.log"
-    benchmarkQuasiStaticDataSet = DispRollingWheelBenchmark(benchmark_name="RollingWheelBenchmarkDisplacement",
-                                benchmark_path=DATA_PATH,
+    benchmark_quasistatic_dataSet = DispRollingWheelBenchmark(benchmark_name="RollingWheelBenchmarkDisplacement",
+                                benchmark_path=data_path,
                                 load_data_set=True,
                                 log_path=LOG_PATH,
                                 config_path=CONFIG_PATH_BENCHMARK,
                                 input_required_for_post_process=True
                                )
 
-    wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
+    wheel_config=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="RollingWheelBenchmarkDisplacement")
 
-    benchmarkQuasiStaticDataSet.split_train_test_valid()
+    benchmark_quasistatic_dataSet.split_train_test_valid()
 
-    rollingProperties=wheelConfig.get_option("env_params").get("physicalProperties").get("rolling")[1]
-    theta_Rolling = rollingProperties.get("theta_Rolling")
-    verticalDisp = rollingProperties.get("d")
-    wheel_origin_y = wheelConfig.get_option("env_params").get("physical_domain").get("wheel_Dimensions")[-1]
+    rolling_properties=wheel_config.get_option("env_params").get("physical_properties").get("rolling")[1]
+    theta_Rolling = rolling_properties.get("theta_Rolling")
+    verticalDisp = rolling_properties.get("d")
+    wheel_origin_y = wheel_config.get_option("env_params").get("physical_domain").get("wheel_Dimensions")[-1]
     wheel_speed = theta_Rolling * (wheel_origin_y - verticalDisp/3)
 
 
@@ -52,11 +51,11 @@ def Benchmark2FFNNDisp():
                               section_name="CONFIGROLLINGDISP")
     torch_sim_params=torch_sim_config.get_options_dict()
 
-    torch_sim.train(train_dataset=benchmarkQuasiStaticDataSet.train_dataset,
-                    val_dataset=benchmarkQuasiStaticDataSet._test_dataset,
+    torch_sim.train(train_dataset=benchmark_quasistatic_dataSet.train_dataset,
+                    val_dataset=benchmark_quasistatic_dataSet._test_dataset,
                     save_path=SAVE_PATH, **torch_sim_params)
 
-    torch_sim_metrics_val = benchmarkQuasiStaticDataSet.evaluate_simulator(augmented_simulator=torch_sim,
+    torch_sim_metrics_val = benchmark_quasistatic_dataSet.evaluate_simulator(augmented_simulator=torch_sim,
                                                   eval_batch_size=128,
                                                   dataset="test",
                                                   shuffle=False,
@@ -64,20 +63,20 @@ def Benchmark2FFNNDisp():
                                                   save_predictions=False
                                                  )
 
-def Benchmark2FFNNMult():
+def Benchmark2FFNNMult(data_path):
     DATA_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/getting_started/TestBenchmarkWheel"
     LOG_PATH="RollingFFNNMultipliers.log"
-    benchmarkQuasiStaticDataSet = DispRollingWheelBenchmark(benchmark_name="RollingWheelBenchmarkMultiplier",
-                                benchmark_path=DATA_PATH,
+    benchmark_quasistatic_dataSet = DispRollingWheelBenchmark(benchmark_name="RollingWheelBenchmarkMultiplier",
+                                benchmark_path=data_path,
                                 load_data_set=True,
                                 log_path=LOG_PATH,
                                 config_path=CONFIG_PATH_BENCHMARK,
                                 input_required_for_post_process=False
                                )
 
-    wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
+    wheel_config=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="RollingWheelBenchmarkMultiplier")
-    benchmarkQuasiStaticDataSet.split_train_test_valid()
+    benchmark_quasistatic_dataSet.split_train_test_valid()
 
 
     torch_sim = TorchSimulator(name="torch_ffnn",
@@ -93,9 +92,9 @@ def Benchmark2FFNNMult():
     torch_sim_params=torch_sim_config.get_options_dict()
 
     SAVE_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/getting_started/TestBenchmarkWheel/RollingMultFFNN"
-    torch_sim.train(benchmarkQuasiStaticDataSet.train_dataset, benchmarkQuasiStaticDataSet._test_dataset, save_path=SAVE_PATH, **torch_sim_params)
+    torch_sim.train(benchmark_quasistatic_dataSet.train_dataset, benchmark_quasistatic_dataSet._test_dataset, save_path=SAVE_PATH, **torch_sim_params)
 
-    torch_sim_metrics_val = benchmarkQuasiStaticDataSet.evaluate_simulator(augmented_simulator=torch_sim,
+    torch_sim_metrics_val = benchmark_quasistatic_dataSet.evaluate_simulator(augmented_simulator=torch_sim,
                                                   eval_batch_size=128,
                                                   dataset="test",
                                                   shuffle=False,
@@ -104,15 +103,15 @@ def Benchmark2FFNNMult():
                                                  )
 
 def GenerateDataBaseBenchmark2():
-    wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
+    wheel_config=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="RollingWheelBenchmarkDisplacement")
-    envParams=wheelConfig.get_option("env_params")
-    physical_domain=envParams.get("physical_domain")
-    physicalProperties=envParams.get("physicalProperties")
-    base_simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
+    env_params=wheel_config.get_option("env_params")
+    physical_domain=env_params.get("physical_domain")
+    physical_properties=env_params.get("physical_properties")
+    base_simulator=GetfemSimulator(physical_domain=physical_domain,physical_properties=physical_properties)
     
     attr_names=(PFN.displacement,PFN.contactMultiplier)
-    attr_x = wheelConfig.get_option("attr_x")
+    attr_x = wheel_config.get_option("attr_x")
     quasiStaticWheelDataSet=QuasiStaticWheelDataSet("base",attr_names=attr_names,attr_x = attr_x,attr_y = attr_names)
     quasiStaticWheelDataSet.generate(simulator=base_simulator,
                                     path_out="RollingWheelBenchmarkBase")
@@ -121,6 +120,8 @@ def GenerateDataBaseBenchmark2():
 
 
 if __name__ == '__main__':
-    #GenerateDataBaseBenchmark2()
-    #Benchmark2FFNNDisp()
-    Benchmark2FFNNMult()
+    # GenerateDataBaseBenchmark2()
+    DATA_PATH="/home/ddanan/HSAProject/LIPSPlatform/LIPS_Github/LIPS/lips/benchmark/"
+
+    #Benchmark2FFNNDisp(data_path=DATA_PATH)
+    Benchmark2FFNNMult(data_path=DATA_PATH)

@@ -455,7 +455,6 @@ class TorchSimulator(AugmentedSimulator):
         path_weights = path / nm_file
         if not path_weights.exists():
             raise FileNotFoundError(f"Weights file {path_weights} not found")
-        #self.build_model(**self.params)
         self._model._load_metadata(path)
         self.build_model()
         self._model.to(self.params["device"])
