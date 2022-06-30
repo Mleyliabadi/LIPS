@@ -17,12 +17,12 @@ import numpy as np
 from lips.physical_simulator.physicalSimulator import PhysicalSimulator
 from lips.physical_simulator.GetfemSimulator.GetfemSimulatorBridge import SimulatorGeneration
 
-def lipsToGetfemBridge(physicalDomain:dict,physicalProperties:dict):
+def lipsToGetfemBridge(physical_domain:dict,physicalProperties:dict):
     """Use to adapt Getfem currently used API with lips PhysicalSimulator API.
 
     Parameters
     ----------
-    physicalDomain : dict
+    physical_domain : dict
         physical domain geometric-related parameters
     physicalProperties : dict
         physical configuration properties parameters
@@ -32,7 +32,7 @@ def lipsToGetfemBridge(physicalDomain:dict,physicalProperties:dict):
     simulator
         A getfem simulator instance endowed with physical caracteristics
     """
-    simulator=SimulatorGeneration(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    simulator=SimulatorGeneration(physical_domain=physical_domain,physicalProperties=physicalProperties)
     return simulator
 
 class GetfemSimulator(PhysicalSimulator):
@@ -40,7 +40,7 @@ class GetfemSimulator(PhysicalSimulator):
     This simulator uses the 'Getfem' library to implement a physical simulator.
     Parameters
     ----------
-    physicalDomain : Union[dict, None], optional
+    physical_domain : Union[dict, None], optional
         physical domain geometric-related parameters
     physicalProperties :  Union[dict, None], optional
         physical configuration properties parameters
@@ -48,12 +48,12 @@ class GetfemSimulator(PhysicalSimulator):
         Getfem simulator instance
     """
     def __init__(self,
-                 physicalDomain: Union[dict, None] = None,
+                 physical_domain: Union[dict, None] = None,
                  physicalProperties: Union[dict, None] = None,
                  simulatorInstance: Union[any, None] = None
                  ):
         if simulatorInstance is None:
-            self._simulator = lipsToGetfemBridge(physicalDomain,physicalProperties)
+            self._simulator = lipsToGetfemBridge(physical_domain,physicalProperties)
             self._simulator.Preprocessing()
         else:
             self._simulator=type(simulatorInstance._simulator)(simulatorInstance._simulator)
@@ -145,7 +145,7 @@ import math
 
 
 def check_static_benchmark():
-    physicalDomain={
+    physical_domain={
         "Mesher":"Getfem",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
         "wheelDimensions":(8.0,15.0),#(13.5,18.0),
@@ -173,14 +173,14 @@ def check_static_benchmark():
     #     "dirichlet":[["HOLE_BOUND",{"type" : "scalar", "Disp_Amplitude":3, "Disp_Angle":-math.pi/2}] ],
     #     "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.0}] ]
     # }
-    mySimulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    mySimulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
     mySimulator.build_model()
     mySimulator.run_problem()
     mySimulator._simulator.ExportSolutionInGmsh(filename="StaticBenchmark.pos")
 
 
 def check_static():
-    physicalDomain={
+    physical_domain={
         "Mesher":"Getfem",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
         "wheelDimensions":(8.,15.),
@@ -195,12 +195,12 @@ def check_static():
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":2.0,"fricCoeff":0.9}] ]
     }
 
-    mySimulator = GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    mySimulator = GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
     mySimulator.build_model()
     mySimulator.run_problem()
 
 def check_quasi_static_rolling():
-    physicalDomain={
+    physical_domain={
         "Mesher":"Gmsh",
         "subcategory":"DentedWheelGenerator",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
@@ -221,7 +221,7 @@ def check_quasi_static_rolling():
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.6}] ],
         "transientParams":{"time": 5*dt, "timeStep": dt}
     }
-    mySimulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    mySimulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
     mySimulator.build_model()
     print(mySimulator)
     mySimulator.run_problem()

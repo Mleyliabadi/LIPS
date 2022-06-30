@@ -102,9 +102,9 @@ def Benchmark1CNN():
     wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="WeightSustainingWheelBenchmarkInterpolated")
     envParams=wheelConfig.get_option("env_params")
-    physicalDomain=envParams.get("physicalDomain")
+    physical_domain=envParams.get("physical_domain")
     physicalProperties=envParams.get("physicalProperties")
-    simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
 
     attr_x= wheelConfig.get_option("attr_x")
     attr_y= ("disp",)
@@ -232,9 +232,9 @@ def GenerateDataBaseBenchmark1():
     print(wheelConfig)
     exit(0)
     envParams=wheelConfig.get_option("env_params")
-    physicalDomain=envParams.get("physicalDomain")
+    physical_domain=envParams.get("physical_domain")
     physicalProperties=envParams.get("physicalProperties")
-    simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
 
     pneumaticWheelDataSetTrain,pneumaticWheelDataSetVal,pneumaticWheelDataSetTest=GenerateDataSets(simulator=simulator,
                                                                                                    config=wheelConfig,

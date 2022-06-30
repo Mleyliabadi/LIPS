@@ -34,7 +34,7 @@ def Benchmark2FFNNDisp():
     rollingProperties=wheelConfig.get_option("env_params").get("physicalProperties").get("rolling")[1]
     theta_Rolling = rollingProperties.get("theta_Rolling")
     verticalDisp = rollingProperties.get("d")
-    wheel_origin_y = wheelConfig.get_option("env_params").get("physicalDomain").get("wheel_Dimensions")[-1]
+    wheel_origin_y = wheelConfig.get_option("env_params").get("physical_domain").get("wheel_Dimensions")[-1]
     wheel_speed = theta_Rolling * (wheel_origin_y - verticalDisp/3)
 
 
@@ -107,9 +107,9 @@ def GenerateDataBaseBenchmark2():
     wheelConfig=ConfigManager(path=CONFIG_PATH_BENCHMARK,
                               section_name="RollingWheelBenchmarkDisplacement")
     envParams=wheelConfig.get_option("env_params")
-    physicalDomain=envParams.get("physicalDomain")
+    physical_domain=envParams.get("physical_domain")
     physicalProperties=envParams.get("physicalProperties")
-    base_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    base_simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
     
     attr_names=(PFN.displacement,PFN.contactMultiplier)
     attr_x = wheelConfig.get_option("attr_x")

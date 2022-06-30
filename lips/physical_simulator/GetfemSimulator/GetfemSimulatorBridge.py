@@ -16,37 +16,37 @@ def InterpolationOnCloudPoints(fieldSupport,fieldValue,phyProblem):
     targetSupport=phyProblem.get_solverOrder_positions()
     return InterpolateSolOnNodes(fieldSupport=fieldSupport,fieldValue=fieldValue,targetSupport=targetSupport)
 
-def MeshGeneration(physicalDomain):
-    if physicalDomain["Mesher"]=="Getfem":
-        return PhySolver.GenerateWheelMesh(wheelDimensions=physicalDomain["wheelDimensions"],\
-                                    meshSize=physicalDomain["meshSize"],\
-                                    RefNumByRegion=physicalDomain["refNumByRegion"])
-    elif physicalDomain["Mesher"]=="Gmsh":
-        if "subcategory" not in physicalDomain.keys():
+def MeshGeneration(physical_domain):
+    if physical_domain["Mesher"]=="Getfem":
+        return PhySolver.GenerateWheelMesh(wheelDimensions=physical_domain["wheelDimensions"],\
+                                    meshSize=physical_domain["meshSize"],\
+                                    RefNumByRegion=physical_domain["refNumByRegion"])
+    elif physical_domain["Mesher"]=="Gmsh":
+        if "subcategory" not in physical_domain.keys():
             return ExternalMesher.GenerateCoincidentHFLFMeshes(wheelExtMeshFile="wheel_ext",\
-                                                           wheelMeshFile=physicalDomain["meshFilename"],\
-                                                           interRadius=physicalDomain["interRadius"],\
-                                                           wheelDim=physicalDomain["wheelDimensions"],\
-                                                           meshSize=physicalDomain["meshSize"],\
-                                                           version=physicalDomain["version"])
-        elif physicalDomain["subcategory"]=="DentedWheelGenerator":
-            myDentedWheel = ExternalMesher.DentedWheelGenerator(wheel_Dimensions=physicalDomain["wheel_Dimensions"],
-                                               teeth_Size=physicalDomain["teeth_Size"],
-                                               tread_Angle_deg=physicalDomain["tread_Angle_deg"],
-                                               mesh_size=physicalDomain["mesh_size"]
+                                                           wheelMeshFile=physical_domain["meshFilename"],\
+                                                           interRadius=physical_domain["interRadius"],\
+                                                           wheelDim=physical_domain["wheelDimensions"],\
+                                                           meshSize=physical_domain["meshSize"],\
+                                                           version=physical_domain["version"])
+        elif physical_domain["subcategory"]=="DentedWheelGenerator":
+            myDentedWheel = ExternalMesher.DentedWheelGenerator(wheel_Dimensions=physical_domain["wheel_Dimensions"],
+                                               teeth_Size=physical_domain["teeth_Size"],
+                                               tread_Angle_deg=physical_domain["tread_Angle_deg"],
+                                               mesh_size=physical_domain["mesh_size"]
                                                )
-            myDentedWheel.GenerateMesh(outputFile=physicalDomain["meshFilename"])
-            mesh=PhySolver.ImportGmshMesh(physicalDomain["meshFilename"]+".msh")
+            myDentedWheel.GenerateMesh(outputFile=physical_domain["meshFilename"])
+            mesh=PhySolver.ImportGmshMesh(physical_domain["meshFilename"]+".msh")
             taggedMesh=PhySolver.TagWheelMesh(mesh=mesh,
-                                              wheelDimensions=(min(physicalDomain["wheel_Dimensions"]),max(physicalDomain["wheel_Dimensions"])),
-                                              center=(0.0,max(physicalDomain["wheel_Dimensions"])),
-                                              refNumByRegion=physicalDomain["refNumByRegion"])
+                                              wheelDimensions=(min(physical_domain["wheel_Dimensions"]),max(physical_domain["wheel_Dimensions"])),
+                                              center=(0.0,max(physical_domain["wheel_Dimensions"])),
+                                              refNumByRegion=physical_domain["refNumByRegion"])
             return taggedMesh
 
     else:
-        raise Exception("Mesher "+str(physicalDomain["Mesher"])+" not supported")
+        raise Exception("Mesher "+str(physical_domain["Mesher"])+" not supported")
 
-def SimulatorGeneration(physicalDomain,physicalProperties):
+def SimulatorGeneration(physical_domain,physicalProperties):
     problemType=physicalProperties["ProblemType"]
 
     classNameByProblemType = {
@@ -61,8 +61,8 @@ def SimulatorGeneration(physicalDomain,physicalProperties):
     except KeyError:
         raise(Exception("Unable to treat this kind of problem !"))
 
-    simulator.mesh=MeshGeneration(physicalDomain)
-    simulator.refNumByRegion=physicalDomain["refNumByRegion"]
+    simulator.mesh=MeshGeneration(physical_domain)
+    simulator.refNumByRegion=physical_domain["refNumByRegion"]
 
     filterPhysicalProperties={k: v for k, v in physicalProperties.items() if k!="ProblemType"}
     for physicalProperty,physicalValue in filterPhysicalProperties.items():

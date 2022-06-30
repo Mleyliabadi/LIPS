@@ -824,7 +824,7 @@ import math
 import lips.physical_simulator.GetfemSimulator.PhysicalFieldNames as PFN
 
 def check_static_samples_generation():
-    physicalDomain={
+    physical_domain={
         "Mesher":"Getfem",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
         "wheelDimensions":(8.,15.),
@@ -838,7 +838,7 @@ def check_static_samples_generation():
         "dirichlet":[["HOLE_BOUND",{"type" : "scalar", "Disp_Amplitude":6, "Disp_Angle":-math.pi/2}] ],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":2.0,"fricCoeff":0.9}] ]
     }
-    training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    training_simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
 
     trainingInput={
               "young":(75.0,85.0),
@@ -870,7 +870,7 @@ def check_static_samples_generation():
     myTransformer.generate(dofnum_by_field=dofnum_by_field,path_out="wheel_interpolated")
 
 def check_quasi_static_generation():
-    physicalDomain={
+    physical_domain={
         "Mesher":"Getfem",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
         "wheelDimensions":(8.,15.),
@@ -887,7 +887,7 @@ def check_quasi_static_generation():
         "transientParams":{"time": 3*dt, "timeStep": dt}
     }
 
-    training_simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    training_simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
     attr_names=(PFN.displacement,PFN.contactMultiplier)
 
     quasiStaticWheelDataSet=QuasiStaticWheelDataSet("train",attr_names=attr_names,attr_x = ("timeSteps",),attr_y = ("disp","contactMult"))
@@ -896,7 +896,7 @@ def check_quasi_static_generation():
                                     )
 
 def check_interpolation_back_and_forth():
-    physicalDomain={
+    physical_domain={
         "Mesher":"Getfem",
         "refNumByRegion":{"HOLE_BOUND": 1,"CONTACT_BOUND": 2, "EXTERIOR_BOUND": 3},
         "wheelDimensions":(8.0,15.0),
@@ -909,7 +909,7 @@ def check_interpolation_back_and_forth():
         "neumann":[["HOLE_BOUND", {"type": "RimRigidityNeumann", "Force": 1.0e7}]],
         "contact":[ ["CONTACT_BOUND",{"type" : "Plane","gap":0.0,"fricCoeff":0.0}] ]
     }
-    simulator=GetfemSimulator(physicalDomain=physicalDomain,physicalProperties=physicalProperties)
+    simulator=GetfemSimulator(physical_domain=physical_domain,physicalProperties=physicalProperties)
 
     trainingInput={
               "Force":(1.0e4,1.0e7),
