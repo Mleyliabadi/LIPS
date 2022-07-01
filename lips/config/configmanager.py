@@ -16,6 +16,7 @@ import pathlib
 from configparser import ConfigParser
 import ast
 from typing import Union
+from pprint import pformat
 
 class ConfigManager(object):
     """
@@ -27,6 +28,8 @@ class ConfigManager(object):
                 ):
         if not(path.exists()):
             raise RuntimeError("A path to a configuration file should be indicated!")
+        elif not str(path).endswith(".ini"):
+            raise RuntimeError("The configuration file should have `.ini` extension!")
         else:
             self.path_config = path
         self.section_name = section_name
@@ -145,3 +148,6 @@ class ConfigManager(object):
     @staticmethod
     def _str_to_list(string: str):
         return ast.literal_eval(string)
+
+    def __str__(self) -> str:
+        return pformat(self.get_options_dict(), indent=1, width=1)
