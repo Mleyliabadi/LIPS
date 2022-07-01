@@ -93,7 +93,6 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 
-<span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">..evaluation</span> <span class="kn">import</span> <span class="n">Evaluation</span>
@@ -116,10 +115,6 @@
 <span class="sd">    ----------</span>
 <span class="sd">    benchmark_name : ``str``</span>
 <span class="sd">        a name attributed to the corresponding experiment</span>
-<span class="sd">    benchmark_path : Union[``pathlib.Path``, ``str``, ``None``], optional</span>
-<span class="sd">        the path to benchmark scenarios and related datasets</span>
-<span class="sd">    config_path : Union[``pathlib.Path``, ``str``]</span>
-<span class="sd">        the path of config file</span>
 <span class="sd">    dataset : Union[``DataSet``, ``None``], optional</span>
 <span class="sd">        an object of ``DataSet`` class which containing the data for training, validation and testing, by default None</span>
 <span class="sd">    augmented_simulator : Union[``AugmentedSimulator``, ``PhysicsSolver``, ``None``], optional</span>
@@ -128,27 +123,26 @@
 <span class="sd">        It allows to evaluate the performance of the simulator with respect to various point of views</span>
 <span class="sd">        It should be parameterized before passing to benchmark class to include appropriate metrics</span>
 <span class="sd">        otherwise, it is initialized using an empty dictionary, by default None</span>
-<span class="sd">    log_path : Union[``pathlib.Path``, ``str``, ``None``], optional</span>
+<span class="sd">    benchmark_path : Union[``str``, ``None``], optional</span>
+<span class="sd">        the path used to save the benchmark results, by default None</span>
+<span class="sd">    log_path : Union[``str``, ``None``], optional</span>
 <span class="sd">        the path of logger, by default None</span>
+<span class="sd">    config_path : Union[``str``, ``None``], optional</span>
+<span class="sd">        the path of config file, by default None</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">benchmark_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-                 <span class="n">benchmark_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
-                 <span class="n">config_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
                  <span class="n">dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataSet</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">augmented_simulator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AugmentedSimulator</span><span class="p">,</span> <span class="n">PhysicsSolver</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">log_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">benchmark_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">log_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">config_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
                  <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_name</span> <span class="o">=</span> <span class="n">benchmark_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_path</span> <span class="o">=</span> <span class="n">benchmark_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">benchmark_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">benchmark_path</span> <span class="k">else</span> <span class="kc">None</span>
 
-        <span class="c1"># config file</span>
-        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">config_path</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Configuration path not found for the benchmark!&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">ConfigManager</span><span class="p">(</span><span class="n">section_name</span><span class="o">=</span><span class="n">benchmark_name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">config_path</span><span class="p">)</span>
 
         <span class="c1"># Object of class DataSet contianing datasets for testing</span>
         <span class="c1"># It contains the last dataset used for evaluation</span>
@@ -165,6 +159,9 @@
         <span class="c1"># logger</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_path</span> <span class="o">=</span> <span class="n">log_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">CustomLogger</span><span class="p">(</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">log_path</span><span class="p">)</span><span class="o">.</span><span class="n">logger</span>
+
+        <span class="c1"># config file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">ConfigManager</span><span class="p">(</span><span class="n">section_name</span><span class="o">=</span><span class="n">benchmark_name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">config_path</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">evaluation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># use the user-defined evaluation object</span>
