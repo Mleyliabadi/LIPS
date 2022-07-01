@@ -99,8 +99,9 @@ class LeapNet(TensorflowSimulator):
         # optimizer
         # optimizer
         if "optimizer" in kwargs:
-            if not isinstance(kwargs["optimizer"], keras.optimizers.Optimizer):
-                raise RuntimeError("If an optimizer is provided, it should be a type tensorflow.keras.optimizers")
+            # TODO : isinstance not working properly on keras, isinstance(keras.optimizers.Optimizer, keras.optimizers.Adam) returns False
+            # if not isinstance(kwargs["optimizer"], keras.optimizers.Optimizer):
+            #     raise RuntimeError("If an optimizer is provided, it should be a type tensorflow.keras.optimizers")
             self._optimizer = kwargs["optimizer"](self.params["optimizer"]["params"])
         else:
             self._optimizer = keras.optimizers.Adam(learning_rate=self.params["optimizer"]["params"]["lr"])
@@ -116,12 +117,16 @@ class LeapNet(TensorflowSimulator):
 
     def _create_proxy(self):
         """part of the "wrapper" part, this function will initialize the leap net model"""
+        # TODO add comment
+        attr_tau = ("concatenated_tau",) if "concatenate_tau" in self.params and self.params["concatenate_tau"]\
+                       else self.bench_config.get_option("attr_tau")
+
         self._leap_net_model = ProxyLeapNet(
             name=f"{self.name}_model",
             train_batch_size=self.params["train_batch_size"],
             attr_x=self.bench_config.get_option("attr_x"),
             attr_y=self.bench_config.get_option("attr_y"),
-            attr_tau=self.bench_config.get_option("attr_tau"),
+            attr_tau=attr_tau,
             sizes_enc=self.params["sizes_enc"],
             sizes_main=self.params["sizes_main"],
             sizes_out=self.params["sizes_out"],
@@ -161,22 +166,54 @@ class LeapNet(TensorflowSimulator):
         tuple
             the normalized dataset with features and labels
         """
+        # extract and transform topo_vect and inject it into the dataset
+        if "topo_vect" in dataset.data: dataset.data["topo_vect"] = self._extract_topo_vect(dataset)
+
+        # concatenate line_status and topo_vect into a single feature, if the concatenate_tau param is enabled
+        if "concatenate_tau" in self.params and self.params["concatenate_tau"]:
+            if all(el in self.bench_config.get_option("attr_tau") for el in ("line_status", "topo_vect")):
+                dataset.data["concatenated_tau"] = np.concatenate(
+                    (dataset.data["line_status"], dataset.data["topo_vect"]), axis=1)
+            else: raise RuntimeError("line_status or topo_vect not found in attr_tau argument, "
+                                         "please add them in benchmark config file")
+
         if training:
             obss = self._make_fake_obs(dataset)
             self._leap_net_model.init(obss)
+
             if self.scaler is not None:
                 (extract_x, extract_tau), extract_y = self.scaler.fit_transform(dataset)
             else:
                 (extract_x, extract_tau), extract_y = dataset.extract_data(concat=False)
-            extract_tau = self._transform_tau(dataset, extract_tau)
         else:
             if self.scaler is not None:
                 (extract_x, extract_tau), extract_y = self.scaler.transform(dataset)
             else:
                 (extract_x, extract_tau), extract_y = dataset.extract_data(concat=False)
-            extract_tau = self._transform_tau(dataset, extract_tau)
+
+        if "concatenate_tau" in self.params and self.params["concatenate_tau"]:
+            extract_tau = np.concatenate(extract_tau, axis=1)
 
         return (extract_x, extract_tau), extract_y
+
+
+    def _extract_topo_vect(self, dataset: DataSet):
+
+        # LeapNetProxy initialization
+        leap_net_model = ProxyLeapNet(
+            attr_x=self.bench_config.get_option("attr_x"),
+            attr_y=self.bench_config.get_option("attr_y"),
+            attr_tau=self.bench_config.get_option("attr_tau"),
+            topo_vect_to_tau=self.params["topo_vect_to_tau"] if "topo_vect_to_tau" in self.params else "raw",
+            kwargs_tau=self.params["kwargs_tau"] if "kwargs_tau" in self.params else None,
+        )
+        # transform a numpy dataset into observations
+        obss = self._make_fake_obs(dataset)
+
+        leap_net_model.init(obss)
+        extract_topo_vect = [leap_net_model.topo_vect_handler(obs) for obs in obss]
+
+        return np.array(extract_topo_vect)
 
     def _post_process(self, dataset, predictions):
         """Do some post processing on the predictions
@@ -204,6 +241,12 @@ class LeapNet(TensorflowSimulator):
                             for obs in obss],
                             dtype=np.float32))
         return tau
+
+    def _transform_topo_vect(self, obss):
+
+        extract_tau = [self._leap_net_model.topo_vect_handler(obs) for obs in obss]
+
+        return np.array(extract_tau)
 
     def _make_fake_obs(self, dataset: DataSet):
         """
