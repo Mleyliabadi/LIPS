@@ -55,8 +55,10 @@ class TorchFullyConnected(nn.Module):
                  log_path: Union[None, pathlib.Path, str]=None,
                  **kwargs):
         super().__init__()
-        if not(os.path.exists(sim_config_path)):
+        if not os.path.exists(sim_config_path):
             raise RuntimeError("Configuration path for the simulator not found!")
+        if not str(sim_config_path).endswith(".ini"):
+            raise RuntimeError("The configuration file should have `.ini` extension!")
         sim_config_name = sim_config_name if sim_config_name is not None else "DEFAULT"
         self.sim_config = ConfigManager(section_name=sim_config_name, path=sim_config_path)
         self.bench_config = ConfigManager(section_name=bench_config_name, path=bench_config_path)
