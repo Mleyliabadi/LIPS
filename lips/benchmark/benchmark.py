@@ -64,6 +64,8 @@ class Benchmark(ABC):
         # config file
         if not(os.path.exists(config_path)):
             raise RuntimeError("Configuration path not found for the benchmark!")
+        elif not str(config_path).endswith(".ini"):
+            raise RuntimeError("The configuration file should have `.ini` extension!")
         else:
             self.config = ConfigManager(section_name=benchmark_name, path=config_path)
 
