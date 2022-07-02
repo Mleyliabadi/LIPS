@@ -127,7 +127,7 @@
 <span class="sd">    benchmark_path : Union[``str``, ``None``], optional</span>
 <span class="sd">        path to the benchmark, it should be indicated</span>
 <span class="sd">        if not indicated, the data remains only in the memory</span>
-<span class="sd">    config_path : Union[``str``, ``None``], optional</span>
+<span class="sd">    config_path : Union[``pathlib.Path``, ``str``, ``None``], optional</span>
 <span class="sd">        path to the configuration file. If config_path is ``None``, the default config file</span>
 <span class="sd">        present in config module will be used by using the benchmark_name as the section, by default None</span>
 <span class="sd">    benchmark_name : ``str``, optional</span>
@@ -137,7 +137,7 @@
 <span class="sd">    evaluation : Union[``PowerGridEvaluation``, ``None``], optional</span>
 <span class="sd">        a ``PowerGridEvaluation`` instance. If not indicated, the benchmark creates its</span>
 <span class="sd">        own evaluation instance using appropriate config, by default None</span>
-<span class="sd">    log_path : Union[``str``, ``None``], optional</span>
+<span class="sd">    log_path : Union[``pathlib.Path``, ``str``, ``None``], optional</span>
 <span class="sd">        path to the logs, by default None</span>
 
 <span class="sd">    Warnings</span>
@@ -147,21 +147,21 @@
 <span class="sd">    can extend this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">benchmark_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
-                 <span class="n">config_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">benchmark_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+                 <span class="n">config_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
                  <span class="n">benchmark_name</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;Benchmark1&quot;</span><span class="p">,</span>
                  <span class="n">load_data_set</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">evaluation</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PowerGridEvaluation</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">log_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">log_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span>
                  <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">benchmark_name</span><span class="o">=</span><span class="n">benchmark_name</span><span class="p">,</span>
+                         <span class="n">benchmark_path</span><span class="o">=</span><span class="n">benchmark_path</span><span class="p">,</span>
+                         <span class="n">config_path</span><span class="o">=</span><span class="n">config_path</span><span class="p">,</span>
                          <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">augmented_simulator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">evaluation</span><span class="o">=</span><span class="n">evaluation</span><span class="p">,</span>
-                         <span class="n">benchmark_path</span><span class="o">=</span><span class="n">benchmark_path</span><span class="p">,</span>
-                         <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
-                         <span class="n">config_path</span><span class="o">=</span><span class="n">config_path</span>
+                         <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span>
                         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span><span class="o">=</span><span class="kc">False</span>
