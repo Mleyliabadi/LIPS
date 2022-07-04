@@ -26,7 +26,6 @@ try:
 except ImportError as err:
     raise RuntimeError("You need to install the leap_net package to use this class") from err
 
-
 from ..tensorflow_simulator import TensorflowSimulator
 from ...logger import CustomLogger
 from ...config import ConfigManager
