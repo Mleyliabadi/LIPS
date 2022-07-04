@@ -184,7 +184,7 @@ class LeapNet(TensorflowSimulator):
 
         is_given_topo_list = (len(self._leap_net_model.kwargs_tau) >= 1)
         if (is_given_topo_list):
-            extract_tau = self._transform_tau_given_list(tau)
+            extract_tau = self._transform_tau_given_list(extract_tau)
         else:
             extract_tau = self._transform_tau(dataset, extract_tau)
 
@@ -286,6 +286,7 @@ class LeapNet(TensorflowSimulator):
             normalised_tensor = match_tensor_adjusted / np.array(sub_length).reshape((-1, 1))
 
         boolean_match_tensor = np.array(normalised_tensor == 1.0).astype(np.int8)
+
         tau[1]=np.transpose(boolean_match_tensor)
         return tau
 
