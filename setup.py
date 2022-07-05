@@ -32,9 +32,19 @@ pkgs = {
             "sphinxcontrib-trio>=1.1.0",
             "autodocsumm>=0.1.13",
             "gym>=0.17.2"
+        ],
+        "test": [
+            "pytest",
+            "ipykernel",
+            "pylint",
+            "pylint-exit",
+            "jupytext"
         ]
     }
 }
+
+pkgs["extras"]["test"] += pkgs["extras"]["recommended"]
+pkgs["extras"]["test"] += pkgs["extras"]["docs"]
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
