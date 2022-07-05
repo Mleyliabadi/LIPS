@@ -11,19 +11,27 @@ from setuptools import setup
 
 pkgs = {
     "required": [
-        "numpy",
+        "numpy==1.21.5",
         "scikit_learn",
         "tqdm",
-        "matplotlib"
+        "matplotlib",
+        "scipy",
+        "six",
+        "pathlib",
+        "numba",
     ],
     "extras": {
         "recommended": [
             "grid2op>=1.6.2",
+            "pybind11==2.8.1",
             "lightsim2grid>=0.5.3",
             "leap_net @ https://github.com/BDonnot/leap_net/tarball/master#egg=leap_net",
-            "numba",
+            "protobuf==3.20.1",
+            "pandapower==2.7.0",
+            "pandas",
             "jupyter",
-            "torch"
+            "tensorflow==2.8.0",
+            "torch",
         ],
         "docs": [
             "numpydoc>=0.9.2",
@@ -35,6 +43,9 @@ pkgs = {
         ],
         "test": [
             "pytest",
+            "pytest-cov",
+            "pytest-html",
+            "pytest-metadata",
             "ipykernel",
             "pylint",
             "pylint-exit",
