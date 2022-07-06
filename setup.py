@@ -18,8 +18,8 @@ pkgs = {
     ],
     "extras": {
         "recommended": [
-            "grid2op>=1.6.2",
-            "lightsim2grid>=0.5.3",
+            "grid2op>=1.7.2",
+            "lightsim2grid>=0.7.0.post1",
             "leap_net @ https://github.com/BDonnot/leap_net/tarball/master#egg=leap_net",
             "numba",
             "jupyter",
