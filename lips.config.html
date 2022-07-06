@@ -108,14 +108,14 @@ This file is part of LIPS, LIPS is a python platform for power networks benchmar
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.config.ConfigManager" title="lips.config.ConfigManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigManager</span></code></a>(path[, section_name])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.config.ConfigManager" title="lips.config.ConfigManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigManager</span></code></a>([section_name, path])</p></td>
 <td><p>This class ease the use of config parser for the framework</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="lips.config.ConfigManager">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lips.config.</span></span><span class="sig-name descname"><span class="pre">ConfigManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'DEFAULT'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/config/configmanager.html#ConfigManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.config.ConfigManager" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lips.config.</span></span><span class="sig-name descname"><span class="pre">ConfigManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'DEFAULT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/config/configmanager.html#ConfigManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.config.ConfigManager" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class ease the use of config parser for the framework</p>
 <p><strong>Methods:</strong></p>
@@ -142,9 +142,6 @@ This file is part of LIPS, LIPS is a python platform for power networks benchmar
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#lips.config.ConfigManager.remove_config_option" title="lips.config.ConfigManager.remove_config_option"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_config_option</span></code></a>(option[, scenario_name])</p></td>
 <td><p>to remove an option from a config</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.config.ConfigManager.__str__" title="lips.config.ConfigManager.__str__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__str__</span></code></a>()</p></td>
-<td><p>Return str(self).</p></td>
 </tr>
 </tbody>
 </table>
@@ -189,12 +186,6 @@ This file is part of LIPS, LIPS is a python platform for power networks benchmar
 <dd><p>to remove an option from a config</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="lips.config.ConfigManager.__str__">
-<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/lips/config/configmanager.html#ConfigManager.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.config.ConfigManager.__str__" title="Permalink to this definition"></a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
 </dd></dl>
 
 <section id="submodules">
@@ -222,14 +213,14 @@ This file is part of LIPS, LIPS is a python platform for power networks benchmar
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.config.configmanager.ConfigManager" title="lips.config.configmanager.ConfigManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigManager</span></code></a>(path[, section_name])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lips.config.configmanager.ConfigManager" title="lips.config.configmanager.ConfigManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigManager</span></code></a>([section_name, path])</p></td>
 <td><p>This class ease the use of config parser for the framework</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="lips.config.configmanager.ConfigManager">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lips.config.configmanager.</span></span><span class="sig-name descname"><span class="pre">ConfigManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'DEFAULT'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/config/configmanager.html#ConfigManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.config.configmanager.ConfigManager" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lips.config.configmanager.</span></span><span class="sig-name descname"><span class="pre">ConfigManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'DEFAULT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/config/configmanager.html#ConfigManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.config.configmanager.ConfigManager" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class ease the use of config parser for the framework</p>
 <p><strong>Methods:</strong></p>
@@ -256,9 +247,6 @@ This file is part of LIPS, LIPS is a python platform for power networks benchmar
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#lips.config.configmanager.ConfigManager.remove_config_option" title="lips.config.configmanager.ConfigManager.remove_config_option"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_config_option</span></code></a>(option[, scenario_name])</p></td>
 <td><p>to remove an option from a config</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#lips.config.configmanager.ConfigManager.__str__" title="lips.config.configmanager.ConfigManager.__str__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__str__</span></code></a>()</p></td>
-<td><p>Return str(self).</p></td>
 </tr>
 </tbody>
 </table>
@@ -301,12 +289,6 @@ This file is part of LIPS, LIPS is a python platform for power networks benchmar
 <dt class="sig sig-object py" id="lips.config.configmanager.ConfigManager.remove_config_option">
 <span class="sig-name descname"><span class="pre">remove_config_option</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lips/config/configmanager.html#ConfigManager.remove_config_option"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.config.configmanager.ConfigManager.remove_config_option" title="Permalink to this definition"></a></dt>
 <dd><p>to remove an option from a config</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lips.config.configmanager.ConfigManager.__str__">
-<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/lips/config/configmanager.html#ConfigManager.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lips.config.configmanager.ConfigManager.__str__" title="Permalink to this definition"></a></dt>
-<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
