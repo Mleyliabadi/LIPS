@@ -26,6 +26,7 @@ try:
 except ImportError as err:
     raise RuntimeError("You need to install the leap_net package to use this class") from err
 
+
 from ..tensorflow_simulator import TensorflowSimulator
 from ...logger import CustomLogger
 from ...config import ConfigManager
@@ -258,6 +259,8 @@ class LeapNet(TensorflowSimulator):
         #we are here looking for the number of matches for every element of a substation topology in the predefined list for a new topo_vect observation
         #if the count is equal to the number of element, then the predefined topology is present in topo_vect observation
         #in that case, the binary encoding of that predefined topology is equal to 1, otherwise 0
+        import time
+        start = time.time()
         if with_tf:
             #count the number of disconnected lines for each substation of topologies in the prefdefined list.
             #These lines could have been connected to either bus_bar1 or bus_bar2, we consider it as a match for that element
@@ -285,10 +288,42 @@ class LeapNet(TensorflowSimulator):
             normalised_tensor = match_tensor_adjusted / np.array(sub_length).reshape((-1, 1))
 
         boolean_match_tensor = np.array(normalised_tensor == 1.0).astype(np.int8)
+        duration_matches = time.time() -start
 
-        tau[1]=np.transpose(boolean_match_tensor)
+        #############"
+        ## do correction if multiple topologies of a same substation have a match on a given state
+        # as it does not make sense to combine topologies at a same substation
+        start = time.time()
+        boolean_match_tensor=self._unicity_tensor_encoding(boolean_match_tensor)
+
+        duration_correction = time.time() - start
+        if(duration_correction>duration_matches):
+            print("warning, correction time if longer that matches time: maybe something to better optimize there")
+        tau[1] = np.transpose(boolean_match_tensor)
+
         return tau
 
+    def _unicity_tensor_encoding(self, tensor):
+        """
+        do correction if multiple topologies of a same substation have a match on a given state
+        as it does not make sense to combine topologies at a same substation
+        """
+        sub_encoding_pos = np.array([topo_action[0] for topo_action in self._leap_net_model.kwargs_tau])
+
+        # in case of multiple matches of topology for a given substation, encode only one of those topologies as an active bit, not several
+        def per_col(a):  # to only have one zero per row
+            idx = a.argmax(0)
+            out = np.zeros_like(a)
+            r = np.arange(a.shape[1])
+            out[idx, r] = a[idx, r]
+            return out
+
+        for sub in set(sub_encoding_pos):
+            indices = np.where(sub_encoding_pos == sub)[0]
+            if (len(indices) >= 2):
+                tensor[indices,:]=per_col(tensor[indices,:])
+
+        return tensor
 
     def _make_fake_obs(self, dataset: DataSet):
         """
