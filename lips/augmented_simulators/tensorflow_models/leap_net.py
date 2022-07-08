@@ -26,7 +26,6 @@ try:
 except ImportError as err:
     raise RuntimeError("You need to install the leap_net package to use this class") from err
 
-
 from ..tensorflow_simulator import TensorflowSimulator
 from ...logger import CustomLogger
 from ...config import ConfigManager
@@ -47,6 +46,11 @@ class LeapNet(TensorflowSimulator):
 
     Parameters
     ----------
+    sim_config_path : ``str``
+        The path to the configuration file for simulator.
+        It should contain all the required hyperparameters for this model.
+    sim_config_name : Union[str, None], optional
+        _description_, by default None
     name : Union[str, None], optional
         _description_, by default None
     scaler : Union[Scaler, None], optional
@@ -54,10 +58,6 @@ class LeapNet(TensorflowSimulator):
     bench_config_path : Union[str, pathlib.Path, None], optional
         _description_, by default None
     bench_config_name : Union[str, None], optional
-        _description_, by default None
-    sim_config_path : Union[str, None], optional
-        _description_, by default None
-    sim_config_name : Union[str, None], optional
         _description_, by default None
     log_path : Union[None, str], optional
         _description_, by default None
@@ -68,23 +68,23 @@ class LeapNet(TensorflowSimulator):
         _description_
     """
     def __init__(self,
+                 sim_config_path: str,
+                 sim_config_name: Union[str, None]=None,
                  name: Union[str, None]=None,
                  scaler: Union[Scaler, None]=None,
                  bench_config_path: Union[str, pathlib.Path, None]=None,
                  bench_config_name: Union[str, None]=None,
-                 sim_config_path: Union[str, None]=None,
-                 sim_config_name: Union[str, None]=None,
                  log_path: Union[None, str]=None,
                  **kwargs):
 
         super().__init__(name=name, log_path=log_path, **kwargs)
-        # Benchmark configurations
-        self.bench_config = ConfigManager(section_name=bench_config_name, path=bench_config_path)
-        # The config file associoated to this model
+        if not os.path.exists(sim_config_path):
+            raise RuntimeError("Configuration path for the simulator not found!")
+        if not str(sim_config_path).endswith(".ini"):
+            raise RuntimeError("The configuration file should have `.ini` extension!")
         sim_config_name = sim_config_name if sim_config_name is not None else "DEFAULT"
-        sim_config_path_default = pathlib.Path(__file__).parent.parent / "configurations" / "tf_leapnet.ini"
-        sim_config_path = sim_config_path if sim_config_path is not None else sim_config_path_default
         self.sim_config = ConfigManager(section_name=sim_config_name, path=sim_config_path)
+        self.bench_config = ConfigManager(section_name=bench_config_name, path=bench_config_path)
         self.name = name if name is not None else self.sim_config.get_option("name")
         self.name = name + '_' + sim_config_name
         # scaler
@@ -259,6 +259,7 @@ class LeapNet(TensorflowSimulator):
         #we are here looking for the number of matches for every element of a substation topology in the predefined list for a new topo_vect observation
         #if the count is equal to the number of element, then the predefined topology is present in topo_vect observation
         #in that case, the binary encoding of that predefined topology is equal to 1, otherwise 0
+
         import time
         start = time.time()
         if with_tf:
@@ -288,6 +289,7 @@ class LeapNet(TensorflowSimulator):
             normalised_tensor = match_tensor_adjusted / np.array(sub_length).reshape((-1, 1))
 
         boolean_match_tensor = np.array(normalised_tensor == 1.0).astype(np.int8)
+
         duration_matches = time.time() -start
 
         #############"
@@ -324,6 +326,7 @@ class LeapNet(TensorflowSimulator):
                 tensor[indices,:]=per_col(tensor[indices,:])
 
         return tensor
+
 
     def _make_fake_obs(self, dataset: DataSet):
         """
