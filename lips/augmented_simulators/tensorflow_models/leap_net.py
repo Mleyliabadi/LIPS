@@ -13,13 +13,13 @@ import pathlib
 from typing import Union
 import json
 import warnings
-import copy
 
 import numpy as np
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
     from tensorflow import keras
+    import tensorflow as tf
 
 try:
     from leap_net.proxy import ProxyLeapNet
@@ -31,8 +31,6 @@ from ...logger import CustomLogger
 from ...config import ConfigManager
 from ...dataset import DataSet
 from ...dataset.scaler import Scaler
-import tensorflow as tf
-
 
 class LeapNet(TensorflowSimulator):
     """LeapNet architecture
@@ -95,10 +93,11 @@ class LeapNet(TensorflowSimulator):
         # Define layer to be used for the model
         self.layers = {"linear": keras.layers.Dense}
         self.layer = self.layers[self.sim_config.get_option("layer")]
+        # get tau attributes
+        self.attr_tau = kwargs['attr_tau'] if "attr_tau" in kwargs else self.bench_config.get_option("attr_tau")
         # model parameters
         self.params = self.sim_config.get_options_dict()
         self.params.update(kwargs)
-        self.attr_tau=kwargs['attr_tau']
 
         # optimizer
         # optimizer
@@ -181,12 +180,12 @@ class LeapNet(TensorflowSimulator):
                 (extract_x, extract_tau), extract_y = dataset.extract_data(concat=False)
 
 
-
-        is_given_topo_list = (len(self._leap_net_model.kwargs_tau) >= 1)
-        if (is_given_topo_list):
-            extract_tau = self._transform_tau_given_list(extract_tau)
-        else:
-            extract_tau = self._transform_tau(dataset, extract_tau)
+        if self._leap_net_model.kwargs_tau is not None:
+            is_given_topo_list = (len(self._leap_net_model.kwargs_tau) >= 1)
+            if (is_given_topo_list):
+                extract_tau = self._transform_tau_given_list(extract_tau)
+            else:
+                extract_tau = self._transform_tau(dataset, extract_tau)
 
         #if len(self._leap_net_model.attr_tau) > 1 :
         #   extract_tau = np.concatenate((extract_tau[0], extract_tau[1]), axis=1)
@@ -411,5 +410,3 @@ class LeapNet(TensorflowSimulator):
 
         if self.scaler is not None:
             self.scaler.load(path)
-
-
