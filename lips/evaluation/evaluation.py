@@ -128,32 +128,7 @@ class Evaluation(object):
         self.predictions = predictions
         # create metrics dictionary
         self.metrics.update(self.__init_metric_dict())
-        # #self.logger.info("General metrics")
-        # # generic_functions = self.mapper.map_generic_criteria()
-        # generic_functions = ["MAE_avg", "MSE_avg"]
-        # metric_dict = self.metrics[self.MACHINE_LEARNING]
-
-        # #for metric_name, metric_fun in generic_functions.items():
-        # for metric_name in generic_functions:
-        #     metric_fun = metric_factory.get_metric(metric_name)
-        #     metric_dict[metric_name] = {}
-        #     for nm_, pred_ in self.predictions.items():
-        #         if nm_ == "__prod_p_dc":
-        #             # fix for the DC approximation
-        #             continue
-        #         true_ = self.observations[nm_]
-        #         tmp = metric_fun(true_, pred_)
-        #         if isinstance(tmp, Iterable):
-        #             metric_dict[metric_name][nm_] = [float(el) for el in tmp]
-        #             # self.logger.info("%s for %s: %s", metric_name, nm_, tmp)
-        #         else:
-        #             metric_dict[metric_name][nm_] = float(tmp)
-        #             # self.logger.info("%s for %s: %.2f", metric_name, nm_, tmp)
-
-        # # TODO : don't forget to save the results
-        # if save_path:
-        #     pass
-
+        
     def evaluate_ml(self):
         """
         It evaluates machine learning specific criteria
