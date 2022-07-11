@@ -203,6 +203,8 @@ def test_train_leapnet_raw():
                    epochs=2
                    )
 
+    assert leap_net.trained is True
+
     leap_net = LeapNet(name="tf_leapnet",
                        bench_config_path=BENCH_CONFIG_PATH,
                        bench_config_name="Benchmark2",
@@ -219,3 +221,5 @@ def test_train_leapnet_raw():
                    val_dataset=benchmark2.val_dataset,
                    epochs=2
                    )
+
+    assert leap_net.trained is True
