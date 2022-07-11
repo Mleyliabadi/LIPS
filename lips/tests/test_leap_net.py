@@ -22,16 +22,19 @@ from lips.config import ConfigManager
 LIPS_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 DATA_PATH = LIPS_PATH / "lips" / "tests" / "data" / "powergrid" / "l2rpn_case14_sandbox"
 BENCH_CONFIG_PATH = LIPS_PATH / "lips" / "tests" / "configs" / "powergrid" / "benchmarks" / "l2rpn_case14_sandbox.ini"
-SIM_CONFIG_PATH = LIPS_PATH / "configurations" / "powergrid" / "simulators"
-BASELINES_PATH = LIPS_PATH / "trained_baselines" / "powergrid"
-TRAINED_MODEL_PATH = LIPS_PATH / "trained_models" / "powergrid"
-EVALUATION_PATH = LIPS_PATH / "evaluation_results" / "PowerGrid"
-LOG_PATH = LIPS_PATH / "lips_logs.log"
+SIM_CONFIG_PATH = LIPS_PATH / "lips" / "tests" / "configs" / "powergrid" / "simulators"
 
 benchmark1 = PowerGridBenchmark(benchmark_name="Benchmark1",
                                 benchmark_path=DATA_PATH,
                                 load_data_set=True,
-                                log_path=LOG_PATH,
+                                log_path=None,
+                                config_path=BENCH_CONFIG_PATH
+                               )
+
+benchmark2 = PowerGridBenchmark(benchmark_name="Benchmark2",
+                                benchmark_path=DATA_PATH,
+                                load_data_set=True,
+                                log_path=None,
                                 config_path=BENCH_CONFIG_PATH
                                )
 
@@ -53,7 +56,7 @@ def test_fast_transform_tau():
                         bench_config_name="Benchmark1",
                         sim_config_path=SIM_CONFIG_PATH / "tf_leapnet.ini",
                         sim_config_name="DEFAULT",
-                        log_path=LOG_PATH,
+                        log_path=None,
                         loss={"name": "mse"},
                         lr=1e-4,
                         activation=tf.keras.layers.LeakyReLU(alpha=0.01),
@@ -145,7 +148,7 @@ def test_fast_transform_tau_multiple_line_disconnect():
                         bench_config_name="Benchmark2",
                         sim_config_path=SIM_CONFIG_PATH / "tf_leapnet.ini",
                         sim_config_name="DEFAULT",
-                        log_path=LOG_PATH,
+                        log_path=None,
                         loss={"name": "mse"},
                         lr=1e-4,
                         activation=tf.keras.layers.LeakyReLU(alpha=0.01),
@@ -175,3 +178,44 @@ def test_fast_transform_tau_multiple_line_disconnect():
         if (len(indices) >= 2):
             nb_topology_activated_per_timestep= extract_tau[1][:,indices].sum(axis=1)
             assert np.all(nb_topology_activated_per_timestep<=1) #maximum 1 topology activated per substation
+
+def test_train_leapnet_raw():
+    """Test if the training of the LeapNet can be executed as expected
+
+    Test leap_net using
+        ``topo_vect_to_tau="raw"``
+    """
+
+    leap_net = LeapNet(name="tf_leapnet",
+                       bench_config_path=BENCH_CONFIG_PATH,
+                       bench_config_name="Benchmark1",
+                       sim_config_path=SIM_CONFIG_PATH / "tf_leapnet.ini",
+                       sim_config_name="DEFAULT",
+                       sizes_main=(150, 150),
+                       sizes_enc=(20, 20, 20),
+                       sizes_out=(100, 40),
+                       scaler=PowerGridScaler,
+                       topo_vect_to_tau="raw",
+                       log_path=None)
+
+    leap_net.train(train_dataset=benchmark1.train_dataset,
+                   val_dataset=benchmark1.val_dataset,
+                   epochs=2
+                   )
+
+    leap_net = LeapNet(name="tf_leapnet",
+                       bench_config_path=BENCH_CONFIG_PATH,
+                       bench_config_name="Benchmark2",
+                       sim_config_path=SIM_CONFIG_PATH / "tf_leapnet.ini",
+                       sim_config_name="DEFAULT",
+                       sizes_main=(150, 150),
+                       sizes_enc=(20, 20, 20),
+                       sizes_out=(100, 40),
+                       scaler=PowerGridScaler,
+                       topo_vect_to_tau="raw",
+                       log_path=None)
+
+    leap_net.train(train_dataset=benchmark2.train_dataset,
+                   val_dataset=benchmark2.val_dataset,
+                   epochs=2
+                   )
