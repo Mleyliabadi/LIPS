@@ -39,11 +39,9 @@ benchmark2 = PowerGridBenchmark(benchmark_name="Benchmark2",
                                )
 
 def test_fast_transform_tau():
-
     """
     In this test, we check that we are able to consistently get the same encoding as the one in leap_net package but for a faster vectorized method
     """
-
     bench_config = ConfigManager(section_name="Benchmark1", path=BENCH_CONFIG_PATH)
     topo_actions = bench_config.get_option("dataset_create_params")["reference_args"]["topo_actions"]
 
@@ -98,7 +96,6 @@ def test_fast_transform_tau():
     #####
     #Launch two different mathods for transformation and check that they match
     tau = copy.deepcopy(extract_tau)
-    import time
     start = time.time()
     extract_tau_1 = leap_net1._transform_tau(dataset, extract_tau)
     end = time.time()

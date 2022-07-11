@@ -23,12 +23,12 @@ class ConfigManager(object):
     This class ease the use of config parser for the framework
     """
     def __init__(self,
-                 path: str,
+                 path: Union[str, pathlib.Path],
                  section_name: str="DEFAULT",
                 ):
         if path is None:
             raise RuntimeError("A path should be indicated!")
-        elif not(path.exists()):
+        elif not os.path.exists(path):
             raise RuntimeError("A path to a configuration file should be indicated!")
         elif not str(path).endswith(".ini"):
             raise RuntimeError("The configuration file should have `.ini` extension!")
@@ -37,8 +37,12 @@ class ConfigManager(object):
         self.section_name = section_name
         self.config = ConfigParser()
         # if a config file exists already try to load it
+
         if os.path.exists(self.path_config):
             self.config = self._read_config(self.path_config)
+        else:
+            print("Warning: path_config ("+str(self.path_config)+") file not found")
+            #Should we raise an exception there?
 
     def create_config(self,
                       scenario_name: Union[str, None] = None,
