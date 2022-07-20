@@ -230,7 +230,8 @@ def init_simulator(args: Namespace) -> Tuple[AugmentedSimulator, Dict]:
     # and pass to the simulator constructor the variables used as input/output for the benchmark
     # this is done using the name of the benchmark and associated configuration  file
 
-    vars = {"benchmark_name": args.benchmark_name}
+    vars = {"bench_config_name": args.benchmark_name, "bench_config_path": args.benchmark_config}
+
     # FIXME: tweak to handle specific case of the scaler parameter: in the config, we use a "scaler_config" parameter (string) which is turned into a "scaler" class parameter
     if kwargs["scaler_class"]:
         module = importlib.import_module("lips.dataset.scaler")
@@ -312,12 +313,7 @@ def is_compatible(
 ) -> bool:
     benchmark_y = list(benchmark.config.get_option("attr_y"))
     benchmark_y.sort()
-
-    simulator_y = list(
-        ConfigManager(
-            section_name=simulator.params["benchmark_name"], path=args.benchmark_config
-        ).get_option("attr_y")
-    )
+    simulator_y = list(simulator.bench_config.get_option("attr_y"))
     simulator_y.sort()
 
     if benchmark_y == simulator_y:
