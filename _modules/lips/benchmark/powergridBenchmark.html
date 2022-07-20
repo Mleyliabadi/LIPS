@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lips.benchmark.powergridBenchmark &mdash; LIPS 0.1 documentation</title>
+  <title>lips.benchmark.powergridBenchmark &mdash; LIPS 0.1.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -26,6 +26,9 @@
         <div class="wy-side-nav-search" >
             <a href="../../../index.html" class="icon icon-home"> LIPS
           </a>
+              <div class="version">
+                0.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -397,6 +400,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="p">,</span> <span class="n">DCApproximationAS</span><span class="p">):</span>
             <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">sim_kwargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">sim_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">)</span>
             <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span>
