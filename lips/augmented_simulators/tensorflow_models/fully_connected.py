@@ -151,7 +151,7 @@ class TfFullyConnected(TensorflowSimulator):
         line_status = extract_tau[0]
 
         # extract tau using LeapNetProxy function
-        extract_tau = self._extract_tau(dataset)
+        extract_tau = self._transform_topo_vect(dataset, training)
 
         # add tau and line_status to inputs
         inputs.extend([extract_tau, line_status])
