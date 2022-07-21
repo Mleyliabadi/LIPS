@@ -170,7 +170,7 @@ class LeapNet(TensorflowSimulator):
         tuple
             the normalized dataset with features and labels
         """
-        # deep copy to avoid changing the original argument
+        # deep copy to avoid changing the original dataset argument
         dataset_copy = copy.deepcopy(dataset)
 
         # extract and transform topo_vect and inject it into the dataset
@@ -179,24 +179,24 @@ class LeapNet(TensorflowSimulator):
 
         # concatenate line_status and topo_vect into a single feature, if the concatenate_tau param is enabled
         if "concatenate_tau" in self.params and self.params["concatenate_tau"]:
-
             if all(el in self.bench_config.get_option("attr_tau") for el in ("line_status", "topo_vect")):
-
-                dataset_copy.data["concatenated_tau"] = np.concatenate(
-                    (dataset.data["line_status"], transformed_topo_vect), axis=1)
-
+                dataset_copy.data["concatenated_tau"] = \
+                    np.concatenate((dataset.data["line_status"], transformed_topo_vect), axis=1)
             else: raise RuntimeError("line_status or topo_vect not found in attr_tau argument, "
                                          "please add them in benchmark config file")
 
         if training:
             obss = self._make_fake_obs(dataset_copy)
             self._leap_net_model.init(obss)
+
+            # replace the old topo_vect by the transformed one
             dataset_copy.data["topo_vect"] = transformed_topo_vect
 
             if self.scaler is not None:
                 (extract_x, extract_tau), extract_y = self.scaler.fit_transform(dataset_copy)
             else:
                 (extract_x, extract_tau), extract_y = dataset_copy.extract_data(concat=False)
+
         else:
             dataset_copy.data["topo_vect"] = transformed_topo_vect
 
@@ -206,7 +206,6 @@ class LeapNet(TensorflowSimulator):
                 (extract_x, extract_tau), extract_y = dataset_copy.extract_data(concat=False)
 
         if "concatenate_tau" in self.params and self.params["concatenate_tau"]:
-            #extract_tau = np.concatenate(extract_tau, axis=1)
             extract_tau = dataset_copy.data["concatenated_tau"]
 
         return (extract_x, extract_tau), extract_y

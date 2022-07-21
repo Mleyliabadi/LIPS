@@ -169,9 +169,48 @@ class TensorflowSimulator(AugmentedSimulator):
 
         return inputs, outputs
 
-    def _transform_topo_vect(self, dataset: DataSet, training = True):
-        # LeapNetProxy initialization
+    def _transform_topo_vect(self, dataset: DataSet, training: bool=True):
+        """ Extract and transform topo_vect according to the processing method defined by the argument `topo_vect_to_tau`
+
+            This function reuses either the ProxyLeapNet methods to process the tau vector or the
+            self ._transform_tau_given_list.
+            See https://github.com/BDonnot/leap_net/blob/master/leap_net/proxy/proxyLeapNet.py for more details.
+
+                From the LeapNet documentation :
+
+                    There are multiple ways to process the `tau` vector from the topology of the grid. Some of these
+                    different methods have been coded in the LeapNetProxy and are controlled by the `topo_vect_to_tau`
+                    argument:
+
+                    1) `topo_vect_to_tau="raw"`: the most straightforward encoding. It transforms the `obs.topo_vect`
+                     directly into a `tau` vector of the same dimension with the convention: if obs.topo_vect[i] == 2
+                     for a given `i` then `tau[i] = 1` else `tau[i] = 0`. More details are given in
+                     the :func:`ProxyLeapNet._raw_topo_vect`, with usage examples on how to create it.
+                    2) `topo_vect_to_tau="all"`: it encodes the global topology of the grid by a one hot encoding of the
+                     "local topology" of each substation. It first computes all the possible "local topologies" for
+                     all the substations of the grid and then assign a number (unique ID) for each of them. The resulting
+                     `tau` vector is then the concatenation of the "one hot encoded" ID of the current "local topology"
+                     of each substation. More information is given in :func:`ProxyLeapNet._all_topo_encode`
+                     with usage examples on how to create it.
+                    3) `topo_vect_to_tau="given_list"`: it encodes the topology into a `tau` vector following the same
+                     convention as method 2) (`topo_vect_to_tau="all"`) with the difference that it only considers
+                     a given list of possible topologies instead of all the topologies of all the substation of the grid.
+                     This list should be provided as an input in the `kwargs_tau` argument. If a topology not given
+                     is encounter, it is mapped to the reference topology.
+                    4) `topo_vect_to_tau="online_list"`: it encodes the topology into a `tau` vector following the same
+                     convention as method 2) (`topo_vect_to_tau="all"`) and 3) (`topo_vect_to_tau="given_list"`) but does
+                     not require to specify any list of topologies. Instead, each time a new "local topology" is
+                     encountered during training, it will be assigned to a new ID. When encountered again, this new
+                     ID will be re used. It can store a maximum of different topologies given as `kwargs_tau` argument.
+                     If too much topologies have been encountered, the new ones will be encoded as the reference topology.
+                Returns
+                -------
+                topo_vect
+
+                """
+
         if training:
+            # initialize a fake leapNet proxy
             self._fake_leap_net_proxy = ProxyLeapNet(
                 attr_x=self.bench_config.get_option("attr_x"),
                 attr_y=self.bench_config.get_option("attr_y"),
@@ -179,14 +218,15 @@ class TensorflowSimulator(AugmentedSimulator):
                 topo_vect_to_tau=self.params["topo_vect_to_tau"] if "topo_vect_to_tau" in self.params else "raw",
                 kwargs_tau=self.params["kwargs_tau"] if "kwargs_tau" in self.params else None,
             )
-            # transform a numpy dataset into observations
             obss = self._make_fake_obs(dataset)
             self._fake_leap_net_proxy.init(obss)
 
+        # if option is given_list then use the accelerated function else use the leapnet porxy method
         if "topo_vect_to_tau" in self.params and self.params["topo_vect_to_tau"] == "given_list":
             return self._transform_tau_given_list(dataset.data["topo_vect"], self._fake_leap_net_proxy.subs_index)
         else:
-            return np.array([self.leap_n_fake_leap_net_proxy.topo_vect_handler(obs) for obs in obss])
+            if not training : obss = self._make_fake_obs(dataset)
+            return np.array([self._fake_leap_net_proxy.topo_vect_handler(obs) for obs in obss])
 
     def _make_fake_obs(self, dataset: DataSet):
         """

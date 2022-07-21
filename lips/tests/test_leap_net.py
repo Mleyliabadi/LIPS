@@ -95,19 +95,19 @@ def test_fast_transform_tau():
 
     #####
     #Launch two different mathods for transformation and check that they match
-    tau = copy.deepcopy(extract_tau)
+    tau = copy.deepcopy(extract_tau[1])
     start = time.time()
     extract_tau_1 = leap_net1._transform_tau(dataset, extract_tau)
     end = time.time()
     print(end - start) #3.9s pour 10 000 / Pour 100 000 35.63s
 
     start = time.time()
-    extract_tau_bis = leap_net1._transform_tau_given_list(tau)
+    extract_tau_bis = leap_net1._transform_tau_given_list(tau, leap_net1._leap_net_model.subs_index)
     end = time.time()
     print(end - start) #0.026s pour 10 000 => 150 fois plus rapide! Pour 100 000, 1,7s
     #0.021s with int32, could we only work with boolean ? 0.32s for 100 000 (or 0.82s with numpy matmult, a bit faster with tensorflow then)
 
-    assert np.all(extract_tau_1[1].astype((np.bool_))==extract_tau_bis[1])
+    assert np.all(extract_tau_1[1]==extract_tau_bis)
 
 def test_fast_transform_tau_multiple_line_disconnect():
     """
@@ -124,21 +124,21 @@ def test_fast_transform_tau_multiple_line_disconnect():
     kwargs_tau = []
     for el in topo_actions:
          kwargs_tau.append(el["set_bus"]["substations_id"][0])
-    tau=[[],[]]
+    tau=[]
     #here we have a match fro the first topology at substation 5
-    tau[1].append(np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1,
+    tau.append(np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1,
      1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1,
      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
      1, 1, 1, 1, 1, 1]))
 
     #here the two topologies at substation 5 will be matched (given 2 disconnected lines that create that ambiguity,
     # but only one should be activated in the encoding
-    tau[1].append(np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1,
+    tau.append(np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1,
      1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 2, 1, 2, 2, 1, 1, 1,
      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
      1, 1, 1, 1, 1, 1]))
 
-    tau[1]=np.array(tau[1])
+    tau=np.array(tau)
 
     leap_net1 = LeapNet(name="tf_leapnet",
                         bench_config_path=BENCH_CONFIG_PATH,
@@ -166,14 +166,14 @@ def test_fast_transform_tau_multiple_line_disconnect():
                         scaler=PowerGridScaler,
                         )
     leap_net1._leap_net_model.subs_index=[(0, 3), (3, 9), (9, 13), (13, 19), (19, 24), (24, 31), (31, 34), (34, 36), (36, 41), (41, 44), (44, 47), (47, 50), (50, 54), (54, 57)]
-    extract_tau = leap_net1._transform_tau_given_list(tau)
+    extract_tau = leap_net1._transform_tau_given_list(tau, leap_net1._leap_net_model.subs_index)
 
     #check that there is no multiple topologies encoded for a given substation at the same time
     sub_encoding_pos = np.array([topo_action[0] for topo_action in kwargs_tau])
     for sub in set(sub_encoding_pos):
         indices = np.where(sub_encoding_pos == sub)[0]
         if (len(indices) >= 2):
-            nb_topology_activated_per_timestep= extract_tau[1][:,indices].sum(axis=1)
+            nb_topology_activated_per_timestep= extract_tau[:,indices].sum(axis=1)
             assert np.all(nb_topology_activated_per_timestep<=1) #maximum 1 topology activated per substation
 
 def test_train_leapnet_raw():
