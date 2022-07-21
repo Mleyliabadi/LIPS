@@ -44,7 +44,7 @@ class PowerGridBenchmark(Benchmark):
     benchmark_path : Union[``str``, ``None``], optional
         path to the benchmark, it should be indicated
         if not indicated, the data remains only in the memory
-    config_path : Union[``str``, ``None``], optional
+    config_path : Union[``pathlib.Path``, ``str``, ``None``], optional
         path to the configuration file. If config_path is ``None``, the default config file
         present in config module will be used by using the benchmark_name as the section, by default None
     benchmark_name : ``str``, optional
@@ -54,7 +54,7 @@ class PowerGridBenchmark(Benchmark):
     evaluation : Union[``PowerGridEvaluation``, ``None``], optional
         a ``PowerGridEvaluation`` instance. If not indicated, the benchmark creates its
         own evaluation instance using appropriate config, by default None
-    log_path : Union[``str``, ``None``], optional
+    log_path : Union[``pathlib.Path``, ``str``, ``None``], optional
         path to the logs, by default None
 
     Warnings
@@ -64,21 +64,21 @@ class PowerGridBenchmark(Benchmark):
     can extend this class.
     """
     def __init__(self,
-                 benchmark_path: Union[str, None],
-                 config_path: Union[str, None]=None,
+                 benchmark_path: Union[pathlib.Path, str, None],
+                 config_path: Union[pathlib.Path, str],
                  benchmark_name: str="Benchmark1",
                  load_data_set: bool=False,
                  evaluation: Union[PowerGridEvaluation, None]=None,
-                 log_path: Union[str, None]=None,
+                 log_path: Union[pathlib.Path, str, None]=None,
                  **kwargs
                  ):
         super().__init__(benchmark_name=benchmark_name,
+                         benchmark_path=benchmark_path,
+                         config_path=config_path,
                          dataset=None,
                          augmented_simulator=None,
                          evaluation=evaluation,
-                         benchmark_path=benchmark_path,
-                         log_path=log_path,
-                         config_path=config_path
+                         log_path=log_path
                         )
 
         self.is_loaded=False
@@ -160,7 +160,7 @@ class PowerGridBenchmark(Benchmark):
         self.is_loaded = True
 
     def generate(self, nb_sample_train: int, nb_sample_val: int,
-                 nb_sample_test: int, nb_sample_test_ood_topo: int):
+                 nb_sample_test: int, nb_sample_test_ood_topo: int,do_store_physics=False):
         """
         generate the different datasets required for the benchmark
         """
@@ -181,25 +181,29 @@ class PowerGridBenchmark(Benchmark):
                                     actor=self.training_actor,
                                     path_out=self.path_datasets,
                                     nb_samples=nb_sample_train,
-                                    nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("train", 864)
+                                    nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("train", 864),
+                                    do_store_physics=do_store_physics
                                     )
         self.val_dataset.generate(simulator=self.val_simulator,
                                   actor=self.val_actor,
                                   path_out=self.path_datasets,
                                   nb_samples=nb_sample_val,
-                                  nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("val", 288)
+                                  nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("val", 288),
+                                  do_store_physics=do_store_physics
                                   )
         self._test_dataset.generate(simulator=self.test_simulator,
                                     actor=self.test_actor,
                                     path_out=self.path_datasets,
                                     nb_samples=nb_sample_test,
-                                    nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("test", 288)
+                                    nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("test", 288),
+                                    do_store_physics=do_store_physics
                                     )
         self._test_ood_topo_dataset.generate(simulator=self.test_ood_topo_simulator,
                                              actor=self.test_ood_topo_actor,
                                              path_out=self.path_datasets,
                                              nb_samples=nb_sample_test_ood_topo,
-                                             nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("test_ood", 288)
+                                             nb_samples_per_chronic=self.config.get_option("samples_per_chronic").get("test_ood", 288),
+                                             do_store_physics=do_store_physics
                                              )
 
     def evaluate_simulator(self,
@@ -310,6 +314,8 @@ class PowerGridBenchmark(Benchmark):
         if isinstance(self.augmented_simulator, DCApproximationAS):
             predictions = self.augmented_simulator.compute(dataset)
         else:
+            sim_kwargs = copy.deepcopy(kwargs)
+            sim_kwargs.pop("env")
             predictions = self.augmented_simulator.predict(dataset, **kwargs)
 
         self.predictions[dataset.name] = predictions

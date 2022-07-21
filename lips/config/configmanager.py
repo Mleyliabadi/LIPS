@@ -16,27 +16,33 @@ import pathlib
 from configparser import ConfigParser
 import ast
 from typing import Union
+from pprint import pformat
 
 class ConfigManager(object):
     """
     This class ease the use of config parser for the framework
     """
     def __init__(self,
+                 path: Union[str, pathlib.Path],
                  section_name: str="DEFAULT",
-                 path: Union[str, None] = None
                 ):
-
-        self.section_name = section_name
-        self.path_config = None
         if path is None:
-            self.path_config = pathlib.Path(__file__).parent.absolute().joinpath("conf.ini")
+            raise RuntimeError("A path should be indicated!")
+        elif not os.path.exists(path):
+            raise RuntimeError("A path to a configuration file should be indicated!")
+        elif not str(path).endswith(".ini"):
+            raise RuntimeError("The configuration file should have `.ini` extension!")
         else:
             self.path_config = path
-
+        self.section_name = section_name
         self.config = ConfigParser()
         # if a config file exists already try to load it
+
         if os.path.exists(self.path_config):
             self.config = self._read_config(self.path_config)
+        else:
+            print("Warning: path_config ("+str(self.path_config)+") file not found")
+            #Should we raise an exception there?
 
     def create_config(self,
                       scenario_name: Union[str, None] = None,
@@ -148,3 +154,6 @@ class ConfigManager(object):
     @staticmethod
     def _str_to_list(string: str):
         return ast.literal_eval(string)
+
+    def __str__(self) -> str:
+        return pformat(self.get_options_dict(), indent=1, width=1)
