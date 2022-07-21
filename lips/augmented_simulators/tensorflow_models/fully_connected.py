@@ -170,7 +170,6 @@ class TfFullyConnected(TensorflowSimulator):
         else:
             if self.scaler is not None:
                 inputs, outputs = self.scaler.transform(inputs, outputs)
-
         return inputs, outputs
 
     #TODO : the process of extracting and transforming tau is the same for the leapNet model, it will be better
