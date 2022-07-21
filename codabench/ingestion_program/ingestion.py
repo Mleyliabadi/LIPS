@@ -338,7 +338,6 @@ def main():
     # Parse directories from input arguments
     logger.info("===== Initialize args.")
     args = _parse_args()
-
     _init_python_path(args)
 
     write_start_file(args.benchmark_output_dir)
