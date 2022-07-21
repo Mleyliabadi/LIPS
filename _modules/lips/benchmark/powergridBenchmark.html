@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lips.benchmark.powergridBenchmark &mdash; LIPS 0.1.0 documentation</title>
+  <title>lips.benchmark.powergridBenchmark &mdash; LIPS 0.1 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -26,9 +26,6 @@
         <div class="wy-side-nav-search" >
             <a href="../../../index.html" class="icon icon-home"> LIPS
           </a>
-              <div class="version">
-                0.1
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -130,7 +127,7 @@
 <span class="sd">    benchmark_path : Union[``str``, ``None``], optional</span>
 <span class="sd">        path to the benchmark, it should be indicated</span>
 <span class="sd">        if not indicated, the data remains only in the memory</span>
-<span class="sd">    config_path : Union[``pathlib.Path``, ``str``, ``None``], optional</span>
+<span class="sd">    config_path : Union[``str``, ``None``], optional</span>
 <span class="sd">        path to the configuration file. If config_path is ``None``, the default config file</span>
 <span class="sd">        present in config module will be used by using the benchmark_name as the section, by default None</span>
 <span class="sd">    benchmark_name : ``str``, optional</span>
@@ -140,7 +137,7 @@
 <span class="sd">    evaluation : Union[``PowerGridEvaluation``, ``None``], optional</span>
 <span class="sd">        a ``PowerGridEvaluation`` instance. If not indicated, the benchmark creates its</span>
 <span class="sd">        own evaluation instance using appropriate config, by default None</span>
-<span class="sd">    log_path : Union[``pathlib.Path``, ``str``, ``None``], optional</span>
+<span class="sd">    log_path : Union[``str``, ``None``], optional</span>
 <span class="sd">        path to the logs, by default None</span>
 
 <span class="sd">    Warnings</span>
@@ -150,21 +147,21 @@
 <span class="sd">    can extend this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">benchmark_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
-                 <span class="n">config_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+                 <span class="n">benchmark_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+                 <span class="n">config_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">benchmark_name</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;Benchmark1&quot;</span><span class="p">,</span>
                  <span class="n">load_data_set</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">evaluation</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PowerGridEvaluation</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">log_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">log_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span>
                  <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">benchmark_name</span><span class="o">=</span><span class="n">benchmark_name</span><span class="p">,</span>
-                         <span class="n">benchmark_path</span><span class="o">=</span><span class="n">benchmark_path</span><span class="p">,</span>
-                         <span class="n">config_path</span><span class="o">=</span><span class="n">config_path</span><span class="p">,</span>
                          <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">augmented_simulator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">evaluation</span><span class="o">=</span><span class="n">evaluation</span><span class="p">,</span>
-                         <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span>
+                         <span class="n">benchmark_path</span><span class="o">=</span><span class="n">benchmark_path</span><span class="p">,</span>
+                         <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
+                         <span class="n">config_path</span><span class="o">=</span><span class="n">config_path</span>
                         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span><span class="o">=</span><span class="kc">False</span>
@@ -246,7 +243,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="PowerGridBenchmark.generate"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.powergridBenchmark.PowerGridBenchmark.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_sample_train</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_sample_val</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                 <span class="n">nb_sample_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_sample_test_ood_topo</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span><span class="n">do_store_physics</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                 <span class="n">nb_sample_test</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_sample_test_ood_topo</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        generate the different datasets required for the benchmark</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -267,29 +264,25 @@
                                     <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">training_actor</span><span class="p">,</span>
                                     <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
                                     <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_train</span><span class="p">,</span>
-                                    <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="mi">864</span><span class="p">),</span>
-                                    <span class="n">do_store_physics</span><span class="o">=</span><span class="n">do_store_physics</span>
+                                    <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="mi">864</span><span class="p">)</span>
                                     <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">val_dataset</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_simulator</span><span class="p">,</span>
                                   <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_actor</span><span class="p">,</span>
                                   <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
                                   <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_val</span><span class="p">,</span>
-                                  <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="mi">288</span><span class="p">),</span>
-                                  <span class="n">do_store_physics</span><span class="o">=</span><span class="n">do_store_physics</span>
+                                  <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="mi">288</span><span class="p">)</span>
                                   <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_test_dataset</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_simulator</span><span class="p">,</span>
                                     <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_actor</span><span class="p">,</span>
                                     <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
                                     <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_test</span><span class="p">,</span>
-                                    <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="mi">288</span><span class="p">),</span>
-                                    <span class="n">do_store_physics</span><span class="o">=</span><span class="n">do_store_physics</span>
+                                    <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="mi">288</span><span class="p">)</span>
                                     <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_test_ood_topo_dataset</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_simulator</span><span class="p">,</span>
                                              <span class="n">actor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_ood_topo_actor</span><span class="p">,</span>
                                              <span class="n">path_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_datasets</span><span class="p">,</span>
                                              <span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_sample_test_ood_topo</span><span class="p">,</span>
-                                             <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_ood&quot;</span><span class="p">,</span> <span class="mi">288</span><span class="p">),</span>
-                                             <span class="n">do_store_physics</span><span class="o">=</span><span class="n">do_store_physics</span>
+                                             <span class="n">nb_samples_per_chronic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;samples_per_chronic&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_ood&quot;</span><span class="p">,</span> <span class="mi">288</span><span class="p">)</span>
                                              <span class="p">)</span></div>
 
 <div class="viewcode-block" id="PowerGridBenchmark.evaluate_simulator"><a class="viewcode-back" href="../../../lips.benchmark.html#lips.benchmark.powergridBenchmark.PowerGridBenchmark.evaluate_simulator">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -400,8 +393,6 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="p">,</span> <span class="n">DCApproximationAS</span><span class="p">):</span>
             <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">sim_kwargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sim_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">)</span>
             <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmented_simulator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span>
