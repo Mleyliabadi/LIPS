@@ -206,7 +206,7 @@ class LeapNet(TensorflowSimulator):
                 (extract_x, extract_tau), extract_y = dataset_copy.extract_data(concat=False)
 
         if "concatenate_tau" in self.params and self.params["concatenate_tau"]:
-            extract_tau = dataset_copy.data["concatenated_tau"]
+            extract_tau = np.concatenate(extract_tau, axis=1)
 
         return (extract_x, extract_tau), extract_y
 
