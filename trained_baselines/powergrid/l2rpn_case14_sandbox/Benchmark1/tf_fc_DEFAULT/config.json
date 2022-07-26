@@ -1,7 +1,0 @@
-{
-    "activation": "elu",
-    "batch_size": 128,
-    "ckpt_freq": 50,
-    "device": "cpu",
-    "dropout": 0.0,
-    "env": 

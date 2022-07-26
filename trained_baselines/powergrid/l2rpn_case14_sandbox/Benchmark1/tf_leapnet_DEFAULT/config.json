@@ -1,6 +1,0 @@
-{
-    "activation": "leaky_relu",
-    "batch_size": 128,
-    "ckpt_freq": 50,
-    "dropout": 0.0,
-    "env": 
