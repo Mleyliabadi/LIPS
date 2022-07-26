@@ -20,6 +20,9 @@ from ...dataset import DataSet
 from ...dataset.scaler import Scaler
 from ...utils import NpEncoder
 
+from leap_net.proxy import ProxyLeapNet
+from leap_net import ResNetLayer
+
 class TfFullyConnected(TensorflowSimulator):
     """Fully Connected architecture
 
@@ -46,6 +49,7 @@ class TfFullyConnected(TensorflowSimulator):
     RuntimeError
         _description_
     """
+
     def __init__(self,
                  sim_config_path: str,
                  sim_config_name: Union[str, None]=None,
@@ -70,16 +74,18 @@ class TfFullyConnected(TensorflowSimulator):
         # Logger
         self.log_path = log_path
         self.logger = CustomLogger(__class__.__name__, log_path).logger
-        # Define layer to be used for the model
-        self.layers = {"linear": keras.layers.Dense}
-        self.layer = self.layers[self.sim_config.get_option("layer")]
         # model parameters
         self.params = self.sim_config.get_options_dict()
         self.params.update(kwargs)
+        # Define layer to be used for the model
+        self.layers = {"linear": keras.layers.Dense, "resnet": ResNetLayer}
+        self.layer = self.layers[self.params["layer"]]
+
         # optimizer
-        if "optimizer" in kwargs:
-            if not isinstance(kwargs["optimizer"], keras.optimizers.Optimizer):
-                raise RuntimeError("If an optimizer is provided, it should be a type tensorflow.keras.optimizers")
+        if "optimizer" in kwargs and "name" in kwargs["optimizer"]:
+            # TODO : isinstance not working properly on keras, isinstance(keras.optimizers.Optimizer, keras.optimizers.Adam) returns False
+            # if not isinstance(kwargs["optimizer"], keras.optimizers.Optimizer):
+            #   raise RuntimeError("If an optimizer is provided, it should be a type tensorflow.keras.optimizers")
             self._optimizer = kwargs["optimizer"](self.params["optimizer"]["params"])
         else:
             self._optimizer = keras.optimizers.Adam(learning_rate=self.params["optimizer"]["params"]["lr"])
@@ -101,6 +107,10 @@ class TfFullyConnected(TensorflowSimulator):
         input_ = keras.layers.Input(shape=(self.input_size,), name="input")
         x = input_
         x = keras.layers.Dropout(rate=self.params["input_dropout"], name="input_dropout")(x)
+
+        if "scale_input_layer" in self.params and self.params["scale_input_layer"]:
+            x = keras.layers.Dense(self.params["layers"][0], name="scaling_input_ResNet")(x)
+
         for layer_id, layer_size in enumerate(self.params["layers"]):
             x = self.layer(layer_size, name=f"layer_{layer_id}")(x)
             x = keras.layers.Activation(self.params["activation"], name=f"activation_{layer_id}")(x)
@@ -111,7 +121,7 @@ class TfFullyConnected(TensorflowSimulator):
                                   name=f"{self.name}_model")
         return self._model
 
-    def process_dataset(self, dataset: DataSet, training: bool=False) -> tuple:
+    def process_dataset(self, dataset: DataSet, training: bool = False) -> tuple:
         """process the datasets for training and evaluation
 
         This function transforms all the dataset into something that can be used by the neural network (for example)
@@ -134,16 +144,33 @@ class TfFullyConnected(TensorflowSimulator):
         tuple
             the normalized dataset with features and labels
         """
+
+        # extract inputs, line_status, outputs without concatenation
+        (inputs, extract_tau), outputs = dataset.extract_data(concat=False)
+        line_status = extract_tau[0]
+
+        # extract tau using LeapNetProxy function
+        extract_tau = self._transform_topo_vect(dataset, training)
+
+        # add tau and line_status to inputs
+        inputs.extend([extract_tau, line_status])
+
+        # concatenate input features
+        inputs = np.concatenate([el.astype(np.float32) for el in inputs], axis=1)
+
+        # concatenate outputs labels
+        outputs = np.concatenate([el.astype(np.float32) for el in outputs], axis=1)
+
         if training:
-            self._infer_size(dataset)
-            inputs, outputs = dataset.extract_data(concat=True)
+            # set input and output sizes
+            self.input_size = inputs.shape[1]
+            self.output_size = outputs.shape[1]
+            #TODO : exclude scaling line_status and tau features
             if self.scaler is not None:
                 inputs, outputs = self.scaler.fit_transform(inputs, outputs)
         else:
-            inputs, outputs = dataset.extract_data(concat=True)
             if self.scaler is not None:
                 inputs, outputs = self.scaler.transform(inputs, outputs)
-
         return inputs, outputs
 
     def _infer_size(self, dataset: DataSet):

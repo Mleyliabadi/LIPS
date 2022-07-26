@@ -8,6 +8,7 @@
 
 import json
 import numpy
+import tensorflow as tf
 from .benchmark import Benchmark
 
 
@@ -22,6 +23,8 @@ class NpEncoder(json.JSONEncoder):
             return float(obj)
         if isinstance(obj, numpy.ndarray):
             return obj.tolist()
+        if isinstance(obj, tf.keras.layers.LeakyReLU):
+            return "leaky_relu"
         return super(NpEncoder, self).default(obj)
 
 
