@@ -47,7 +47,7 @@ pkgs = {
         "codabench": [
             "filelock==3.7.1",
             "json2table==1.1.5",
-            "loguru==0.0.6",
+            "loguru==0.6.0",
             "PyYAML==6.0"
         ],
         "test": [
